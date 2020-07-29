@@ -22,26 +22,48 @@
 #include "SdFat.h"
 #include "lib/gifdec.h"
 #include "lib/stdinout.h"
+// #define FASTLED_ESP8266_D1_PIN_ORDER
+#include <FastLED.h>
 
+// SD Card setup
 SdFat sd;
 File fd;
-
 #define SD_CS_PIN 4
+
+// LED setup
+// How many leds in your strip?
+#define NUM_LEDS 256
+#define DATA_PIN 5
+#define BRIGHTNESS  64
+// Define the array of leds
+CRGB leds[NUM_LEDS];
+// #define CLOCK_PIN 13
 
 unsigned long previousMillis = 0;
 gd_GIF *gif;
 
 void setup() {
-
-  char sigver[3];
-  int n;
-  uint16_t width, height, depth;
-
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+
+  delay(2000);
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS); // GRB ordering is assumed
+  FastLED.setBrightness(  BRIGHTNESS );
+
+  // while(true) {
+  //   leds[0].setRGB(255, 0, 0);
+  //   FastLED.show();
+  //   delay(1000);
+  //   leds[0].setRGB(0, 255, 0);
+  //   FastLED.show();
+  //   delay(1000);
+  //   leds[0].setRGB(0, 0, 255);
+  //   FastLED.show();
+  //   delay(1000);
+  // }
 
   // stdout to serial setup
   hal_printf_init();
@@ -68,7 +90,7 @@ void setup() {
 
   Serial.println("Reading gif... ");
   Serial.println("---------------");
-  gif = gd_open_gif(fd);
+  gif = gd_open_gif(&fd);
   Serial.println("---------------");
 
   if (gif == NULL) {
@@ -81,32 +103,58 @@ void setup() {
   int ret;
 
   frame = (uint8_t*) malloc(gif->width * gif->height * 3);
-  unsigned long delay = 0;
-
-  ret = gd_get_frame(gif);
-  Serial.println("get_frame");
-  Serial.println(ret);
-  if (ret == -1)
+  unsigned long previousMillis = 0;
+  unsigned long delay = 250;
+  while (true)
   {
-    Serial.println("Could not load gif frame");
-    return;
-  }
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= delay)
+    {
+      Serial.print("\n=======\n");
+      Serial.println("new Frame");
+      previousMillis = currentMillis;
 
-  // color = &gif->gct.colors[gif->bgindex * 3];
-
-  gd_render_frame(gif, frame);
-  color = frame;
-  for (int i = 0; i < gif->height; i++) {
-      for (int j = 0; j < gif->width; j++) {
-          if (color[0] == 0 && color[1] == 0 && color[2] == 0) {
-            Serial.print(" ");
-          } else {
-            Serial.print("#");
-          }
-          color += 3;
+      Serial.print("gd_get_frame");
+      ret = gd_get_frame(gif);
+      if (ret == -1)
+      {
+        Serial.println("Could not load gif frame");
+        return;
       }
-      Serial.print("\n");
+      Serial.print(" ret: ");
+      Serial.println(ret);
+
+      Serial.println("gd_render_frame");
+      gd_render_frame(gif, frame);
+      color = frame;
+
+      int startIndex = 0;
+      for (int i = 0; i < gif->height; i++) {
+        startIndex = i * 16;
+        int index = 0;
+        for (int j = 0; j < gif->width; j++) {
+          if (i % 2 == 0) {
+              index = startIndex + j;
+          } else {
+              index = startIndex + 15 - j;
+          }
+          leds[index].setRGB(color[0], color[1], color[2]);
+          color += 3;
+        }
+      }
+      Serial.println("show_leds");
+      FastLED.show();
+      Serial.println("showed leds");
+      // delay = gif->gce.delay * 10;
+      // printf("delay: %d", delay);
+
+      if (ret == 0) {
+        Serial.println("rewind");
+        gd_rewind(gif);
+      }
+    }
   }
+  free(frame);
   // Serial.println("width");
   // Serial.println(gif->width);
   // Serial.println("height");

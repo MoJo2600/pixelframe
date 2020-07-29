@@ -42,7 +42,7 @@ typedef struct gd_GIF {
     uint8_t *canvas, *frame;
 } gd_GIF;
 
-gd_GIF *gd_open_gif(File fd);
+gd_GIF *gd_open_gif(File *fd);
 int gd_get_frame(gd_GIF *gif);
 void gd_render_frame(gd_GIF *gif, uint8_t *buffer);
 void gd_rewind(gd_GIF *gif);
