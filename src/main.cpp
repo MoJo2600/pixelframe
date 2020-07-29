@@ -16,7 +16,7 @@
  This example code is in the public domain.
 
  */
-
+#define _stackSize (6748/4) 
 #include <SPI.h>
 //#include <SD.h>
 #include "SdFat.h"
@@ -27,6 +27,11 @@
 
 // SD Card setup
 SdFat sd;
+
+// Directory file.
+SdFile root;
+SdFile dirFile;
+
 File fd;
 #define SD_CS_PIN 4
 
@@ -42,16 +47,25 @@ CRGB leds[NUM_LEDS];
 unsigned long previousMillis = 0;
 gd_GIF *gif;
 
+// Error messages stored in flash.
+#define error(msg) sd.errorHalt(F(msg))
+
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  // Serial.setDebugOutput(true);
 
   delay(2000);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS); // GRB ordering is assumed
   FastLED.setBrightness(  BRIGHTNESS );
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i].setRGB(0, 0, 0);
+  }
+  FastLED.show();
 
   // while(true) {
   //   leds[0].setRGB(255, 0, 0);
@@ -74,87 +88,102 @@ void setup() {
     Serial.println("initialization failed!");
     return;
   }
-  Serial.println("initialization done.");
 
-  fd = sd.open("mario.gif", O_RDONLY);
-  if (!fd) {
-    sd.errorHalt("open failed");
+  int rootFileCount = 0;
+  if (!dirFile.open("/")) {
+    error("open root failed");
   }
-
-  // // // char fileName[] = "mario.gif";
-  // int fd = ifstream.open("mario.gif", O_RDONLY);
-  // if (!fd) {
-  //   Serial.println("could not open file");
-  //   return;
-  // }
-
-  Serial.println("Reading gif... ");
-  Serial.println("---------------");
-  gif = gd_open_gif(&fd);
-  Serial.println("---------------");
-
-  if (gif == NULL) {
-    Serial.println("failure reading gif");
-    return;
-  }
-  Serial.println("ok");
 
   uint8_t *color, *frame;
-  int ret;
-
-  frame = (uint8_t*) malloc(gif->width * gif->height * 3);
+  int ret = 1;
   unsigned long previousMillis = 0;
-  unsigned long delay = 250;
-  while (true)
-  {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= delay)
-    {
-      Serial.print("\n=======\n");
-      Serial.println("new Frame");
-      previousMillis = currentMillis;
+  unsigned long delay = 10;
 
-      Serial.print("gd_get_frame");
-      ret = gd_get_frame(gif);
-      if (ret == -1)
-      {
-        Serial.println("Could not load gif frame");
+  int startIndex = 0;
+  int index = 0;
+  unsigned long currentMillis = millis();
+  int repeat = 0;
+
+  while (fd.openNext(&dirFile, O_RDONLY)) {
+    if (!fd.isHidden() && !fd.isSubDir()) {
+      // fd = sd.open("mario.gif", O_RDONLY);
+      // if (!fd) {
+      //   sd.errorHalt("open failed");
+      // }
+
+      // // // char fileName[] = "mario.gif";
+      // int fd = ifstream.open("mario.gif", O_RDONLY);
+      // if (!fd) {
+      //   Serial.println("could not open file");
+      //   return;
+      // }
+
+      gif = gd_open_gif(&fd);
+      delay = gif->gce.delay+1 * 100;
+
+      if (gif == NULL) {
+        Serial.println("failure reading gif");
         return;
       }
-      Serial.print(" ret: ");
-      Serial.println(ret);
 
-      Serial.println("gd_render_frame");
-      gd_render_frame(gif, frame);
-      color = frame;
+      frame = (uint8_t*) malloc(gif->width * gif->height * 3);
+      repeat = 0;
+      while (repeat <= 3) // play only thrice
+      {
+        currentMillis = millis();
+        if (currentMillis - previousMillis >= delay)
+        {
+          previousMillis = currentMillis;
+          
 
-      int startIndex = 0;
-      for (int i = 0; i < gif->height; i++) {
-        startIndex = i * 16;
-        int index = 0;
-        for (int j = 0; j < gif->width; j++) {
-          if (i % 2 == 0) {
-              index = startIndex + j;
-          } else {
-              index = startIndex + 15 - j;
+          // Serial.println("Fee heap: ");
+          // Serial.println(ESP.getFreeHeap());
+          // Serial.println("Max free block size: ");
+          // Serial.println(ESP.getMaxFreeBlockSize());
+          ret = gd_get_frame(gif);
+          // Serial.println("Fee heap after: ");
+          // Serial.println(ESP.getFreeHeap());
+          // Serial.println(ret);
+          if (ret == -1)
+          {
+            Serial.println("Could not load gif frame");
+            return;
           }
-          leds[index].setRGB(color[0], color[1], color[2]);
-          color += 3;
+
+          gd_render_frame(gif, frame);
+
+          color = frame;
+
+          for (int i = 0; i < gif->height; i++)
+          {
+            startIndex = i * 16;
+            index = 0;
+            for (int j = 0; j < gif->width; j++) {
+              if (i % 2 == 0) {
+                  index = startIndex + j;
+              } else {
+                  index = startIndex + 15 - j;
+              }
+              leds[index].setRGB(color[0], color[1], color[2]);
+              color += 3;
+            }
+          }
+          FastLED.show();
+
+          if (ret == 0) {
+            repeat++;
+            Serial.println(repeat);
+            gd_rewind(gif);
+          }
         }
       }
-      Serial.println("show_leds");
-      FastLED.show();
-      Serial.println("showed leds");
-      // delay = gif->gce.delay * 10;
-      // printf("delay: %d", delay);
-
-      if (ret == 0) {
-        Serial.println("rewind");
-        gd_rewind(gif);
-      }
+      free(frame);
+      gd_close_gif(gif);
     }
+    // 
+    fd.close();
   }
-  free(frame);
+
   // Serial.println("width");
   // Serial.println(gif->width);
   // Serial.println("height");

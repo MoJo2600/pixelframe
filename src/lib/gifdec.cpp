@@ -32,7 +32,7 @@ read_num(File *file)
 {
   uint8_t bytes[2];
 
-  file->read(bytes, 2);
+  int count = file->read(bytes, 2);
   return bytes[0] + (((uint16_t)bytes[1]) << 8);
 }
 
@@ -48,17 +48,12 @@ gd_open_gif(File *fd)
     gd_GIF *gif;
     FatPos_t pos;
 
-    fprintf(stdout, "try to load gif\n");
-
-    // serial.println("initialization failed!");
     // fd = open(fname, O_RDONLY);
 
     if (*fd == -1)
       return NULL;
     /* Header */
     int n = fd->read(sigver, 3);
-    fprintf(stdout, "Bytes read: %d\n", n);
-    fprintf(stdout, "header: %c %c %c\n", sigver[0], sigver[1], sigver[2]);
     if (memcmp(sigver, "GIF", 3) != 0)
     {
       fprintf(stdout, "invalid signature\n");
@@ -67,29 +62,17 @@ gd_open_gif(File *fd)
 
     fd->getpos(&pos);
 
-    fprintf(stdout, "pos1: %d\n", fd->curPosition());
-    fprintf(stdout, "pos2: %d\n", pos.position);
-    fprintf(stdout, "pos_cluster: %d\n", pos.cluster);
-
     /* Version */
     fd->read(sigver, 3);
-    fprintf(stdout, "version: %s\n", sigver);
     if (memcmp(sigver, "89a", 3) != 0)
     {
       fprintf(stdout, "invalid version\n");
       goto fail;
     }
 
-    // uint8_t bytes[2];
-    // file.read(bytes, 2);
-    // fprintf(stdout, "%d %d\n", bytes[0], bytes[1]);
-
     /* Width x Height */
     width = read_num(fd);
     height = read_num(fd);
-
-    fprintf(stdout, "width: %d\n", width);
-    fprintf(stdout, "height: %d\n", height);
 
     /* FDSZ */
     fd->read(&fdsz, 1);
@@ -101,13 +84,11 @@ gd_open_gif(File *fd)
     }
     /* Color Space's Depth */
     depth = ((fdsz >> 4) & 7) + 1;
-    fprintf(stdout, "depth: %d\n", depth);
     /* Ignore Sort Flag. */
     /* GCT Size */
     gct_sz = 1 << ((fdsz & 0x07) + 1);
     /* Background Color Index */
     fd->read(&bgidx, 1);
-    fprintf(stdout, "bgidx: %d\n", bgidx);
 
     /* Aspect Ratio */
     fd->read(&aspect, 1);
@@ -129,7 +110,6 @@ gd_open_gif(File *fd)
     if (gif->bgindex)
       memset(gif->frame, gif->bgindex, gif->width * gif->height);
     fd->seekCur(0);
-    fprintf(stdout, "current pos: %d\n", fd->curPosition());
     gif->anim_start = fd->curPosition();
 
     goto ok;
@@ -281,10 +261,15 @@ read_ext(gd_GIF *gif)
 }
 
 static Table *
-new_table(int key_size)
+new_table(uint8_t key_size)
 {
   int key;
   int init_bulk = MAX(1 << (key_size + 1), 0x100);
+	// fprintf(stdout, "init_bulk: %d\n", init_bulk);
+	// fprintf(stdout, "entry: %d\n", sizeof(Entry));
+	// fprintf(stdout, "key_size: %d\n", sizeof(key_size));
+	// fprintf(stdout, "comb_size: %d\n", sizeof(Entry) * init_bulk);
+  //sizeof(*table) + sizeof(Entry) * init_bulk
   Table *table = (Table *)malloc(sizeof(*table) + sizeof(Entry) * init_bulk);
   if (table)
   {
@@ -377,24 +362,22 @@ interlaced_line_index(int h, int y)
 static int
 read_image_data(gd_GIF *gif, int interlace)
 {
-  uint8_t sub_len, shift, byte;
-  int init_key_size, key_size, table_is_full;
+  uint8_t sub_len, shift, byte, key_size;
+  int init_key_size, table_is_full;
   int frm_off, str_len, p, x, y;
   uint16_t key, clear, stop;
   int ret;
   Table *table;
   Entry entry;
-  off_t start, end;
+  uint32_t start, end;
 
   gif->fd->read(&byte, 1);
-  key_size = (int)byte;
+  key_size = (uint8_t)byte;
   gif->fd->seekCur(0);
   start = gif->fd->curPosition();
-  ;
   discard_sub_blocks(gif);
   gif->fd->seekCur(0);
   end = gif->fd->curPosition();
-  ;
   gif->fd->seekSet(start);
   clear = 1 << key_size;
   stop = clear + 1;
@@ -472,13 +455,6 @@ read_image(gd_GIF *gif)
   gif->fy = read_num(gif->fd);
   gif->fw = read_num(gif->fd);
   gif->fh = read_num(gif->fd);
-
-  fprintf(stdout, "fx %c\n", gif->fx);
-  fprintf(stdout, "fy %c\n", gif->fy);
-  fprintf(stdout, "fw %c\n", gif->fw);
-  fprintf(stdout, "fh %c\n", gif->fh);
-
-
   gif->fd->read(&fisrz, 1);
   interlace = fisrz & 0x40;
   /* Ignore Sort Flag. */
@@ -490,8 +466,9 @@ read_image(gd_GIF *gif)
     gif->fd->read(gif->lct.colors, 3 * gif->lct.size);
     gif->palette = &gif->lct;
   }
-  else
+  else {
     gif->palette = &gif->gct;
+  }
   /* Image Data. */
   return read_image_data(gif, interlace);
 }
@@ -544,10 +521,7 @@ dispose(gd_GIF *gif)
 int gd_get_frame(gd_GIF *gif)
 {
   char sep;
-  fprintf(stdout, "get frame\n");
-
   dispose(gif);
-  fprintf(stdout, "dispose\n");
   gif->fd->read(&sep, 1);
 
   while (sep != ',')
