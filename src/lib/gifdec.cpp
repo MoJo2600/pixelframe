@@ -40,24 +40,29 @@ read_num(File *file)
 gd_GIF *
 gd_open_gif(File *fd)
 {
-    // int fd;
-    uint8_t sigver[3];
-    uint16_t width, height, depth;
-    uint8_t fdsz, bgidx, aspect;
-    int gct_sz;
-    gd_GIF *gif;
-    FatPos_t pos;
+  if (!fd) {
+    fprintf(stdout, "file not open");
+    return NULL;
+  }
 
-    // fd = open(fname, O_RDONLY);
+  // int fd;
+  uint8_t sigver[3];
+  uint16_t width, height, depth;
+  uint8_t fdsz, bgidx, aspect;
+  int gct_sz;
+  gd_GIF *gif;
+  FatPos_t pos;
 
-    if (*fd == -1)
-      return NULL;
-    /* Header */
-    int n = fd->read(sigver, 3);
-    if (memcmp(sigver, "GIF", 3) != 0)
-    {
-      fprintf(stdout, "invalid signature\n");
-      goto fail;
+  // fd = open(fname, O_RDONLY);
+
+  // if (*fd == -1)
+  //   return NULL;
+  // /* Header */
+  int n = fd->read(sigver, 3);
+  if (memcmp(sigver, "GIF", 3) != 0)
+  {
+    fprintf(stdout, "invalid signature\n");
+    goto fail;
     }
 
     fd->getpos(&pos);
@@ -265,11 +270,6 @@ new_table(uint8_t key_size)
 {
   int key;
   int init_bulk = MAX(1 << (key_size + 1), 0x100);
-	// fprintf(stdout, "init_bulk: %d\n", init_bulk);
-	// fprintf(stdout, "entry: %d\n", sizeof(Entry));
-	// fprintf(stdout, "key_size: %d\n", sizeof(key_size));
-	// fprintf(stdout, "comb_size: %d\n", sizeof(Entry) * init_bulk);
-  //sizeof(*table) + sizeof(Entry) * init_bulk
   Table *table = (Table *)malloc(sizeof(*table) + sizeof(Entry) * init_bulk);
   if (table)
   {

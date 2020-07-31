@@ -6,8 +6,6 @@
 extern "C" {
 #endif
 
-void foo();
-
 typedef struct gd_Palette {
     int size;
     uint8_t colors[0x100 * 3];
