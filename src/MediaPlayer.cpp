@@ -44,14 +44,14 @@ void MediaPlayerClass::play(char *filename) {
 }
 
 void MediaPlayerClass::stop() {
-  cleanup(); // Hm... not sure about cleanup
   playing = false;
+  cleanup(); // Hm... not sure about cleanup
 }
 
 void MediaPlayerClass::cleanup() {
-  free(frame);
   // closes file and frees gif
   gd_close_gif(gif);
+  free(frame);
 }
 
 
@@ -99,10 +99,6 @@ void MediaPlayerClass::loop(){
       }
 
       previousMillis = millis();
-      // Serial.print("Rendering took: ");
-      // Serial.print(currentMillis - previousMillis);
-      // Serial.println(" ,s");
-
     }
   }
 
