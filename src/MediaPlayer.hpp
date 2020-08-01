@@ -21,9 +21,12 @@ namespace PixelFrame {
             gd_GIF *gif;
             SdFat *sd;
             File fd;
-            uint8_t *color, *frame;
+            uint8_t
+                *color,
+                *frame;
             CRGB *leds;
-            bool playing;
+            bool
+                playing = false;
 
             void cleanup();
     };

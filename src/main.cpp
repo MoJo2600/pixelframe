@@ -3,13 +3,13 @@
 
  The circuit:
  * SD card attached to SPI bus as follows:
- ** MOSI - pin 13 - D
- ** MISO - pin 12
- ** CLK - pin 14
- ** CS - pin 4
+ ** MOSI - pin 13 - D7
+ ** MISO - pin 12 - D6
+ ** CLK - pin 14 - D5
+ ** CS - pin 4 - D2
 
  TODO: LED connection
- D1
+ LED - pin 3 - RX
 
  created   July 2020
  by Christian Erhardt
@@ -18,6 +18,8 @@
 #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 #include "SPI.h"
 #include "lib/stdinout.h"
+// #define FASTLED_ALLOW_INTERRUPTS 0 // https://github.com/FastLED/FastLED/issues/306
+#define FASTLED_ESP8266_DMA
 #include "FastLED.h"
 #include "ESP8266WiFi.h"
 #include "ArduinoJson.h"
@@ -35,8 +37,9 @@ File fd;
 #define SD_CS_PIN 4
 
 // LED setup
+#define FRAMES_PER_SECOND 60
 #define NUM_LEDS 256
-#define DATA_PIN 5
+#define DATA_PIN 3
 #define BRIGHTNESS  64
 CRGB leds[NUM_LEDS];
 CRGB leds_buf[NUM_LEDS];
@@ -292,17 +295,12 @@ void showClock()
     {
       pong_showtime = millis() + pong_speed;
 
-      Serial.println("1");
-
       // move ball
       // left side
       if ((ballX + sin(degToRad(ballAngle)) * 16) + .5 > 256-16)
       {
-        Serial.println("2");
         if (!pong_scored_minute) 
         {
-           Serial.println("3");
-
           if (getScreenIndex(ballX, ballY) < getScreenIndex(255, pong_paddle_left_y)) ballAngle = realRandom(225-25, 225+25);
           else if (getScreenIndex(ballX, ballY) == getScreenIndex(255, pong_paddle_left_y) + 1) swapXdirection();
           else if (getScreenIndex(ballX, ballY) == getScreenIndex(255, pong_paddle_left_y) - 1) swapXdirection();
@@ -313,8 +311,6 @@ void showClock()
         }
         else
         {
-                Serial.println("4");
-
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
           // 24 hour conversion
@@ -367,11 +363,11 @@ void showClock()
     pong_scored_minute = false;
 
     // store second hands
-    Serial.println("Storing second hand colors...");
+    // Serial.println("Storing second hand colors...");
     offsetX = 0;
     offsetY = 176;
     // bmpDraw(clockFace, 0, 0);
-    uint8_t second_index = 0;
+    // uint8_t second_index = 0;
     // for (uint8_t x=0; x<16; x++) secondHands[second_index++] = leds[getIndex(x, 0)];
     // for (uint8_t y=0; y<16; y++) secondHands[second_index++] = leds[getIndex(15, y)];
     // for (uint8_t x=0; x<16; x++) secondHands[second_index++] = leds[getIndex(15-x, 15)];
@@ -547,26 +543,7 @@ void setup() {
 
   timeClient.begin();
 
-  // while ( WiFi.status() != WL_CONNECTED ) {
-  //   delay (500);
-  //   Serial.print ( "." );
-  // }
-  // Serial.println("connected");
-  // // ### CONNECT WIFI
-
   // MediaPlayer.play("/system/nowifi.gif");
-
-  // while(true) {
-  //   leds[0].setRGB(255, 0, 0);
-  //   FastLED.show();
-  //   delay(1000);
-  //   leds[0].setRGB(0, 255, 0);
-  //   FastLED.show();
-  //   delay(1000);
-  //   leds[0].setRGB(0, 0, 255);
-  //   FastLED.show();
-  //   delay(1000);
-  // }
 
   // if (!dirFile.open("/")) {
   //   error("open root failed");
@@ -574,7 +551,15 @@ void setup() {
   initClock();
 }
 
+long lastClockMillis = 0;
+
 void loop() {
+  //
+  MediaPlayer.loop();
+  // delay(2);
+
+
+  // Wifi Connection
   if (!wifiConnected) {
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("Wifi connected!");
@@ -585,13 +570,10 @@ void loop() {
   } else {
     // MediaPlayer.stop();
     timeClient.update();
-    showClock();
+
+    if (millis() - lastClockMillis > 10) {
+      showClock();
+      lastClockMillis = millis();
+    }
   }
-
-
-
-  //
-  // MediaPlayer.loop();
-
-  
 }
