@@ -9,7 +9,7 @@
  ** CS - pin 4 - D2
 
  TODO: LED connection
- LED - pin 3 - RX
+ LED - pin 5 - D1
 
  created   July 2020
  by Christian Erhardt
@@ -19,8 +19,8 @@
 #include "SPI.h"
 #include "lib/stdinout.h"
 // #define FASTLED_ALLOW_INTERRUPTS 0 // https://github.com/FastLED/FastLED/issues/306
-#define FASTLED_ESP8266_DMA
-#include "FastLED.h"
+// #define FASTLED_ESP8266_DMA
+
 #include "ESP8266WiFi.h"
 #include "ArduinoJson.h"
 #include "MediaPlayer.h"
@@ -28,6 +28,36 @@
 #include "NTPClient.h"
 #include "WiFiUdp.h"
 #include "ESP8266TrueRandom.h"
+
+#include <Adafruit_GFX.h>
+#include <FastLED_NeoMatrix.h>
+#include "FastLED.h"
+#include "fonts/TomThumb.h"
+
+
+
+#define MATRIX_TILE_WIDTH   16 // width of EACH NEOPIXEL MATRIX (not total display)
+#define MATRIX_TILE_HEIGHT  16 // height of each matrix
+#define MATRIX_TILE_H       1  // number of matrices arranged horizontally
+#define MATRIX_TILE_V       1  // number of matrices arranged vertically
+
+// Used by NeoMatrix
+#define mw (MATRIX_TILE_WIDTH *  MATRIX_TILE_H)
+#define mh (MATRIX_TILE_HEIGHT * MATRIX_TILE_V)
+#define NUMMATRIX (mw*mh)
+
+uint8_t matrix_brightness = 32;
+
+CRGB matrixleds[NUMMATRIX];
+
+FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(matrixleds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V, 
+  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
+  NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG + 
+  NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE);
+
+const uint16_t colors[] = {
+  matrix->Color(255, 0, 0), matrix->Color(0, 255, 0), matrix->Color(0, 0, 255) };
+
 
 // SD Card setup
 SdFat sd;
@@ -37,17 +67,20 @@ File fd;
 #define SD_CS_PIN 4
 
 // LED setup
-#define FRAMES_PER_SECOND 60
-#define NUM_LEDS 256
-#define DATA_PIN 3
-#define BRIGHTNESS  64
-CRGB leds[NUM_LEDS];
-CRGB leds_buf[NUM_LEDS];
+#define FRAMES_PER_SECOND 60 // TODO: implement
+#define DATA_PIN          5
+#define BRIGHTNESS        48
+// #define CANVAS_WIDTH      16
+// #define CANVAS_HEIGHT     16
+// #define NUM_LEDS          (CANVAS_WIDTH * CANVAS_HEIGHT)
+// CRGB leds[NUM_LEDS];
+// CRGB leds_buf[NUM_LEDS];
 
 StaticJsonDocument<512> configuration;
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
+// TODO: implement daylight savings time, etc
+NTPClient timeClient(ntpUDP, 3600*2);
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -87,18 +120,17 @@ fadeStartTime = 0; // millis to end fade
 
 int
 ballAngle = 0,
-fadeLength = 0, // length in ms for fade up effect
-offsetX = 0, // for translating images x pixels
-offsetY = 0; // for translating images y pixels
+fadeLength = 0; // length in ms for fade up effect
+// offsetX = 0, // for translating images x pixels
+// offsetY = 0; // for translating images y pixels
 
-void clearStripBuffer()
-{
-  for (int i = 0; i < NUM_LEDS; i++)
-  {
-    leds[i] = CRGB(0, 0, 0);
-  }
-}
-
+// void clearStripBuffer()
+// {
+//   for (int i = 0; i < NUM_LEDS; i++)
+//   {
+//     leds[i] = CRGB(0, 0, 0);
+//   }
+// }
 
 void printDigits(int digits)
 {
@@ -174,7 +206,21 @@ void swapXdirection()
 
 void drawDigits()
 {
-  clearStripBuffer();
+  matrix->clear();
+  // CRGB(rgb2hsv_approximate(CRGB(205,205,205)))
+  matrix->setTextColor(matrix->Color(155, 155, 155));
+  matrix->setTextSize(1);
+  matrix->setFont(&TomThumb);
+  matrix->setCursor(0, 10);
+  if (timeClient.getHours() < 10)
+    matrix->print('0');
+  matrix->print(timeClient.getHours());
+  matrix->setCursor(9, 10);
+  if (timeClient.getMinutes() < 10)
+    matrix->print('0');
+  matrix->print(timeClient.getMinutes());
+  // matrix->show();
+  // clearStripBuffer();
   // clockDigit_1();
   // clockDigit_2();
   // clockDigit_3();
@@ -224,16 +270,18 @@ byte getScreenIndex(byte x, byte y)
 
 void fastledshow()
 {
-  if (fadeStartTime + fadeLength > millis())
-  {
-    memmove( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
-    uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 255, 0);
-    for (int i = 0; i < NUM_LEDS; i++)
-    {
-      leds[i].fadeToBlackBy(fadeAmount);
-    }
-  }
-  FastLED.show();
+  // if (fadeStartTime + fadeLength > millis())
+  // {
+  //   memmove( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
+  //   uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 255, 0);
+  //   for (int i = 0; i < NUM_LEDS; i++)
+  //   {
+  //     leds[i].fadeToBlackBy(fadeAmount);
+  //   }
+  // }
+  // FastLED.show();
+  // Serial.println("fastled show");
+  matrix->show();
 }
 
 int pong_predict_y(int x, int y, int angle)
@@ -316,7 +364,7 @@ void showClock()
           // 24 hour conversion
           drawDigits();
           fastledshow();
-          memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
+          // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
         }
       }
 
@@ -339,7 +387,7 @@ void showClock()
           pong_celebration_end = millis() + 2000;
           drawDigits();
           fastledshow();
-          memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
+          // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
         }
       }
 
@@ -364,8 +412,8 @@ void showClock()
 
     // store second hands
     // Serial.println("Storing second hand colors...");
-    offsetX = 0;
-    offsetY = 176;
+    // offsetX = 0;
+    // offsetY = 176;
     // bmpDraw(clockFace, 0, 0);
     // uint8_t second_index = 0;
     // for (uint8_t x=0; x<16; x++) secondHands[second_index++] = leds[getIndex(x, 0)];
@@ -376,7 +424,7 @@ void showClock()
     // 24 hour conversion
     drawDigits();
     fastledshow();
-    memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
+    // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
     pong_paddle_left_y = 128;
     pong_paddle_left_start = 128;
     pong_paddle_left_target = 128;
@@ -413,7 +461,7 @@ void showClock()
   }
 
   // copy the time back on screen
-  memcpy( leds, leds_buf, NUM_LEDS * sizeof( CRGB) );
+  // memcpy( leds, leds_buf, NUM_LEDS * sizeof( CRGB) );
 
   // get hue
   // secondHands[currentSecond]
@@ -426,14 +474,42 @@ void showClock()
   if (pong_celebrate) pongHue_ball.hue += millis();
 
   // draw the dots
-  leds[getScreenIndex(255, pong_paddle_left_y)] = pongHue_paddle;
-  leds[getScreenIndex(255, pong_paddle_left_y-16)] = pongHue_paddle;
-  leds[getScreenIndex(255, pong_paddle_left_y+16)] = pongHue_paddle;
-  leds[getScreenIndex(0, pong_paddle_right_y)] = pongHue_paddle;
-  leds[getScreenIndex(0, pong_paddle_right_y-16)] = pongHue_paddle;
-  leds[getScreenIndex(0, pong_paddle_right_y+16)] = pongHue_paddle;
-  ballIndex = getScreenIndex(ballX, ballY);
-  leds[ballIndex] = pongHue_ball;
+  drawDigits();
+  // matrix->ColorHSV()
+
+  // Serial.print("Paddle Left (");
+  // Serial.print("0,");
+  // Serial.print(getScreenIndex(255, pong_paddle_left_y)/16);
+  // Serial.print(")");
+  // Serial.print("Paddle Right (");
+  // Serial.print("16,");
+  // Serial.print(getScreenIndex(0, pong_paddle_right_y)/16);
+  // Serial.println(")");
+
+  matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16-1, CRGB(pongHue_paddle));
+  matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16, CRGB(pongHue_paddle));
+  matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16+1, CRGB(pongHue_paddle));
+  matrix->drawPixel(0, getScreenIndex(0, pong_paddle_right_y)/16-1, CRGB(pongHue_paddle));
+  matrix->drawPixel(0, getScreenIndex(0, pong_paddle_right_y)/16, CRGB(pongHue_paddle));
+  matrix->drawPixel(0, getScreenIndex(0, pong_paddle_right_y)/16+1, CRGB(pongHue_paddle));
+
+
+  // matrix->drawFastVHLine(15, getScreenIndex(255, pong_paddle_left_y)/16, 3, CRGB(pongHue_paddle));
+  // matrix->drawFastVLine(0, getScreenIndex(0, pong_paddle_right_y)/16, 3, CRGB(pongHue_paddle));
+  matrix->drawPixel(ballX/16, ballY/16, CRGB(pongHue_ball));
+
+  // Serial.println("Screen Inddex: ");
+  // Serial.println(getScreenIndex(255, pong_paddle_left_y));
+  // Serial.println(getScreenIndex(0, pong_paddle_right_y));
+
+  // leds[getScreenIndex(255, pong_paddle_left_y)] = pongHue_paddle;
+  // leds[getScreenIndex(255, pong_paddle_left_y-16)] = pongHue_paddle;
+  // leds[getScreenIndex(255, pong_paddle_left_y+16)] = pongHue_paddle;
+  // leds[getScreenIndex(0, pong_paddle_right_y)] = pongHue_paddle;
+  // leds[getScreenIndex(0, pong_paddle_right_y-16)] = pongHue_paddle;
+  // leds[getScreenIndex(0, pong_paddle_right_y+16)] = pongHue_paddle;
+  // ballIndex = getScreenIndex(ballX, ballY);
+  // leds[ballIndex] = pongHue_ball;
   fastledshow();
 }
 
@@ -465,8 +541,8 @@ void initClock()
   //   // 24 hour conversion
   //   if (hour12 && currentHour > 12) currentHour -= 12;
   //   if (hour12 && currentHour == 0) currentHour = 12;
-  //   drawDigits();
-  //   fastledshow();
+    drawDigits();
+    fastledshow();
   // }
 }
 
@@ -480,11 +556,19 @@ void setup() {
   }
   delay(500);
 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS).setDither(0); // GRB ordering is assumed
-  FastLED.setBrightness(BRIGHTNESS);
-  clearStripBuffer();
-  fastledshow();
+  // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS); // GRB ordering is assumed
+  // FastLED.setBrightness(BRIGHTNESS);
 
+  FastLED.addLeds<WS2812B,DATA_PIN>(matrixleds, NUMMATRIX); 
+  matrix->begin();
+  matrix->setTextWrap(false);
+  matrix->setBrightness(40);
+  // matrix->setTextColor(colors[0]);
+
+  // clearStripBuffer();
+  // fastledshow();
+
+  matrix->clear();
   // End Black screen
 
   // stdout to serial setup
@@ -498,7 +582,7 @@ void setup() {
   Serial.println("ok");
 
 
-  MediaPlayer.setup(leds, &sd);
+  // MediaPlayer.setup(leds, &sd);
 
   // Switch to bmp
   // MediaPlayer.play("system/nowifi.gif");
@@ -535,13 +619,13 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.println("Clear screen");
+  // Serial.println("Clear screen");
 
   Serial.println("Connect wifi");
 
   WiFi.begin(ssid, password);
 
-  timeClient.begin();
+  // timeClient.begin();
 
   // MediaPlayer.play("/system/nowifi.gif");
 
@@ -554,10 +638,9 @@ void setup() {
 long lastClockMillis = 0;
 
 void loop() {
-  //
-  MediaPlayer.loop();
-  // delay(2);
-
+  // //
+  // MediaPlayer.loop();
+  // // delay(2);
 
   // Wifi Connection
   if (!wifiConnected) {
@@ -571,7 +654,7 @@ void loop() {
     // MediaPlayer.stop();
     timeClient.update();
 
-    if (millis() - lastClockMillis > 10) {
+    if (millis() - lastClockMillis > 20) {
       showClock();
       lastClockMillis = millis();
     }
