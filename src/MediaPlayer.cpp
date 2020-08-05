@@ -9,6 +9,7 @@ MediaPlayerClass::MediaPlayerClass(){};
 MediaPlayerClass::~MediaPlayerClass(){};
 
 void MediaPlayerClass::setup(CRGB *ledConfig, SdFat *sdFat){
+  // TODO: add nulptr check
   leds = ledConfig;
   sd = sdFat;
 };
