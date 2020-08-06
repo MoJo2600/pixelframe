@@ -166,7 +166,7 @@ void PongClockClass::fastledshow()
   // }
   // FastLED.show();
   // Serial.println("fastled show");
-  matrix.show();
+  // matrix.show();
 }
 
 int PongClockClass::pong_predict_y(int x, int y, int angle)
@@ -248,7 +248,7 @@ if (!pong_celebrate)
         pong_celebration_end = millis() + 2000;
         // 24 hour conversion
         drawDigits();
-        fastledshow();
+        // fastledshow();
         // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
       }
     }
@@ -271,7 +271,7 @@ if (!pong_celebrate)
         pong_celebrate = true;
         pong_celebration_end = millis() + 2000;
         drawDigits();
-        fastledshow();
+        // fastledshow();
         // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
       }
     }
@@ -308,7 +308,7 @@ if (pong_reset)
 
   // 24 hour conversion
   drawDigits();
-  fastledshow();
+  // fastledshow();
   // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
   pong_paddle_left_y = 128;
   pong_paddle_left_start = 128;
@@ -395,7 +395,7 @@ matrix.drawPixel(ballX/16, ballY/16, CRGB(pongHue_ball));
 // leds[getScreenIndex(0, pong_paddle_right_y+16)] = pongHue_paddle;
 // ballIndex = getScreenIndex(ballX, ballY);
 // leds[ballIndex] = pongHue_ball;
-fastledshow();
+// fastledshow();
 }
 
 void PongClockClass::setup(){
@@ -403,5 +403,5 @@ void PongClockClass::setup(){
   lastSecond = 255;
   pong_reset = true;
   drawDigits();
-  fastledshow();
+  // fastledshow();
 }

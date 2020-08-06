@@ -33,7 +33,8 @@
 #include "FastLED.h"
 #include "PongClock.h"
 
-
+// Web interface
+#include "webserver.h"
 
 #define MATRIX_TILE_WIDTH   16 // width of EACH NEOPIXEL MATRIX (not total display)
 #define MATRIX_TILE_HEIGHT  16 // height of each matrix
@@ -83,8 +84,7 @@ WiFiUDP ntpUDP;
 // TODO: implement daylight savings time, etc
 NTPClient timeClient(ntpUDP, 3600*2);
 
-
-PixelFrame::PongClockClass *pongClock = new PixelFrame::PongClockClass(*matrix, timeClient, sd);
+PixelFrame::PongClockClass *pongClock  = new PixelFrame::PongClockClass(*matrix, timeClient, sd);
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -103,7 +103,7 @@ void setup() {
   FastLED.addLeds<WS2812B,DATA_PIN>(matrixleds, NUMMATRIX); 
   matrix->begin();
   matrix->setTextWrap(false);
-  matrix->setBrightness(40);
+  matrix->setBrightness(matrix_brightness);
   // matrix->setTextColor(colors[0]);
 
   // clearStripBuffer();
@@ -152,7 +152,7 @@ void setup() {
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(configuration, jsonData);
   if (error)
-    Serial.println(F("Failed to read file, using default configuration"));
+    Serial.println(F("Failed to read configuration file"));
 
   // ### END: READ CONFIG
 
@@ -166,7 +166,14 @@ void setup() {
 
   WiFi.begin(ssid, password);
 
-  // timeClient.begin();
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(500);
+    Serial.print('.');
+  }
+
+  timeClient.begin();
+
+  setup_webserver();
 
   // MediaPlayer.play("/system/nowifi.gif");
 
@@ -178,29 +185,21 @@ void setup() {
   pongClock->setup();
 }
 
-long lastClockMillis = 0;
-
+// long lastClockMillis = 0;
 void loop() {
   // //
   // MediaPlayer.loop();
   // // delay(2);
 
-  // Wifi Connection
-  if (!wifiConnected) {
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("Wifi connected!");
-      wifiConnected = true;
-      // MediaPlayer.stop();
-      // MediaPlayer.play("/system/wifi.gif");
-    }
-  } else {
-    // MediaPlayer.stop();
-    timeClient.update();
+  webserver_loop();
 
-    if (millis() - lastClockMillis > 20) {
-      // showClock();
-      pongClock->loop();
-      lastClockMillis = millis();
-    }
-  }
+  // MediaPlayer.stop();
+  timeClient.update();
+
+  // showClock();
+  pongClock->loop();
+
+  matrix->show();
+  // insert a delay to keep the framerate modest
+  FastLED.delay(1000/FRAMES_PER_SECOND); 
 }
