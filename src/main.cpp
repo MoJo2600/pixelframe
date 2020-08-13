@@ -5,8 +5,8 @@
  * SD card attached to SPI bus as follows:
  ** MOSI - pin 13 - D7
  ** MISO - pin 12 - D6
- ** CLK - pin 14 - D5
- ** CS - pin 4 - D2
+ ** CLK  - pin 14 - D5
+ ** CS   - pin 4  - D2
 
  TODO: LED connection
  LED - pin 5 - D1
@@ -170,6 +170,7 @@ void setup() {
     delay(500);
     Serial.print('.');
   }
+  Serial.println(WiFi.localIP());
 
   timeClient.begin();
 
@@ -200,6 +201,17 @@ void loop() {
   pongClock->loop();
 
   matrix->show();
+
+#ifdef ESP8266
+// Disable watchdog interrupt so that it does not trigger in the middle of
+// updates. and break timing of pixels, causing random corruption on interval
+// https://github.com/esp8266/Arduino/issues/34
+    ESP.wdtDisable();
+#endif
   // insert a delay to keep the framerate modest
   FastLED.delay(1000/FRAMES_PER_SECOND); 
+#ifdef ESP8266
+    ESP.wdtEnable(1000);
+#endif
+
 }

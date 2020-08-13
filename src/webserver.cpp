@@ -5,6 +5,7 @@
 #include <LittleFS.h>
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
+#include <FastLED.h>
 
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81
@@ -89,29 +90,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         return;
       }
 
-      // // get wifi config from homie
-      // File file = LittleFS.open("/homie/config.json", "r");               // Open the file
-      // DynamicJsonDocument doc(1024);
-      // // Deserialize the JSON document
-      // error = deserializeJson(doc, file);
-      // if (error) {
-      //   Serial.println(F("Failed to read file, using default configuration"));
-      //   return;
-      // }
-
-      // doc["settings"]["dryReadingAt3V"] = received["dry"];
-      // doc["settings"]["wetReadingAt3V"] = received["wet"];
-      // doc["settings"]["batteryFull"] = received["battery"];
-      // doc["settings"]["startCalibration"] = false;
-
-      // file.close();                                                     // Close the file again
-
-      // file = LittleFS.open("/homie/config.json", "w");                    // Open the file
-      // serializeJson(doc, file);
-      // file.close();
-
-      // ESP.restart();
-
+      // Got brightness?
+      int brightness = received["brightness"];
+      if (brightness) {
+        Serial.println("Setting brightness");
+        Serial.println(brightness);
+        FastLED.setBrightness(brightness);
+      }
       break;
   }
 }

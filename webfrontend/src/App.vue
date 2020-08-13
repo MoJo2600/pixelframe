@@ -13,16 +13,19 @@
     </v-app-bar>
 
     <v-content>
+      <settings></settings>
     </v-content>
   </v-app>
 </template>
 
 <script>
+import Settings from './components/Settings';
 
 export default {
   name: 'App',
 
   components: {
+    Settings
   },
 
   data: () => ({
