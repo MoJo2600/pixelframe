@@ -12,16 +12,6 @@ WebSocketsServer webSocket(81);    // create a websocket server on port 81
 
 const char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
-String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
-  if (bytes < 1024) {
-    return String(bytes) + "B";
-  } else if (bytes < (1024 * 1024)) {
-    return String(bytes / 1024.0) + "KB";
-  } else if (bytes < (1024 * 1024 * 1024)) {
-    return String(bytes / 1024.0 / 1024.0) + "MB";
-  }
-}
-
 String getContentType(String filename) { // determine the filetype of a given filename, based on the extension
   if (filename.endsWith(".html")) return "text/html";
   else if (filename.endsWith(".css")) return "text/css";
@@ -52,20 +42,6 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 void handleNotFound(){ // if the requested file or page doesn't exist, return a 404 not found error
   if(!handleFileRead(server.uri())){          // check if the file exists in the flash memory (LittleFS), if so, send it
     server.send(404, "text/plain", "404: File Not Found");
-  }
-}
-
-void startLittleFS() { // Start the LittleFS and list all contents
-  LittleFS.begin();                             // Start the SPI Flash File System (LittleFS)
-  Serial.println("LittleFS started. Contents:");
-  {
-    Dir dir = LittleFS.openDir("/");
-    while (dir.next()) {                      // List the file system contents
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    Serial.printf("\n");
   }
 }
 
@@ -136,7 +112,7 @@ void setup_webserver() {
 
   // startWiFi();                 // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   
-  startLittleFS();               // Start the LittleFS and list all contents
+  // startLittleFS();               // Start the LittleFS and list all contents
 
   startWebSocket();            // Start a WebSocket server
   

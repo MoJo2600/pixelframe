@@ -1,6 +1,11 @@
 # PixelFrame
 
 
+## Used sources
+
+https://github.com/Jerware/GameFrameV2
+https://github.com/pixelmatix/AnimatedGIFs
+https://github.com/marcmerlin/AnimatedGIFs
 
 
 ## Useful links
