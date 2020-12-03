@@ -73,6 +73,37 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         Serial.println(brightness);
         FastLED.setBrightness(brightness);
       }
+
+      const char* timezone = received["timezone"];
+      if (timezone) {
+        Serial.println("Setting timezone");
+        Serial.println(timezone);
+      }
+
+
+      // TODO: If 'save settings'
+
+      // // get wifi config from homie
+      // File file = SPIFFS.open("/system/config.json", "r");               // Open the file
+      // DynamicJsonDocument doc(1024);
+      // // Deserialize the JSON document
+      // error = deserializeJson(doc, file);
+      // if (error) {
+      //   Serial.println(F("Failed to read file, using default configuration"));
+      //   return;
+      // }
+
+      // doc["timezone"] = received["dry"];
+      // doc["settings"]["wetReadingAt3V"] = received["wet"];
+      // doc["settings"]["batteryFull"] = received["battery"];
+      // doc["settings"]["startCalibration"] = false;
+
+      // file.close();                                                     // Close the file again
+
+      // file = SPIFFS.open("/system/config.json", "w");                    // Open the file
+      // serializeJson(doc, file);
+      // file.close();
+
       break;
   }
 }

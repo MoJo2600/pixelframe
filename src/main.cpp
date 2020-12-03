@@ -8,6 +8,8 @@
  ** CLK  - pin 14 - D5
  ** CS   - pin 4  - D2
 
+ 8===D ~ ~
+
  TODO: LED connection
  LED - pin 5 - D1
 
@@ -24,15 +26,16 @@
 #include "ArduinoJson.h"
 // #include "MediaPlayer.h"
 // #include "SdFat.h"
-#include "NTPClient.h"
+//#include "NTPClient.h"
 #include "WiFiUdp.h"
 #include "LittleFS.h"
 
 #include "config.h"            // Set up the LED matrix here
 
 #include "lib/gif/GifDecoder.h"
+#include "ezTime.h"
 
-// #include "PongClock.h"
+#include "PongClock.h"
 
 // Web interface
 #include "webserver.h"
@@ -48,7 +51,7 @@ bool
 #define SD_CS_PIN 4
 
 // LED setup
-#define FRAMES_PER_SECOND 60 // TODO: implement
+#define FRAMES_PER_SECOND 60
 
 #define BRIGHTNESS        48
 // #define CANVAS_WIDTH      16
@@ -59,11 +62,11 @@ bool
 
 StaticJsonDocument<512> configuration;
 
-WiFiUDP ntpUDP;
+//WiFiUDP ntpUDP;
 // TODO: implement daylight savings time, etc
-NTPClient timeClient(ntpUDP, 3600*2);
+//NTPClient timeClient(ntpUDP, 3600*2);
 
-// PixelFrame::PongClockClass *pongClock  = new PixelFrame::PongClockClass(*matrix, timeClient, sd);
+PixelFrame::PongClockClass *pongClock  = new PixelFrame::PongClockClass(*matrix, timeClient);
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -111,7 +114,7 @@ void startLittleFS() { // Start the LittleFS and list all contents
   Serial.print("Max open files:   ");
   Serial.println(fs_info.maxOpenFiles);
 
-  Serial.print("Max path lenght:  ");
+  Serial.print("Max path length:  ");
   Serial.println(fs_info.maxPathLength);
 
   Serial.println();
@@ -137,7 +140,7 @@ int OFFSETY = 0;
 int FACTX = 0;
 int FACTY = 0;
 
-const char *pathname = "/www/css/cubeslide.gif";
+const char *pathname = "/gifs/bird.gif";
 
 /* template parameters are maxGifWidth, maxGifHeight, lzwMaxBits
  * 
@@ -145,7 +148,7 @@ const char *pathname = "/www/css/cubeslide.gif";
  * lzwMaxBits can be set to 10 or 11 for small displays, 12 for large displays
  * All 32x32-pixel GIFs tested work with 11, most work with 10
  */
-GifDecoder<kMatrixWidth, kMatrixHeight, 12> decoder;
+GifDecoder<kMatrixWidth, kMatrixHeight, 10> decoder;
 
 fs::File file;
 bool fileSeekCallback(unsigned long position) { return file.seek(position); }
@@ -195,12 +198,13 @@ void setup() {
   // stdout to serial setup
   hal_printf_init();
 
-  Serial.print("Initializing SD card... ");
+  // When SD card should be necessary, uncomment this
+  // Serial.print("Initializing SD card... ");
   // if (!sd.begin(SD_CS_PIN)) {
   //   error("initialization failed!");
   //   return;
   // }
-  Serial.println("ok");
+  // Serial.println("ok");
 
 
   // MediaPlayer.setup(leds, &sd);
@@ -210,51 +214,57 @@ void setup() {
 
   // ### READ CONFIG
   Serial.print("Opening configuration file... ");
-  // if (!fd.open("system/config.json", O_READ))
-  // {
-  //   error("opening config failed");
-  //   return;
-  // }
+  file = LittleFS.open("system/config.json", "r");
   Serial.println("ok");
 
-  // Serial.println("reading json config");
-  // char jsonData[fd.size() + 1];
-  // int stringIndex = 0;
-  // int data;
-  // while ((data = fd.read()) >= 0)
-  // {
-  //   jsonData[stringIndex] = data;
-  //   stringIndex++;
-  // }
-  // jsonData[stringIndex] = '\0'; // Add the NULL
-  // fd.close();
+  Serial.println("reading json config");
+  char jsonData[file.size() + 1];
+  int stringIndex = 0;
+  int data;
+  while ((data = file.read()) >= 0)
+  {
+    jsonData[stringIndex] = data;
+    stringIndex++;
+  }
+  jsonData[stringIndex] = '\0'; // Add the NULL
+  file.close();
 
-  // // Deserialize the JSON document
-  // DeserializationError error = deserializeJson(configuration, jsonData);
-  // if (error)
-  //   Serial.println(F("Failed to read configuration file"));
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(configuration, jsonData);
+  if (error)
+    Serial.println(F("Failed to read configuration file"));
 
-  // // ### END: READ CONFIG
+  // ### END: READ CONFIG
 
-  // // ### CONNECT WIFI
-  // const char* ssid = configuration["wifi"]["ssid"];
-  // const char* password = configuration["wifi"]["password"];
+  // ### CONNECT WIFI
+  const char* ssid = configuration["wifi"]["ssid"];
+  const char* password = configuration["wifi"]["password"];
+
 
   // Serial.println("Clear screen");
 
   Serial.println("Connect wifi");
 
-  // WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);
 
-  // while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-  //   delay(500);
-  //   Serial.print('.');
-  // }
-  // Serial.println(WiFi.localIP());
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println(WiFi.localIP());
+
+  // Time
+  const char* tz = configuration["timezone"];
+  Serial.println("Timezone");
+  Serial.println(tz);
+  bool syncSuccessfull = waitForSync();
+  Timezone myTZ;
+  myTZ.setLocation(tz);
+  // myTZ.setLocation(F("Pacific/Auckland"));
+  Serial.println(myTZ.dateTime());
 
   // timeClient.begin();
-
-  // setup_webserver();
+  setup_webserver();
 
   // MediaPlayer.play("/system/nowifi.gif");
 
@@ -262,8 +272,7 @@ void setup() {
   //   error("open root failed");
   // }
 
-  // initClock();
-  // pongClock->setup();
+  pongClock->setup();
 
   decoder.setScreenClearCallback(screenClearCallback);
   decoder.setUpdateScreenCallback(updateScreenCallback);
@@ -295,16 +304,14 @@ void loop() {
   // MediaPlayer.loop();
   // // delay(2);
 
-  // webserver_loop();
+  webserver_loop();
 
   // MediaPlayer.stop();
-  // timeClient.update();
 
-  // showClock();
-  // pongClock->loop();
+  pongClock->loop();
 
-  decoder.decodeFrame();
-  // matrix->show();
+  // decoder.decodeFrame();
+  matrix->show();
 
 #ifdef ESP8266
 // Disable watchdog interrupt so that it does not trigger in the middle of

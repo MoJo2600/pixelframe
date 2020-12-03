@@ -1,14 +1,12 @@
 #include "PongClock.hpp"
-#include "SdFat.h"
 #include "FastLED.h"
 #include "ESP8266TrueRandom.h"
-#include "NTPClient.h"
+#include "ezTime.h"
 #include "fonts/TomThumbPatched.h"
 
 using namespace PixelFrame;
 
-// , NTPClient& c / , timeClient(c)
-PongClockClass::PongClockClass(FastLED_NeoMatrix& matrix, NTPClient& timeClient, SdFat& sdFat) : matrix(matrix), timeClient(timeClient), sdFat(sdFat) {};
+PongClockClass::PongClockClass(FastLED_NeoMatrix& matrix, Timezone& tz) : matrix(matrix) : tz {};
 
 PongClockClass::~PongClockClass(){};
 
@@ -30,9 +28,9 @@ void PongClockClass::printDigits(int digits)
 void PongClockClass::debugClockDisplay()
 {
   // digital clock display of the time
-  Serial.print(timeClient.getHours());
-  printDigits(timeClient.getMinutes());
-  printDigits(timeClient.getSeconds());
+  Serial.print(tz.getHours());
+  printDigits(tz.getMinutes());
+  printDigits(tz.getSeconds());
   Serial.println();
 }
 

@@ -3,15 +3,14 @@
 #include "lib/gifdec.h"
 #include "FastLED.h"
 #include "FastLED_NeoMatrix.h"
-#include "SdFat.h"
-#include "NTPClient.h"
+#include "ezTime.h"
 
 namespace PixelFrame {
 
     class PongClockClass {
         public:
             //, NTPClient &client
-            PongClockClass(FastLED_NeoMatrix &matrix, NTPClient &timeClient, SdFat &sdFat);
+            PongClockClass(FastLED_NeoMatrix &matrix, Timezone &tz);
             ~PongClockClass();
             void setup();
             void start();
@@ -55,9 +54,8 @@ namespace PixelFrame {
             ballAngle = 0,
             fadeLength = 0;
 
-            NTPClient &timeClient;
+            Timezone &tz;
             FastLED_NeoMatrix &matrix;
-            SdFat &sdFat;
 
             void printDigits(int digits);
             void debugClockDisplay();
