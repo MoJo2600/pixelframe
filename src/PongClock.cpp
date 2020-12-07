@@ -92,26 +92,17 @@ void PongClockClass::swapXdirection()
 void PongClockClass::drawDigits()
 {
   matrix->clear();
-  // CRGB(rgb2hsv_approximate(CRGB(205,205,205)))
   matrix->setTextColor(matrix->Color(155, 155, 155));
   matrix->setTextSize(1);
   matrix->setFont(&TomThumbPatched);
   matrix->setCursor(0, 10);
-  if (tz.hour() < 10)
+  if (current_hour < 10)
     matrix->print('0');
-  matrix->print(tz.hour());
+  matrix->print(current_hour);
   matrix->setCursor(9, 10);
-  if (tz.minute() < 10)
+  if (current_minute < 10)
     matrix->print('0');
-  matrix->print(tz.minute());
-  // matrix->show();
-  // clearStripBuffer();
-  // clockDigit_1();
-  // clockDigit_2();
-  // clockDigit_3();
-  // clockDigit_4();
-  // if (!clockSet) clockSetBlink = !clockSetBlink;
-  // closeMyFile();
+  matrix->print(current_minute);
 }
 
 long PongClockClass::realRandom(int max)
@@ -249,9 +240,8 @@ void PongClockClass::loop()
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
           // 24 hour conversion
+          current_minute = tz.minute();
           drawDigits();
-          // fastledshow();
-          // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
         }
       }
 
@@ -272,9 +262,8 @@ void PongClockClass::loop()
         {
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
+          current_hour = tz.hour();
           drawDigits();
-          // fastledshow();
-          // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
         }
       }
 
@@ -297,21 +286,8 @@ void PongClockClass::loop()
     pong_scored_hour = false;
     pong_scored_minute = false;
 
-    // store second hands
-    // Serial.println("Storing second hand colors...");
-    // offsetX = 0;
-    // offsetY = 176;
-    // bmpDraw(clockFace, 0, 0);
-    // uint8_t second_index = 0;
-    // for (uint8_t x=0; x<16; x++) secondHands[second_index++] = leds[getIndex(x, 0)];
-    // for (uint8_t y=0; y<16; y++) secondHands[second_index++] = leds[getIndex(15, y)];
-    // for (uint8_t x=0; x<16; x++) secondHands[second_index++] = leds[getIndex(15-x, 15)];
-    // for (uint8_t y=0; y<16; y++) secondHands[second_index++] = leds[getIndex(0, 15-y)];
-
     // 24 hour conversion
     drawDigits();
-    // fastledshow();
-    // memcpy( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
     pong_paddle_left_y = 128;
     pong_paddle_left_start = 128;
     pong_paddle_left_target = 128;
@@ -346,9 +322,6 @@ void PongClockClass::loop()
     }
     pong_paddle_right_y = map(ballX, 256-16, 16, pong_paddle_right_start, pong_paddle_right_target + offset);
   }
-
-  // copy the time back on screen
-  // memcpy( leds, leds_buf, NUM_LEDS * sizeof( CRGB) );
 
   // get hue
   // secondHands[currentSecond]
@@ -406,6 +379,7 @@ void PongClockClass::setup(){
   lastSecond = 255;
   pong_reset = true;
   matrix->setTextWrap(false);
+  current_minute = tz.minute();
+  current_hour = tz.hour();
   drawDigits();
-  // fastledshow();
 }

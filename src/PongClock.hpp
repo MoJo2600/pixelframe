@@ -52,7 +52,9 @@ namespace PixelFrame {
 
             int
             ballAngle = 0,
-            fadeLength = 0;
+            fadeLength = 0,
+            current_minute = 0,
+            current_hour = 0;
 
             Timezone tz;
             FastLED_NeoMatrix * matrix;
