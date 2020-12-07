@@ -62,11 +62,12 @@ bool
 
 StaticJsonDocument<512> configuration;
 
+Timezone tz;
+PixelFrame::PongClockClass *pongClock;
+
 //WiFiUDP ntpUDP;
 // TODO: implement daylight savings time, etc
 //NTPClient timeClient(ntpUDP, 3600*2);
-
-PixelFrame::PongClockClass *pongClock  = new PixelFrame::PongClockClass(*matrix, timeClient);
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -178,6 +179,9 @@ void setup() {
   }
   delay(500);
 
+  matrix_setup();
+  matrix->clear();
+
   startLittleFS();
 
   // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS); // GRB ordering is assumed
@@ -191,9 +195,6 @@ void setup() {
 
   // clearStripBuffer();
   // fastledshow();
-
-  // matrix->clear();
-  // End Black screen
 
   // stdout to serial setup
   hal_printf_init();
@@ -240,11 +241,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-
-  // Serial.println("Clear screen");
-
   Serial.println("Connect wifi");
-
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
@@ -254,57 +251,59 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Time
-  const char* tz = configuration["timezone"];
+  const char* tzConf = configuration["timezone"];
   Serial.println("Timezone");
-  Serial.println(tz);
-  bool syncSuccessfull = waitForSync();
-  Timezone myTZ;
-  myTZ.setLocation(tz);
-  // myTZ.setLocation(F("Pacific/Auckland"));
-  Serial.println(myTZ.dateTime());
+  Serial.println(tzConf);
+  waitForSync();
+  tz.setLocation(tzConf);
+  Serial.println(tz.dateTime());
 
-  // timeClient.begin();
-  setup_webserver();
+  // // timeClient.begin();
+  // setup_webserver();
 
-  // MediaPlayer.play("/system/nowifi.gif");
+  // // MediaPlayer.play("/system/nowifi.gif");
 
-  // if (!dirFile.open("/")) {
-  //   error("open root failed");
-  // }
+  // // if (!dirFile.open("/")) {
+  // //   error("open root failed");
+  // // }
 
+  // decoder.setScreenClearCallback(screenClearCallback);
+  // decoder.setUpdateScreenCallback(updateScreenCallback);
+  // decoder.setDrawPixelCallback(drawPixelCallback);
+
+  // decoder.setFileSeekCallback(fileSeekCallback);
+  // decoder.setFilePositionCallback(filePositionCallback);
+  // decoder.setFileReadCallback(fileReadCallback);
+  // decoder.setFileReadBlockCallback(fileReadBlockCallback);
+
+
+  pongClock  = new PixelFrame::PongClockClass(matrix);
   pongClock->setup();
 
-  decoder.setScreenClearCallback(screenClearCallback);
-  decoder.setUpdateScreenCallback(updateScreenCallback);
-  decoder.setDrawPixelCallback(drawPixelCallback);
+  // Serial.print(pathname);
 
-  decoder.setFileSeekCallback(fileSeekCallback);
-  decoder.setFilePositionCallback(filePositionCallback);
-  decoder.setFileReadCallback(fileReadCallback);
-  decoder.setFileReadBlockCallback(fileReadBlockCallback);
-
-  Serial.println("Starting AnimatedGIFs Sketch");
-  matrix_setup();
-
-  Serial.print(pathname);
-
-  if (file) file.close();
-  file = LittleFS.open(pathname, "r");
-  if (!file) {
-    Serial.println(": Error opening GIF file");
-    while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
-  }
-  Serial.println(": Opened GIF file, start decoding");
-  decoder.startDecoding();
+  // if (file) file.close();
+  // file = LittleFS.open(pathname, "r");
+  // if (!file) {
+  //   Serial.println(": Error opening GIF file");
+  //   while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
+  // }
+  // Serial.println(": Opened GIF file, start decoding");
+  // decoder.startDecoding();
 }
 
+// unsigned long _timer = millis();
 // long lastClockMillis = 0;
 void loop() {
+  // if ((millis() - _timer) >= 100) {
+  //   _timer = millis();
+  //   ESP.getFreeHeap();
+  // };
   // //
   // MediaPlayer.loop();
   // // delay(2);
 
-  webserver_loop();
+  // webserver_loop();
 
   // MediaPlayer.stop();
 
@@ -314,15 +313,15 @@ void loop() {
   matrix->show();
 
 #ifdef ESP8266
-// Disable watchdog interrupt so that it does not trigger in the middle of
-// updates. and break timing of pixels, causing random corruption on interval
-// https://github.com/esp8266/Arduino/issues/34
-    ESP.wdtDisable();
+  // Disable watchdog interrupt so that it does not trigger in the middle of
+  // updates. and break timing of pixels, causing random corruption on interval
+  // https://github.com/esp8266/Arduino/issues/34
+  ESP.wdtDisable();
 #endif
   // insert a delay to keep the framerate modest
   FastLED.delay(1000/FRAMES_PER_SECOND); 
 #ifdef ESP8266
-    ESP.wdtEnable(1000);
+  ESP.wdtEnable(1000);
 #endif
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/gifdec.h"
+// #include "lib/gifdec.h"
 #include "FastLED.h"
 #include "FastLED_NeoMatrix.h"
 #include "ezTime.h"
@@ -10,7 +10,7 @@ namespace PixelFrame {
     class PongClockClass {
         public:
             //, NTPClient &client
-            PongClockClass(FastLED_NeoMatrix &matrix, Timezone &tz);
+            PongClockClass(FastLED_NeoMatrix * matrix);
             ~PongClockClass();
             void setup();
             void start();
@@ -54,8 +54,8 @@ namespace PixelFrame {
             ballAngle = 0,
             fadeLength = 0;
 
-            Timezone &tz;
-            FastLED_NeoMatrix &matrix;
+            Timezone tz;
+            FastLED_NeoMatrix * matrix;
 
             void printDigits(int digits);
             void debugClockDisplay();

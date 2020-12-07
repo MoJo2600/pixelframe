@@ -12,6 +12,7 @@
 
 // #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 // #include <FS.h>
+#define FS_NO_GLOBALS
 #include <LittleFS.h>
 #include <Adafruit_GFX.h>
 bool init_done = 0;
@@ -62,7 +63,7 @@ CRGB *matrixleds;
 //     zig-zag order, the orientation of the matrices in alternate rows
 //     will be rotated 180 degrees (this is normal -- simplifies wiring).
 //   See example below for these values in action.
-FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(matrixleds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V,
+FastLED_NeoMatrix * matrix = new FastLED_NeoMatrix(matrixleds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
     NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
     NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE);
