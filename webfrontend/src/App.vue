@@ -14,18 +14,21 @@
 
     <v-content>
       <settings></settings>
+      <files></files>
     </v-content>
   </v-app>
 </template>
 
 <script>
 import Settings from './components/Settings';
+import Files from './components/Files';
 
 export default {
   name: 'App',
 
   components: {
-    Settings
+    Settings,
+    Files
   },
 
   data: () => ({
