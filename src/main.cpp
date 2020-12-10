@@ -8,8 +8,6 @@
  ** CLK  - pin 14 - D5
  ** CS   - pin 4  - D2
 
- 8===D ~ ~
-
  TODO: LED connection
  LED - pin 5 - D1
 
@@ -64,6 +62,7 @@ StaticJsonDocument<512> configuration;
 
 Timezone tz;
 PixelFrame::PongClockClass *pongClock;
+bool fsOK;
 
 //WiFiUDP ntpUDP;
 // TODO: implement daylight savings time, etc
@@ -85,7 +84,8 @@ String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
 
 void startLittleFS() { // Start the LittleFS and list all contents
   Serial.println(F("Inizializing FS..."));
-  if (LittleFS.begin()){
+  fsOK = LittleFS.begin();
+  if (fsOK){
       Serial.println(F("done."));
   }else{
       Serial.println(F("fail."));
@@ -258,8 +258,7 @@ void setup() {
   tz.setLocation(tzConf);
   Serial.println(tz.dateTime());
 
-  // // timeClient.begin();
-  // setup_webserver();
+  setup_webserver();
 
   // // MediaPlayer.play("/system/nowifi.gif");
 
@@ -275,7 +274,6 @@ void setup() {
   // decoder.setFilePositionCallback(filePositionCallback);
   // decoder.setFileReadCallback(fileReadCallback);
   // decoder.setFileReadBlockCallback(fileReadBlockCallback);
-
 
   pongClock  = new PixelFrame::PongClockClass(matrix);
   pongClock->setup();
@@ -303,13 +301,14 @@ void loop() {
   // MediaPlayer.loop();
   // // delay(2);
 
-  // webserver_loop();
+  webserver_loop();
 
   // MediaPlayer.stop();
 
   pongClock->loop();
 
   // decoder.decodeFrame();
+
   matrix->show();
 
 #ifdef ESP8266

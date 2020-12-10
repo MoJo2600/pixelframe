@@ -7,10 +7,43 @@
 #include <ArduinoJson.h>
 #include <FastLED.h>
 
+const char* fsName = "LittleFS";
+FS* fileSystem = &LittleFS;
+LittleFSConfig fileSystemConfig = LittleFSConfig();
+
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81
 
 const char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
+
+static const char TEXT_PLAIN[] PROGMEM = "text/plain";
+static const char FS_INIT_ERROR[] PROGMEM = "FS INIT ERROR";
+static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
+
+////////////////////////////////
+// Utils to return HTTP codes, and determine content-type
+
+void replyOK() {
+  server.send(200, FPSTR(TEXT_PLAIN), "");
+}
+
+void replyOKWithMsg(String msg) {
+  server.send(200, FPSTR(TEXT_PLAIN), msg);
+}
+
+void replyNotFound(String msg) {
+  server.send(404, FPSTR(TEXT_PLAIN), msg);
+}
+
+void replyBadRequest(String msg) {
+  Serial.println(msg);
+  server.send(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
+}
+
+void replyServerError(String msg) {
+  Serial.println(msg);
+  server.send(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
+}
 
 String getContentType(String filename) { // determine the filetype of a given filename, based on the extension
   if (filename.endsWith(".html")) return "text/html";
@@ -37,6 +70,73 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   }
   Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
   return false;
+}
+
+/*
+   Return the list of files in the directory specified by the "dir" query string parameter.
+   Also demonstrates the use of chuncked responses.
+*/
+void handleFileList() {
+  // if (!fsOK) {
+  //   return replyServerError(FPSTR(FS_INIT_ERROR));
+  // }
+
+  if (!server.hasArg("dir")) {
+    return replyBadRequest(F("DIR ARG MISSING"));
+  }
+
+  String path = server.arg("dir");
+  if (path != "/" && !fileSystem->exists(path)) {
+    return replyBadRequest("BAD PATH");
+  }
+
+  Serial.println(String("handleFileList: ") + path);
+  Dir dir = fileSystem->openDir(path);
+  path.clear();
+
+  // use HTTP/1.1 Chunked response to avoid building a huge temporary string
+  if (!server.chunkedResponseModeStart(200, "text/json")) {
+    server.send(505, F("text/html"), F("HTTP1.1 required"));
+    return;
+  }
+
+  // use the same string for every line
+  String output;
+  output.reserve(64);
+  while (dir.next()) {
+
+    if (output.length()) {
+      // send string from previous iteration
+      // as an HTTP chunk
+      server.sendContent(output);
+      output = ',';
+    } else {
+      output = '[';
+    }
+
+    output += "{\"type\":\"";
+    if (dir.isDirectory()) {
+      output += "dir";
+    } else {
+      output += F("file\",\"size\":\"");
+      output += dir.fileSize();
+    }
+
+    output += F("\",\"name\":\"");
+    // Always return names without leading "/"
+    if (dir.fileName()[0] == '/') {
+      output += &(dir.fileName()[1]);
+    } else {
+      output += dir.fileName();
+    }
+
+    output += "\"}";
+  }
+
+  // send last string
+  output += "]";
+  server.sendContent(output);
+  server.chunkedResponseFinalize();
 }
 
 void handleNotFound(){ // if the requested file or page doesn't exist, return a 404 not found error
@@ -128,6 +228,10 @@ void startMDNS() { // Start the mDNS responder
 }
 
 void startServer() { // Start a HTTP server with a file read handler and an upload handler
+
+  // List directory
+  server.on("/list", HTTP_GET, handleFileList);
+
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
                                               // and check if the file exists
 
