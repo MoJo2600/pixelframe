@@ -8,7 +8,10 @@ using namespace PixelFrame;
 
 // #define DEBUG
 
-PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix) : matrix(matrix) {};
+PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf) : matrix(matrix) {
+  waitForSync();
+  tz.setLocation(tzConf);
+};
 
 PongClockClass::~PongClockClass(){};
 

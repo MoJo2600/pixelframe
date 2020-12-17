@@ -10,7 +10,7 @@ namespace PixelFrame {
     class PongClockClass {
         public:
             //, NTPClient &client
-            PongClockClass(FastLED_NeoMatrix * matrix);
+            PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf);
             ~PongClockClass();
             void setup();
             void start();

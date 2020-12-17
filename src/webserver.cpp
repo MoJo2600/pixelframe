@@ -94,8 +94,9 @@ void handleFileList() {
   Dir dir = fileSystem->openDir(path);
   path.clear();
 
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   // use HTTP/1.1 Chunked response to avoid building a huge temporary string
-  if (!server.chunkedResponseModeStart(200, "text/json")) {
+  if (!server.chunkedResponseModeStart(200, "application/json")) {
     server.send(505, F("text/html"), F("HTTP1.1 required"));
     return;
   }
@@ -172,6 +173,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         Serial.println("Setting brightness");
         Serial.println(brightness);
         FastLED.setBrightness(brightness);
+      }
+
+      const char* action = received["action"];
+      if (action) {
+        Serial.print("Got action: ");
+        Serial.println(action);
       }
 
       const char* timezone = received["timezone"];

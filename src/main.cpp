@@ -60,7 +60,7 @@ bool
 
 StaticJsonDocument<512> configuration;
 
-Timezone tz;
+// Timezone tz;
 PixelFrame::PongClockClass *pongClock;
 bool fsOK;
 
@@ -252,11 +252,11 @@ void setup() {
 
   // Time
   const char* tzConf = configuration["timezone"];
-  Serial.println("Timezone");
-  Serial.println(tzConf);
-  waitForSync();
-  tz.setLocation(tzConf);
-  Serial.println(tz.dateTime());
+  // Serial.println("Timezone");
+  // Serial.println(tzConf);
+  // waitForSync();
+  // tz.setLocation(tzConf);
+  // Serial.println(tz.dateTime());
 
   setup_webserver();
 
@@ -275,7 +275,7 @@ void setup() {
   // decoder.setFileReadCallback(fileReadCallback);
   // decoder.setFileReadBlockCallback(fileReadBlockCallback);
 
-  pongClock  = new PixelFrame::PongClockClass(matrix);
+  pongClock  = new PixelFrame::PongClockClass(matrix, tzConf);
   pongClock->setup();
 
   // Serial.print(pathname);
@@ -301,8 +301,6 @@ void loop() {
   // MediaPlayer.loop();
   // // delay(2);
 
-  webserver_loop();
-
   // MediaPlayer.stop();
 
   pongClock->loop();
@@ -310,6 +308,8 @@ void loop() {
   // decoder.decodeFrame();
 
   matrix->show();
+
+  webserver_loop();
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of
