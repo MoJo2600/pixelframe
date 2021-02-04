@@ -682,21 +682,21 @@ extern void *mallocordie(const char *varname, uint32_t req, bool psram);
 template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
 int GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::startDecoding(void) {
     if (!stack) {
-	// use PSRAM if available for those bigger buffers.
-	stack =  (uint8_t *)		mallocordie("stack", LZW_SIZTABLE, true);
-	prefix = (uint16_t *)		mallocordie("prefix", LZW_SIZTABLE*2, true);
-	suffix = (uint8_t *)		mallocordie("suffix", LZW_SIZTABLE, true);
-	imageData = (uint8_t *)		mallocordie("imageData", gifsize, true);
-	imageDataBU = (uint8_t *)	mallocordie("imageDataBU", gifsize, true);
-	// skip PSRAM on those, hey are too small to bother
-	palette = (rgb_24 *)		mallocordie("palette", sizeof(rgb_24)*256, false);
-	tempBuffer = (char *)		mallocordie("tempBuffer", tempBufferSz, false); // 260 bytes
+        // use PSRAM if available for those bigger buffers.
+        stack =  (uint8_t *)		mallocordie("stack", LZW_SIZTABLE, true);
+        prefix = (uint16_t *)		mallocordie("prefix", LZW_SIZTABLE*2, true);
+        suffix = (uint8_t *)		mallocordie("suffix", LZW_SIZTABLE, true);
+        imageData = (uint8_t *)		mallocordie("imageData", gifsize, true);
+        imageDataBU = (uint8_t *)	mallocordie("imageDataBU", gifsize, true);
+        // skip PSRAM on those, hey are too small to bother
+        palette = (rgb_24 *)		mallocordie("palette", sizeof(rgb_24)*256, false);
+        tempBuffer = (char *)		mallocordie("tempBuffer", tempBufferSz, false); // 260 bytes
 
-	// from neomatrix_config.h:
-	show_free_mem();
-    }	
+        // from neomatrix_config.h:
+        // show_free_mem();
+    }
 
-    // For 64x64 GIFS on a 64x96 display, PSRAM saves 24KB of real RAM:
+    // For 64x64 GIFS on a 64x96 display, PFSRAM saves 24KB of real RAM:
     // after:
     // Heap/32-bit Memory Available     : 200752 bytes total, 73548 bytes largest free block
     // 8-bit/malloc/DMA Memory Available: 127204 bytes total, 64624 bytes largest free block
@@ -727,6 +727,13 @@ int GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::startDecoding(void) {
     parseGlobalColorTable();
 
     return ERROR_NONE;
+}
+
+template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
+void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::loop(void) {
+    if (nextFrameTime_ms <= millis()) {
+        decodeFrame();
+    }
 }
 
 template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
@@ -768,7 +775,7 @@ void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::decompressAndDisplayFram
 
     // Each pixel of image is 8 bits and is an index into the palette
 
-        // How the image is decoded depends upon whether it is interlaced or not
+    // How the image is decoded depends upon whether it is interlaced or not
     // Decode the interlaced LZW data into the image buffer
     if (tbiInterlaced) {
         // Decode every 8th line starting at line 0
@@ -834,8 +841,9 @@ void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::decompressAndDisplayFram
     // swapBuffers() call can take up to 1/framerate seconds to return (it waits until a buffer copy is complete)
     // note the time before calling
 
+    // TODO: We have to remove this and handle wait in main loop
     // wait until time to display next frame
-    while(nextFrameTime_ms > millis());
+    // while(nextFrameTime_ms > millis());
 
     // calculate time to display next frame
     nextFrameTime_ms = millis() + (10 * frameDelay);

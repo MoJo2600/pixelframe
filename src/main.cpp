@@ -157,8 +157,10 @@ unsigned long filePositionCallback(void) { return file.position(); }
 int fileReadCallback(void) { return file.read(); }
 int fileReadBlockCallback(void * buffer, int numberOfBytes) { return file.read((uint8_t*)buffer, numberOfBytes); }
 
-void screenClearCallback(void) { matrix->clear(); }
-void updateScreenCallback(void) { matrix->show(); }
+void screenClearCallback(void) { //matrix->clear(); 
+}
+void updateScreenCallback(void) { //matrix->show(); 
+}
 
 void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) {
   CRGB color = CRGB(matrix->gamma[red], matrix->gamma[green], matrix->gamma[blue]);
@@ -242,13 +244,14 @@ void setup() {
   const char* password = configuration["wifi"]["password"];
 
   Serial.println("Connect wifi");
-  WiFi.begin(ssid, password);
+  // WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-    delay(500);
-    Serial.print('.');
-  }
-  Serial.println(WiFi.localIP());
+  //TODO Move in loop and show image during connection
+  // while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+  //   delay(500);
+  //   Serial.print('.');
+  // }
+  // Serial.println(WiFi.localIP());
 
   // Time
   const char* tzConf = configuration["timezone"];
@@ -266,28 +269,26 @@ void setup() {
   // //   error("open root failed");
   // // }
 
-  // decoder.setScreenClearCallback(screenClearCallback);
-  // decoder.setUpdateScreenCallback(updateScreenCallback);
-  // decoder.setDrawPixelCallback(drawPixelCallback);
+  decoder.setScreenClearCallback(screenClearCallback);
+  decoder.setUpdateScreenCallback(updateScreenCallback);
+  decoder.setDrawPixelCallback(drawPixelCallback);
+  decoder.setFileSeekCallback(fileSeekCallback);
+  decoder.setFilePositionCallback(filePositionCallback);
+  decoder.setFileReadCallback(fileReadCallback);
+  decoder.setFileReadBlockCallback(fileReadBlockCallback);
 
-  // decoder.setFileSeekCallback(fileSeekCallback);
-  // decoder.setFilePositionCallback(filePositionCallback);
-  // decoder.setFileReadCallback(fileReadCallback);
-  // decoder.setFileReadBlockCallback(fileReadBlockCallback);
-
-  pongClock  = new PixelFrame::PongClockClass(matrix, tzConf);
-  pongClock->setup();
-
+  // pongClock  = new PixelFrame::PongClockClass(matrix, tzConf);
+  // pongClock->setup();
   // Serial.print(pathname);
 
-  // if (file) file.close();
-  // file = LittleFS.open(pathname, "r");
-  // if (!file) {
-  //   Serial.println(": Error opening GIF file");
-  //   while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
-  // }
-  // Serial.println(": Opened GIF file, start decoding");
-  // decoder.startDecoding();
+  if (file) file.close();
+  file = LittleFS.open(pathname, "r");
+  if (!file) {
+    Serial.println(": Error opening GIF file");
+    while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
+  }
+  Serial.println(": Opened GIF file, start decoding");
+  decoder.startDecoding();
 }
 
 // unsigned long _timer = millis();
@@ -303,11 +304,14 @@ void loop() {
 
   // MediaPlayer.stop();
 
-  pongClock->loop();
+  // pongClock->loop();
 
+  // TODO: decodeFrame has a while loop that waits for the next frame to decode
+  //       we have to move it to main loop to avoid problems with wifi, server, etc.
   // decoder.decodeFrame();
+  decoder.loop();
 
-  matrix->show();
+  //matrix->show();
 
   webserver_loop();
 

@@ -40,6 +40,8 @@ public:
     void setFileReadCallback(file_read_callback f);
     void setFileReadBlockCallback(file_read_block_callback f);
 
+    void loop();
+
 private:
     void parseTableBasedImage(void);
     void decompressAndDisplayFrame(unsigned long filePositionAfter);
