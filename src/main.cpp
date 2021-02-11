@@ -38,6 +38,8 @@
 // Web interface
 #include "webserver.h"
 
+#include "lib/tinyfsm.hpp"
+
 // SD Card setup
 // SdFat sd;
 // SdFile dirFile;
@@ -58,10 +60,32 @@ bool
 // CRGB leds[NUM_LEDS];
 // CRGB leds_buf[NUM_LEDS];
 
+PixelFrame::PongClockClass *pongClock;
+
+// State machine
+struct Gif; // forward declaration
+struct ToggleEvent : tinyfsm::Event { };
+struct LoopEvent : tinyfsm::Event { };
+
+struct Switch : tinyfsm::Fsm<Switch>
+{
+  virtual void react(ToggleEvent const &) { };
+  virtual void react(LoopEvent const &) { };
+
+  // alternative: enforce handling of Toggle in all states (pure virtual)
+  //virtual void react(Toggle const &) = 0;
+
+  virtual void entry(void) { };  /* entry actions in some states */
+  void         exit(void)  { };  /* no exit actions */
+  // alternative: enforce entry actions in all states (pure virtual)
+  //virtual void entry(void) = 0;
+};
+
+// END - state machine
+
 StaticJsonDocument<512> configuration;
 
 // Timezone tz;
-PixelFrame::PongClockClass *pongClock;
 bool fsOK;
 
 //WiFiUDP ntpUDP;
@@ -70,7 +94,6 @@ bool fsOK;
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
-
 
 String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
   if (bytes < 1024) {
@@ -156,10 +179,11 @@ bool fileSeekCallback(unsigned long position) { return file.seek(position); }
 unsigned long filePositionCallback(void) { return file.position(); }
 int fileReadCallback(void) { return file.read(); }
 int fileReadBlockCallback(void * buffer, int numberOfBytes) { return file.read((uint8_t*)buffer, numberOfBytes); }
-
-void screenClearCallback(void) { //matrix->clear(); 
+void screenClearCallback(void) {
+  //matrix->clear(); 
 }
-void updateScreenCallback(void) { //matrix->show(); 
+void updateScreenCallback(void) {
+  //matrix->show(); 
 }
 
 void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) {
@@ -171,6 +195,38 @@ void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t
 }
 // END Giftest
 
+
+struct Clock : Switch
+{
+  void entry() override { 
+    Serial.println("On");
+    pongClock  = new PixelFrame::PongClockClass(matrix, "Europe/Berlin"); // TODO: Read tz from config
+    pongClock->setup();
+  };
+  void react(ToggleEvent const &) override { transit<Gif>(); };
+  void react(LoopEvent const &) override { 
+    pongClock->loop();
+  };
+};
+
+struct Gif : Switch
+{
+  void entry() override { 
+    decoder.startDecoding();
+  };
+  void loop() {
+    
+  }
+  void react(ToggleEvent const &) override { transit<Clock>(); };
+  void react(LoopEvent const &) override {
+    decoder.loop();
+  };
+};
+FSM_INITIAL_STATE(Switch, Clock)
+using fsm_handle = Switch;
+
+ToggleEvent toggle;
+LoopEvent loopUpdate;
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -209,11 +265,9 @@ void setup() {
   // }
   // Serial.println("ok");
 
-
-  // MediaPlayer.setup(leds, &sd);
-
-  // Switch to bmp
-  // MediaPlayer.play("system/nowifi.gif");
+  // State machine
+  // instantiate events
+  fsm_handle::start();
 
   // ### READ CONFIG
   Serial.print("Opening configuration file... ");
@@ -244,14 +298,14 @@ void setup() {
   const char* password = configuration["wifi"]["password"];
 
   Serial.println("Connect wifi");
-  // WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);
 
   //TODO Move in loop and show image during connection
-  // while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-  //   delay(500);
-  //   Serial.print('.');
-  // }
-  // Serial.println(WiFi.localIP());
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println(WiFi.localIP());
 
   // Time
   const char* tzConf = configuration["timezone"];
@@ -261,7 +315,7 @@ void setup() {
   // tz.setLocation(tzConf);
   // Serial.println(tz.dateTime());
 
-  setup_webserver();
+  // setup_webserver();
 
   // // MediaPlayer.play("/system/nowifi.gif");
 
@@ -288,32 +342,36 @@ void setup() {
     while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
   }
   Serial.println(": Opened GIF file, start decoding");
-  decoder.startDecoding();
 }
 
-// unsigned long _timer = millis();
+unsigned long _timer = millis();
 // long lastClockMillis = 0;
 void loop() {
-  // if ((millis() - _timer) >= 100) {
-  //   _timer = millis();
+  if ((millis() - _timer) >= 10*1000) {
+    fsm_handle::dispatch(toggle);
+    _timer = millis();
   //   ESP.getFreeHeap();
-  // };
+  };
   // //
   // MediaPlayer.loop();
   // // delay(2);
 
   // MediaPlayer.stop();
 
-  // pongClock->loop();
+  // fsm_handle::dispatch(loopUpdate);
+
+  //pongClock->loop();
 
   // TODO: decodeFrame has a while loop that waits for the next frame to decode
   //       we have to move it to main loop to avoid problems with wifi, server, etc.
   // decoder.decodeFrame();
-  decoder.loop();
+  //decoder.loop();
 
   //matrix->show();
 
-  webserver_loop();
+  //webserver_loop();
+
+  fsm_handle::dispatch(loopUpdate);
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of
