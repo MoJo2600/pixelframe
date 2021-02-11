@@ -27,18 +27,15 @@
 //#include "NTPClient.h"
 #include "WiFiUdp.h"
 #include "LittleFS.h"
-
 #include "config.h"            // Set up the LED matrix here
-
 #include "lib/gif/GifDecoder.h"
 #include "ezTime.h"
-
 #include "PongClock.h"
-
 // Web interface
 #include "webserver.h"
-
 #include "lib/tinyfsm.hpp"
+#include "vector"
+using namespace std;
 
 // SD Card setup
 // SdFat sd;
@@ -53,13 +50,6 @@ bool
 // LED setup
 #define FRAMES_PER_SECOND 60
 
-#define BRIGHTNESS        48
-// #define CANVAS_WIDTH      16
-// #define CANVAS_HEIGHT     16
-// #define NUM_LEDS          (CANVAS_WIDTH * CANVAS_HEIGHT)
-// CRGB leds[NUM_LEDS];
-// CRGB leds_buf[NUM_LEDS];
-
 PixelFrame::PongClockClass *pongClock;
 
 // State machine
@@ -71,10 +61,6 @@ struct Switch : tinyfsm::Fsm<Switch>
 {
   virtual void react(ToggleEvent const &) { };
   virtual void react(LoopEvent const &) { };
-
-  // alternative: enforce handling of Toggle in all states (pure virtual)
-  //virtual void react(Toggle const &) = 0;
-
   virtual void entry(void) { };  /* entry actions in some states */
   void         exit(void)  { };  /* no exit actions */
   // alternative: enforce entry actions in all states (pure virtual)
@@ -104,6 +90,8 @@ String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
     return String(bytes / 1024.0 / 1024.0) + "MB";
   }
 }
+
+vector<String> gifs_vec;
 
 void startLittleFS() { // Start the LittleFS and list all contents
   Serial.println(F("Inizializing FS..."));
@@ -145,9 +133,10 @@ void startLittleFS() { // Start the LittleFS and list all contents
   
   Serial.println("LittleFS started. Contents:");
   {
-    Dir dir = LittleFS.openDir("/");
+    Dir dir = LittleFS.openDir("/gifs");
     while (dir.next()) {                      // List the file system contents
       String fileName = dir.fileName();
+      gifs_vec.push_back("/gifs/"+fileName);
       size_t fileSize = dir.fileSize();
       Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
     }
@@ -203,7 +192,10 @@ struct Clock : Switch
     pongClock  = new PixelFrame::PongClockClass(matrix, "Europe/Berlin"); // TODO: Read tz from config
     pongClock->setup();
   };
-  void react(ToggleEvent const &) override { transit<Gif>(); };
+  void react(ToggleEvent const &) override {
+    matrix->clear();
+    transit<Gif>();
+  };
   void react(LoopEvent const &) override { 
     pongClock->loop();
   };
@@ -212,12 +204,27 @@ struct Clock : Switch
 struct Gif : Switch
 {
   void entry() override { 
+    if (file) file.close();
+
+    int gif = rand() % gifs_vec.size();
+    String filename = gifs_vec[gif];
+    Serial.println(filename);
+
+    file = LittleFS.open(filename, "r");
+    if (!file) {
+      Serial.println(": Error opening GIF file");
+      while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
+    }
+    Serial.println(": Opened GIF file, start decoding");
     decoder.startDecoding();
   };
   void loop() {
     
   }
-  void react(ToggleEvent const &) override { transit<Clock>(); };
+  void react(ToggleEvent const &) override { 
+    matrix->clear();
+    transit<Clock>(); 
+  };
   void react(LoopEvent const &) override {
     decoder.loop();
   };
@@ -309,19 +316,12 @@ void setup() {
 
   // Time
   const char* tzConf = configuration["timezone"];
-  // Serial.println("Timezone");
-  // Serial.println(tzConf);
-  // waitForSync();
+  Serial.println("Timezone");
+  Serial.println(tzConf);
+  waitForSync();
   // tz.setLocation(tzConf);
   // Serial.println(tz.dateTime());
-
-  // setup_webserver();
-
-  // // MediaPlayer.play("/system/nowifi.gif");
-
-  // // if (!dirFile.open("/")) {
-  // //   error("open root failed");
-  // // }
+  setup_webserver();
 
   decoder.setScreenClearCallback(screenClearCallback);
   decoder.setUpdateScreenCallback(updateScreenCallback);
@@ -330,46 +330,16 @@ void setup() {
   decoder.setFilePositionCallback(filePositionCallback);
   decoder.setFileReadCallback(fileReadCallback);
   decoder.setFileReadBlockCallback(fileReadBlockCallback);
-
-  // pongClock  = new PixelFrame::PongClockClass(matrix, tzConf);
-  // pongClock->setup();
-  // Serial.print(pathname);
-
-  if (file) file.close();
-  file = LittleFS.open(pathname, "r");
-  if (!file) {
-    Serial.println(": Error opening GIF file");
-    while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
-  }
-  Serial.println(": Opened GIF file, start decoding");
 }
 
 unsigned long _timer = millis();
-// long lastClockMillis = 0;
 void loop() {
   if ((millis() - _timer) >= 10*1000) {
     fsm_handle::dispatch(toggle);
     _timer = millis();
-  //   ESP.getFreeHeap();
   };
-  // //
-  // MediaPlayer.loop();
-  // // delay(2);
 
-  // MediaPlayer.stop();
-
-  // fsm_handle::dispatch(loopUpdate);
-
-  //pongClock->loop();
-
-  // TODO: decodeFrame has a while loop that waits for the next frame to decode
-  //       we have to move it to main loop to avoid problems with wifi, server, etc.
-  // decoder.decodeFrame();
-  //decoder.loop();
-
-  //matrix->show();
-
-  //webserver_loop();
+  webserver_loop();
 
   fsm_handle::dispatch(loopUpdate);
 

@@ -9,7 +9,8 @@
 			"array": "cpp",
 			"initializer_list": "cpp",
 			"istream": "cpp",
-			"ostream": "cpp"
+			"ostream": "cpp",
+			"vector": "cpp"
 		}
 	}
 }
