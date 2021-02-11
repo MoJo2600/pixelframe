@@ -274,7 +274,6 @@ void setup() {
 
   // State machine
   // instantiate events
-  fsm_handle::start();
 
   // ### READ CONFIG
   Serial.print("Opening configuration file... ");
@@ -330,6 +329,8 @@ void setup() {
   decoder.setFilePositionCallback(filePositionCallback);
   decoder.setFileReadCallback(fileReadCallback);
   decoder.setFileReadBlockCallback(fileReadBlockCallback);
+
+  fsm_handle::start();
 }
 
 unsigned long _timer = millis();
