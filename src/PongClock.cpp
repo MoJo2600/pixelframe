@@ -4,12 +4,13 @@
 #include "ezTime.h"
 #include "fonts/TomThumbPatched.h"
 
-using namespace PixelFrame;
-
 // #define DEBUG
 
 PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf) : matrix(matrix) {
+  Serial.println("Wait for sync");
   waitForSync();
+  Serial.println("Set location");
+  Serial.println(tzConf);
   tz.setLocation(tzConf);
 };
 

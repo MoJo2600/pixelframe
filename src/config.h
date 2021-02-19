@@ -1,3 +1,5 @@
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
 /***************************************************************************************
 *    Title: <title of program/source code>
 *    Author: <author(s) names>
@@ -6,9 +8,6 @@
 *    Availability: <where it's located>
 *
 ***************************************************************************************/
-
-#ifndef config_h
-#define config_h
 
 // #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 // #include <FS.h>
@@ -20,6 +19,9 @@ bool init_done = 0;
 
 #include <FastLED_NeoMatrix.h>
 #define FASTLED_NEOMATRIX
+
+// LED setup
+#define FRAMES_PER_SECOND 60
 
 #define DATA_PIN          5
 uint8_t matrix_brightness = 64;
@@ -222,5 +224,5 @@ void matrix_setup(bool initserial=true, int reservemem = 40000) {
     // Hence, flush input.
     while(Serial.available() > 0) { char t = Serial.read(); t = t; }
 }
-#endif // config_h
+#endif // CONFIG_H_INCLUDED
 // vim:sts=4:sw=4:et

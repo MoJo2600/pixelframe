@@ -10,7 +10,8 @@
 			"initializer_list": "cpp",
 			"istream": "cpp",
 			"ostream": "cpp",
-			"vector": "cpp"
+			"vector": "cpp",
+			"random": "cpp"
 		}
 	}
 }
