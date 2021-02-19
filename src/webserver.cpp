@@ -7,19 +7,42 @@
 #include <ArduinoJson.h>
 #include <FastLED.h>
 
+const char* fsName = "LittleFS";
+FS* fileSystem = &LittleFS;
+LittleFSConfig fileSystemConfig = LittleFSConfig();
+
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81
 
 const char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
-String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
-  if (bytes < 1024) {
-    return String(bytes) + "B";
-  } else if (bytes < (1024 * 1024)) {
-    return String(bytes / 1024.0) + "KB";
-  } else if (bytes < (1024 * 1024 * 1024)) {
-    return String(bytes / 1024.0 / 1024.0) + "MB";
-  }
+static const char TEXT_PLAIN[] PROGMEM = "text/plain";
+static const char FS_INIT_ERROR[] PROGMEM = "FS INIT ERROR";
+static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
+
+////////////////////////////////
+// Utils to return HTTP codes, and determine content-type
+
+void replyOK() {
+  server.send(200, FPSTR(TEXT_PLAIN), "");
+}
+
+void replyOKWithMsg(String msg) {
+  server.send(200, FPSTR(TEXT_PLAIN), msg);
+}
+
+void replyNotFound(String msg) {
+  server.send(404, FPSTR(TEXT_PLAIN), msg);
+}
+
+void replyBadRequest(String msg) {
+  Serial.println(msg);
+  server.send(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
+}
+
+void replyServerError(String msg) {
+  Serial.println(msg);
+  server.send(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
 }
 
 String getContentType(String filename) { // determine the filetype of a given filename, based on the extension
@@ -49,23 +72,77 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   return false;
 }
 
+/*
+   Return the list of files in the directory specified by the "dir" query string parameter.
+   Also demonstrates the use of chuncked responses.
+*/
+void handleFileList() {
+  // if (!fsOK) {
+  //   return replyServerError(FPSTR(FS_INIT_ERROR));
+  // }
+
+  if (!server.hasArg("dir")) {
+    return replyBadRequest(F("DIR ARG MISSING"));
+  }
+
+  String path = server.arg("dir");
+  if (path != "/" && !fileSystem->exists(path)) {
+    return replyBadRequest("BAD PATH");
+  }
+
+  Serial.println(String("handleFileList: ") + path);
+  Dir dir = fileSystem->openDir(path);
+  path.clear();
+
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  // use HTTP/1.1 Chunked response to avoid building a huge temporary string
+  if (!server.chunkedResponseModeStart(200, "application/json")) {
+    server.send(505, F("text/html"), F("HTTP1.1 required"));
+    return;
+  }
+
+  // use the same string for every line
+  String output;
+  output.reserve(64);
+  while (dir.next()) {
+
+    if (output.length()) {
+      // send string from previous iteration
+      // as an HTTP chunk
+      server.sendContent(output);
+      output = ',';
+    } else {
+      output = '[';
+    }
+
+    output += "{\"type\":\"";
+    if (dir.isDirectory()) {
+      output += "dir";
+    } else {
+      output += F("file\",\"size\":\"");
+      output += dir.fileSize();
+    }
+
+    output += F("\",\"name\":\"");
+    // Always return names without leading "/"
+    if (dir.fileName()[0] == '/') {
+      output += &(dir.fileName()[1]);
+    } else {
+      output += dir.fileName();
+    }
+
+    output += "\"}";
+  }
+
+  // send last string
+  output += "]";
+  server.sendContent(output);
+  server.chunkedResponseFinalize();
+}
+
 void handleNotFound(){ // if the requested file or page doesn't exist, return a 404 not found error
   if(!handleFileRead(server.uri())){          // check if the file exists in the flash memory (LittleFS), if so, send it
     server.send(404, "text/plain", "404: File Not Found");
-  }
-}
-
-void startLittleFS() { // Start the LittleFS and list all contents
-  LittleFS.begin();                             // Start the SPI Flash File System (LittleFS)
-  Serial.println("LittleFS started. Contents:");
-  {
-    Dir dir = LittleFS.openDir("/");
-    while (dir.next()) {                      // List the file system contents
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    Serial.printf("\n");
   }
 }
 
@@ -97,6 +174,43 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         Serial.println(brightness);
         FastLED.setBrightness(brightness);
       }
+
+      const char* action = received["action"];
+      if (action) {
+        Serial.print("Got action: ");
+        Serial.println(action);
+      }
+
+      const char* timezone = received["timezone"];
+      if (timezone) {
+        Serial.println("Setting timezone");
+        Serial.println(timezone);
+      }
+
+
+      // TODO: If 'save settings'
+
+      // // get wifi config from homie
+      // File file = SPIFFS.open("/system/config.json", "r");               // Open the file
+      // DynamicJsonDocument doc(1024);
+      // // Deserialize the JSON document
+      // error = deserializeJson(doc, file);
+      // if (error) {
+      //   Serial.println(F("Failed to read file, using default configuration"));
+      //   return;
+      // }
+
+      // doc["timezone"] = received["dry"];
+      // doc["settings"]["wetReadingAt3V"] = received["wet"];
+      // doc["settings"]["batteryFull"] = received["battery"];
+      // doc["settings"]["startCalibration"] = false;
+
+      // file.close();                                                     // Close the file again
+
+      // file = SPIFFS.open("/system/config.json", "w");                    // Open the file
+      // serializeJson(doc, file);
+      // file.close();
+
       break;
   }
 }
@@ -121,6 +235,10 @@ void startMDNS() { // Start the mDNS responder
 }
 
 void startServer() { // Start a HTTP server with a file read handler and an upload handler
+
+  // List directory
+  server.on("/list", HTTP_GET, handleFileList);
+
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
                                               // and check if the file exists
 
@@ -136,7 +254,7 @@ void setup_webserver() {
 
   // startWiFi();                 // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   
-  startLittleFS();               // Start the LittleFS and list all contents
+  // startLittleFS();               // Start the LittleFS and list all contents
 
   startWebSocket();            // Start a WebSocket server
   

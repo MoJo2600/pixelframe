@@ -15,139 +15,79 @@
  by Christian Erhardt
  */
 // #define _stackSize (6748/4)
-#define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 #include "SPI.h"
 #include "lib/stdinout.h"
-// #define FASTLED_ALLOW_INTERRUPTS 0 // https://github.com/FastLED/FastLED/issues/306
+// #define FASTLED_ALLOW_INTERRUPTS 0  // https://github.com/FastLED/FastLED/issues/306
 // #define FASTLED_ESP8266_DMA
 
 #include "ESP8266WiFi.h"
 #include "ArduinoJson.h"
-// #include "MediaPlayer.h"
-#include "SdFat.h"
-#include "NTPClient.h"
+//#include "NTPClient.h"
 #include "WiFiUdp.h"
-
-#include <Adafruit_GFX.h>
-#include <FastLED_NeoMatrix.h>
-#include "FastLED.h"
-#include "PongClock.h"
-
-// Web interface
-#include "webserver.h"
-
-#define MATRIX_TILE_WIDTH   16 // width of EACH NEOPIXEL MATRIX (not total display)
-#define MATRIX_TILE_HEIGHT  16 // height of each matrix
-#define MATRIX_TILE_H       1  // number of matrices arranged horizontally
-#define MATRIX_TILE_V       1  // number of matrices arranged vertically
-
-// Used by NeoMatrix
-#define mw (MATRIX_TILE_WIDTH *  MATRIX_TILE_H)
-#define mh (MATRIX_TILE_HEIGHT * MATRIX_TILE_V)
-#define NUMMATRIX (mw*mh)
-
-uint8_t matrix_brightness = 32;
-
-CRGB matrixleds[NUMMATRIX];
-
-FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(matrixleds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V, 
-  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
-  NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG + 
-  NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE);
-
-const uint16_t colors[] = {
-  matrix->Color(255, 0, 0), matrix->Color(0, 255, 0), matrix->Color(0, 0, 255) };
-
-// SD Card setup
-SdFat sd;
-// SdFile dirFile;
-File fd;
+#include "LittleFS.h"
+#include "config.h"                     // Set up the LED matrix here
+#include "lib/gif/GifDecoder.h"
+#include "ezTime.h"
+#include "webserver.h"                  // Web interface
+#include "pixelframe.hpp"               // Statemachine
+#include <filesystem.hpp>
 
 bool
   wifiConnected = false;
 
 #define SD_CS_PIN 4
 
-// LED setup
-#define FRAMES_PER_SECOND 60 // TODO: implement
-#define DATA_PIN          5
-#define BRIGHTNESS        48
-// #define CANVAS_WIDTH      16
-// #define CANVAS_HEIGHT     16
-// #define NUM_LEDS          (CANVAS_WIDTH * CANVAS_HEIGHT)
-// CRGB leds[NUM_LEDS];
-// CRGB leds_buf[NUM_LEDS];
-
 StaticJsonDocument<512> configuration;
 
-WiFiUDP ntpUDP;
-// TODO: implement daylight savings time, etc
-NTPClient timeClient(ntpUDP, 3600*2);
+// Timezone tz;
 
-PixelFrame::PongClockClass *pongClock  = new PixelFrame::PongClockClass(*matrix, timeClient, sd);
+// Statemachine handle
+FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
+using fsm_handle = PixelframeStateMachine;
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
 
+fs::File file;
+
+// instantiate events
+ToggleEvent toggle;
+LoopEvent loopUpdate;
+
 void setup() {
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
+  Serial.begin(74880);
+
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
   delay(500);
 
-  // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS); // GRB ordering is assumed
-  // FastLED.setBrightness(BRIGHTNESS);
-
-  FastLED.addLeds<WS2812B,DATA_PIN>(matrixleds, NUMMATRIX); 
-  matrix->begin();
-  matrix->setTextWrap(false);
-  matrix->setBrightness(matrix_brightness);
-  // matrix->setTextColor(colors[0]);
-
-  // clearStripBuffer();
-  // fastledshow();
-
-  matrix->clear();
-  // End Black screen
-
   // stdout to serial setup
   hal_printf_init();
 
-  Serial.print("Initializing SD card... ");
-  if (!sd.begin(SD_CS_PIN)) {
-    error("initialization failed!");
-    return;
-  }
-  Serial.println("ok");
+  // Setup matrix
+  matrix_setup();
+  matrix->clear();
 
-
-  // MediaPlayer.setup(leds, &sd);
-
-  // Switch to bmp
-  // MediaPlayer.play("system/nowifi.gif");
+  startLittleFS();
 
   // ### READ CONFIG
   Serial.print("Opening configuration file... ");
-  if (!fd.open("system/config.json", O_READ))
-  {
-    error("opening config failed");
-    return;
-  }
+  file = LittleFS.open("system/config.json", "r");
   Serial.println("ok");
 
   Serial.println("reading json config");
-  char jsonData[fd.size() + 1];
+  char jsonData[file.size() + 1];
   int stringIndex = 0;
   int data;
-  while ((data = fd.read()) >= 0)
+  while ((data = file.read()) >= 0)
   {
     jsonData[stringIndex] = data;
     stringIndex++;
   }
   jsonData[stringIndex] = '\0'; // Add the NULL
-  fd.close();
+  file.close();
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(configuration, jsonData);
@@ -160,58 +100,49 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  // Serial.println("Clear screen");
-
   Serial.println("Connect wifi");
-
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+  // Wait for the Wi-Fi to connect
+  while (WiFi.status() != WL_CONNECTED) { 
     delay(500);
     Serial.print('.');
   }
   Serial.println(WiFi.localIP());
 
-  timeClient.begin();
-
+  // Time
+  // const char* tzConf = configuration["timezone"];
+  // Serial.println("Timezone");
+  // Serial.println(tzConf);
+  // waitForSync();
+  // tz.setLocation(tzConf);
+  // Serial.println(tz.dateTime());
   setup_webserver();
 
-  // MediaPlayer.play("/system/nowifi.gif");
-
-  // if (!dirFile.open("/")) {
-  //   error("open root failed");
-  // }
-
-  // initClock();
-  pongClock->setup();
+  fsm_handle::start();
 }
 
-// long lastClockMillis = 0;
+unsigned long _timer = millis();
 void loop() {
-  // //
-  // MediaPlayer.loop();
-  // // delay(2);
+  // if ((millis() - _timer) >= 10*1000) {
+  //   fsm_handle::dispatch(toggle);
+  //   _timer = millis();
+  // };
 
   webserver_loop();
 
-  // MediaPlayer.stop();
-  timeClient.update();
-
-  // showClock();
-  pongClock->loop();
-
-  matrix->show();
+  fsm_handle::dispatch(loopUpdate);
 
 #ifdef ESP8266
-// Disable watchdog interrupt so that it does not trigger in the middle of
-// updates. and break timing of pixels, causing random corruption on interval
-// https://github.com/esp8266/Arduino/issues/34
-    ESP.wdtDisable();
+  // Disable watchdog interrupt so that it does not trigger in the middle of
+  // updates. and break timing of pixels, causing random corruption on interval
+  // https://github.com/esp8266/Arduino/issues/34
+  ESP.wdtDisable();
 #endif
   // insert a delay to keep the framerate modest
   FastLED.delay(1000/FRAMES_PER_SECOND); 
 #ifdef ESP8266
-    ESP.wdtEnable(1000);
+  ESP.wdtEnable(1000);
 #endif
 
 }
