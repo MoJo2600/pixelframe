@@ -1,0 +1,322 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: Pixelframe
+servers:
+  - url: http://pixelframe.local/v1
+paths:
+  /configuration:
+    delete:
+      operationId: deleteConfiguration
+      summary: Reset configuration
+      tags:
+        - configuration
+      responses:
+        "204":
+          description: No content
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /configuration/basic:
+    get:
+      operationId: getBasicConfiguration
+      summary: Get basic configuration
+      tags:
+        - configuration
+      responses:
+        "200":
+          description: Basic configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicConfiguration"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: patchBasicConfiguration
+      summary: Update basic configuration
+      tags:
+        - configuration
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/UpdateBasicConfiguration"
+      responses:
+        "200":
+          description: Basic configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicConfiguration"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /configuration/wifi:
+    get:
+      operationId: getWifiConfiguration
+      summary: Get WiFi configuration
+      tags:
+        - configuration
+      responses:
+        "200":
+          description: WiFi configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WifiConfiguration"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: putWifiConfiguration
+      summary: Update WiFi configuration
+      tags:
+        - configuration
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/UpdateWifiConfiguration"
+      responses:
+        "200":
+          description: Wifi configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WifiConfiguration"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /environment/wifis:
+    get:
+      operationId: getEnvironmentWifis
+      summary: Get list of available WiFis
+      tags:
+        - environment
+      responses:
+        "200":
+          description: Available Wifis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentWifiList"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /images:
+    get:
+      operationId: getImages
+      summary: Get list of images
+      tags:
+        - images
+      responses:
+        "200":
+          description: Available images
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImagesList"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: postImages
+      summary: Add new image
+      tags:
+        - images
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UploadImage"
+      responses:
+        "200":
+          description: Image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /images/{id}:
+    delete:
+      operationId: deleteImage
+      summary: Delete image
+      tags:
+        - images
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the image to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No content
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    BasicConfiguration:
+      type: object
+      required:
+        - brightness
+        - timezone
+      properties:
+        brightness:
+          type: integer
+          minimum: 0
+          maximum: 255
+        timezone:
+          type: string
+
+    UpdateBasicConfiguration:
+      type: object
+      properties:
+        brightness:
+          type: integer
+          minimum: 0
+          maximum: 255
+        timezone:
+          type: string
+
+    WifiConfiguration:
+      type: object
+      required:
+        - ssid
+      properties:
+        ssid:
+          type: string
+
+    UpdateWifiConfiguration:
+      type: object
+      required:
+        - ssid
+        - password
+      properties:
+        ssid:
+          type: string
+        password:
+          type: string
+
+    EnvironmentWifi:
+      type: object
+      required:
+        - ssid
+        - signalStrength
+      properties:
+        ssid:
+          type: string
+        signalStrength:
+          type: integer
+
+    EnvironmentWifiList:
+      type: array
+      items:
+        $ref: "#/components/schemas/EnvironmentWifi"
+
+    Image:
+      type: object
+      required:
+        - id
+        - url
+        - fileType
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        fileType:
+          type: string
+
+    ImagesList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Image"
+
+    UploadImage:
+      type: object
+      required:
+        - fileType
+        - file
+      properties:
+        fileType:
+          type: string
+        file:
+          type: string
+          format: binary
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
