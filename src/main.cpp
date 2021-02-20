@@ -30,6 +30,7 @@
 #include "webserver.h"                  // Web interface
 #include "pixelframe.hpp"               // Statemachine
 #include <filesystem.hpp>
+#include <PubSubClient.h>
 
 bool
   wifiConnected = false;
@@ -37,6 +38,10 @@ bool
 #define SD_CS_PIN 4
 
 StaticJsonDocument<512> configuration;
+
+// MQTT client
+WiFiClient esp_client;
+PubSubClient mqtt_client(esp_client);
 
 // Timezone tz;
 
@@ -52,6 +57,20 @@ fs::File file;
 // instantiate events
 ToggleEvent toggle;
 LoopEvent loopUpdate;
+
+void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+  StaticJsonDocument<256> doc;
+  deserializeJson(doc, payload, length);
+  String pattern = doc["pattern"]; // e.g. "blink_slowly"
+  JsonArray color = doc["color"];
+  int R = color[0]; // e.g. 255
+  int G = color[1]; // e.g. 255
+  int B = color[2]; // e.g. 255
+  int duration = doc["duration"]; // e.g. 10
+
+  Serial.println("[MQTT] PATTERN received! ");
+
+}
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -109,6 +128,33 @@ void setup() {
   }
   Serial.println(WiFi.localIP());
 
+  // Read MQTT settings
+  const char* mqtt_host = configuration["mqtt"]["host"];
+  const int mqtt_port = configuration["mqtt"]["port"];
+  const char* mqtt_user = configuration["mqtt"]["user"];
+  const char* mqtt_pass = configuration["mqtt"]["password"];
+  const char* mqtt_sub_topic = configuration["mqtt"]["topic"];
+
+  // Create MQTT connection
+  mqtt_client.setServer(mqtt_host, mqtt_port);
+  mqtt_client.setCallback(mqtt_callback);
+  while (!mqtt_client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String mqtt_client_id = "pixelframe-";
+    mqtt_client_id += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (mqtt_client.connect(mqtt_client_id.c_str(), mqtt_user, mqtt_pass)) {
+      Serial.println("connected");
+      mqtt_client.subscribe(mqtt_sub_topic);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqtt_client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000); // Wait 5 seconds before retrying
+    }
+  }
+
   // Time
   // const char* tzConf = configuration["timezone"];
   // Serial.println("Timezone");
@@ -121,12 +167,39 @@ void setup() {
   fsm_handle::start();
 }
 
+// Should be MQTT reconnection function
+// void mqtt_reconnect() {
+//   // Loop until we're reconnected
+//   while (!mqtt_client.connected()) {
+//     Serial.print("Attempting MQTT connection...");
+//     // Create a random client ID
+//     String mqtt_client_id = "pixelframe-";
+//     mqtt_client_id += String(random(0xffff), HEX);
+//     // Attempt to connect
+//     if (mqtt_client.connect(mqtt_client_id.c_str(), mqtt_user, mqtt_pass)) {
+//       Serial.println("connected");
+//       mqtt_client.subscribe(mqtt_sub_topic);
+//     } else {
+//       Serial.print("failed, rc=");
+//       Serial.print(mqtt_client.state());
+//       Serial.println(" try again in 5 seconds");
+//       delay(5000); // Wait 5 seconds before retrying
+//     }
+//   }
+// }
+
 unsigned long _timer = millis();
 void loop() {
   // if ((millis() - _timer) >= 10*1000) {
   //   fsm_handle::dispatch(toggle);
   //   _timer = millis();
   // };
+
+  // should be checking for MQTT connection and reconnect
+  // if (!mqtt_client.connected()) {
+  //   mqtt_reconnect(mqtt_user, mqtt_pass, mqtt_sub_topic);
+  // }
+  mqtt_client.loop();
 
   webserver_loop();
 
