@@ -2,6 +2,12 @@ SHELL := /bin/zsh
 .DEFAULT_GOAL := help
 
 ###########################
+# VARS
+###########################
+
+MOCK_API_DIR := mock-api
+
+###########################
 # TARGETS
 ###########################
 
@@ -20,3 +26,15 @@ dev-build: ## Build the development docker environment
 .PHONY: dev-prune
 dev-prune: ## Cleanup the development docker environment
 	docker-compose down -v --remove-orphans --rmi all
+
+.PHONY: mock-api
+mock-api: ## Start up mock api
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json
+
+.PHONY: mock-api-delay
+mock-api-delay: ## Start up mock api with delay
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --delay 3000
+
+.PHONY: mock-api-error
+mock-api-error: ## Start up mock api with error middleware
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --middlewares ${MOCK_API_DIR}/middlewares/internalServerError.js

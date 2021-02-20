@@ -1,0 +1,4 @@
+{
+  "/configuration/*": "/configuration-$1",
+  "/environment/*": "/environment-$1"
+}

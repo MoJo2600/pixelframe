@@ -1,0 +1,20 @@
+{
+  "configuration-basic": {
+    "brightness": 230,
+    "timezone": "Europe/Berlin"
+  },
+  "configuration-wifi": {
+    "ssid": "asdf",
+    "password": "asdf"
+  },
+  "environment-wifis": [
+    {
+      "ssid": "ssid1",
+      "signalStrength": 0
+    },
+    {
+      "ssid": "ssid2",
+      "signalStrength": 0
+    }
+  ]
+}
