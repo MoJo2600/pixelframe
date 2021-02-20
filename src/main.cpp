@@ -17,6 +17,7 @@
 // #define _stackSize (6748/4)
 #include "SPI.h"
 #include "lib/stdinout.h"
+#include "lib/gif/GifDecoder.h"
 // #define FASTLED_ALLOW_INTERRUPTS 0  // https://github.com/FastLED/FastLED/issues/306
 // #define FASTLED_ESP8266_DMA
 
@@ -24,10 +25,7 @@
 #include "ArduinoJson.h"
 //#include "NTPClient.h"
 #include "WiFiUdp.h"
-#define FS_NO_GLOBALS
-#include "LittleFS.h"
 #include "config.h"                     // Set up the LED matrix here
-#include "lib/gif/GifDecoder.h"
 #include "ezTime.h"
 #include "webserver.h"                  // Web interface
 #include "pixelframe.hpp"               // Statemachine
