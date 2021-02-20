@@ -4,7 +4,7 @@
     "timezone": "Europe/Berlin"
   },
   "configuration-wifi": {
-    "ssid": "asdf",
+    "ssid": "ssid1",
     "password": "asdf"
   },
   "environment-wifis": [

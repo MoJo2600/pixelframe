@@ -1,2 +1,3 @@
 export * from "./service";
-export * from "./configuration.service";
+export * from "./configuration";
+export * from "./environment";
