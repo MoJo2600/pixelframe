@@ -3,8 +3,10 @@ root = true
 [*]
 end_of_line = lf
 insert_final_newline = true
+indent_style = space
+indent_size = 2
 
-[*.{h,cpp}]
+[*.{h,cpp,hpp}]
 indent_style = space
 indent_size = 2
 
