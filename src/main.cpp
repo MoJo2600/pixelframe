@@ -24,6 +24,7 @@
 #include "ArduinoJson.h"
 //#include "NTPClient.h"
 #include "WiFiUdp.h"
+#define FS_NO_GLOBALS
 #include "LittleFS.h"
 #include "config.h"                     // Set up the LED matrix here
 #include "lib/gif/GifDecoder.h"
