@@ -1,15 +1,13 @@
 #pragma once
 
-// #include "lib/gifdec.h"
 #include "FastLED.h"
 #include "FastLED_NeoMatrix.h"
 #include "ezTime.h"
 
-
 class PongClockClass {
     public:
         //, NTPClient &client
-        PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf);
+        PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz);
         ~PongClockClass();
         void setup();
         void start();
@@ -55,7 +53,7 @@ class PongClockClass {
         current_minute = 0,
         current_hour = 0;
 
-        Timezone tz;
+        Timezone * tz;
         FastLED_NeoMatrix * matrix;
 
         void printDigits(int digits);

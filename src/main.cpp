@@ -17,7 +17,6 @@
 // #define _stackSize (6748/4)
 #include "SPI.h"
 #include "lib/stdinout.h"
-#include "lib/gif/GifDecoder.h"
 // #define FASTLED_ALLOW_INTERRUPTS 0  // https://github.com/FastLED/FastLED/issues/306
 // #define FASTLED_ESP8266_DMA
 
@@ -123,10 +122,12 @@ void setup() {
 
 unsigned long _timer = millis();
 void loop() {
-  // if ((millis() - _timer) >= 10*1000) {
-  //   fsm_handle::dispatch(toggle);
-  //   _timer = millis();
-  // };
+  if ((millis() - _timer) >= 500) {  // 1*1000
+    fsm_handle::dispatch(toggle);
+    Serial.println("Memory after state switch");
+    show_free_mem();
+    _timer = millis();
+  };
 
   webserver_loop();
 

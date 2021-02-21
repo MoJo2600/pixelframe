@@ -6,15 +6,15 @@
 
 // #define DEBUG
 
-PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf) : matrix(matrix) {
-  Serial.println("Wait for sync");
-  waitForSync();
-  Serial.println("Set location");
-  Serial.println(tzConf);
-  tz.setLocation(tzConf);
+PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz) : matrix(matrix), tz{tz} {
+  // Serial.println("Wait for sync");
+  // Serial.println("Set location");
+  // Serial.println(tzConf);
 };
 
-PongClockClass::~PongClockClass(){};
+PongClockClass::~PongClockClass(){
+
+};
 
 void PongClockClass::start() {
 }
@@ -34,9 +34,9 @@ void PongClockClass::printDigits(int digits)
 void PongClockClass::debugClockDisplay()
 {
   // digital clock display of the time
-  Serial.print(tz.hour());
-  printDigits(tz.minute());
-  printDigits(tz.second());
+  Serial.print(tz->hour());
+  printDigits(tz->minute());
+  printDigits(tz->second());
   Serial.println();
 }
 
@@ -201,19 +201,19 @@ int PongClockClass::pong_predict_y(int x, int y, int angle)
 
 void PongClockClass::loop()
 {
-  if (tz.second() != lastSecond)
+  if (tz->second() != lastSecond)
   {
     secondCounter++;
-    lastSecond = tz.second();
+    lastSecond = tz->second();
     
 #ifdef DEBUG
     debugClockDisplay();
 #endif
 
-    if (tz.second() == 0)
+    if (tz->second() == 0)
     {
       // register pong score change
-      if (tz.minute() == 0) pong_scored_hour = true;
+      if (tz->minute() == 0) pong_scored_hour = true;
       else pong_scored_minute = true;
     }
   }
@@ -244,7 +244,7 @@ void PongClockClass::loop()
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
           // 24 hour conversion
-          current_minute = tz.minute();
+          current_minute = tz->minute();
           drawDigits();
         }
       }
@@ -266,7 +266,7 @@ void PongClockClass::loop()
         {
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
-          current_hour = tz.hour();
+          current_hour = tz->hour();
           drawDigits();
         }
       }
@@ -383,7 +383,7 @@ void PongClockClass::setup(){
   lastSecond = 255;
   pong_reset = true;
   matrix->setTextWrap(false);
-  current_minute = tz.minute();
-  current_hour = tz.hour();
+  current_minute = tz->minute();
+  current_hour = tz->hour();
   drawDigits();
 }
