@@ -39,9 +39,9 @@ bool
 
 StaticJsonDocument<512> configuration;
 
-// MQTT client
-WiFiClient esp_client;
-PubSubClient mqtt_client(esp_client);
+// Creates a partially initialised mqttclient instance.
+WiFiClient wifi_client;
+PubSubClient mqtt_client(wifi_client);
 
 // Timezone tz;
 
@@ -58,6 +58,7 @@ fs::File file;
 ToggleEvent toggle;
 LoopEvent loopUpdate;
 
+// mqtt subscription callback. This function is called when new messages arrive at the client.
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);
@@ -68,8 +69,14 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
   int B = color[2]; // e.g. 255
   int duration = doc["duration"]; // e.g. 10
 
-  Serial.println("[MQTT] PATTERN received! ");
-
+  // Print received MQTT message. TODO: format JSON
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println("): ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
 }
 
 void setup() {
@@ -139,18 +146,18 @@ void setup() {
   mqtt_client.setServer(mqtt_host, mqtt_port);
   mqtt_client.setCallback(mqtt_callback);
   while (!mqtt_client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.println("[MQTT] connecting..");
     // Create a random client ID
     String mqtt_client_id = "pixelframe-";
     mqtt_client_id += String(random(0xffff), HEX);
     // Attempt to connect
     if (mqtt_client.connect(mqtt_client_id.c_str(), mqtt_user, mqtt_pass)) {
-      Serial.println("connected");
+      Serial.println("[MQTT] connected!");
       mqtt_client.subscribe(mqtt_sub_topic);
     } else {
-      Serial.print("failed, rc=");
+      Serial.print("[MQTT] failed, rc=");
       Serial.print(mqtt_client.state());
-      Serial.println(" try again in 5 seconds");
+      Serial.println(" retry in 5s.");
       delay(5000); // Wait 5 seconds before retrying
     }
   }
