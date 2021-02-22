@@ -38,8 +38,6 @@ class PongClockClass {
         pong_reset = false,
         pong_ball_direction = 0,
 
-        wifiConnected = false;
-
         unsigned long
         pong_celebration_end = 0,
         pong_showtime = 0;
@@ -67,5 +65,4 @@ class PongClockClass {
         byte getScreenIndex(byte x, byte y);
         void fastledshow();
         int pong_predict_y(int x, int y, int angle);
-
 };

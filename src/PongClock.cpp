@@ -6,21 +6,13 @@
 
 // #define DEBUG
 
-PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz) : matrix(matrix), tz{tz} {
-  // Serial.println("Wait for sync");
-  // Serial.println("Set location");
-  // Serial.println(tzConf);
-};
+PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz) : matrix(matrix), tz{tz} {};
 
-PongClockClass::~PongClockClass(){
+PongClockClass::~PongClockClass(){ };
 
-};
+void PongClockClass::start() { }
 
-void PongClockClass::start() {
-}
-
-void PongClockClass::stop() {
-}
+void PongClockClass::stop() { }
 
 void PongClockClass::printDigits(int digits)
 {

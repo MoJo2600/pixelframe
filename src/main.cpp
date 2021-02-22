@@ -37,10 +37,11 @@ bool
 
 StaticJsonDocument<512> configuration;
 
-// Timezone tz;
+Timezone * tz = new Timezone();
 
 // Statemachine handle
 FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
+Timezone * PixelframeStateMachine::timezone{tz};
 using fsm_handle = PixelframeStateMachine;
 
 // Error messages stored in flash.
@@ -109,12 +110,13 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Time
-  // const char* tzConf = configuration["timezone"];
-  // Serial.println("Timezone");
-  // Serial.println(tzConf);
-  // waitForSync();
-  // tz.setLocation(tzConf);
-  // Serial.println(tz.dateTime());
+  Serial.println("Adjusting Clock");
+  const char* tzConf = configuration["timezone"];
+  waitForSync();
+  tz->setLocation(tzConf);
+  Serial.println(tz->dateTime());
+  Serial.println((String)"Timezone: " + tzConf);
+
   setup_webserver();
 
   fsm_handle::start();

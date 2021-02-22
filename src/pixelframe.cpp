@@ -22,7 +22,7 @@ class ClockState
   public:
     void entry() override {
         cout << "Entering Clock mode" << endl;
-        clock = new PongClockClass(base::pixel_matrix, base::tz);
+        clock = new PongClockClass(base::pixel_matrix, base::timezone);
         clock->setup();
     }
 
@@ -37,11 +37,10 @@ class ClockState
     };
 
     void exit() {
-        delete clock;
+      cout << "Exit Clock mode" << endl;
+      delete clock;
     }
 };
-
-Timezone * PixelframeStateMachine::tz = new Timezone();
 
 
 // class Clock

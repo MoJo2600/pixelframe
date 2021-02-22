@@ -15,21 +15,15 @@ class PixelframeStateMachine
 {
   // friend class tinyfsm::Fsm<PixelframeStateMachine>;
   // friend class tinyfsm::Fsm<PongClockClass>;
-  protected:
-    static Timezone * tz;
 
   public:
     static FastLED_NeoMatrix * pixel_matrix;
-    void PixelframeState(FastLED_NeoMatrix *) {
-      waitForSync();
-      tz->setLocation("Europe/Berlin");
-    };
+    static Timezone * timezone;
+    void PixelframeState(FastLED_NeoMatrix *, Timezone *);
     virtual void react(ToggleEvent const &);
     virtual void react(LoopEvent const &);
     virtual void entry(void) { };  /* entry actions in some states */
-    void         exit(void)  {
-      delete tz;
-    };  /* no exit actions */
+    void         exit(void)  { };  /* no exit actions */
 
     static FastLED_NeoMatrix * getMatrix() { return pixel_matrix; }
 };
