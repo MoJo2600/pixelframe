@@ -133,6 +133,9 @@ import DataLoaderError from "@/components/DataLoaderError.vue";
 import { DataLoaderMixin } from "@/mixins";
 import { BasicConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService } from "@/services";
+import NotificationModule, {
+  NotificationType
+} from "@/store/modules/notification";
 import timezones from "@/assets/timezones.json";
 
 @Component({
@@ -159,6 +162,11 @@ export default class BasicConfigurationView extends Mixins(DataLoaderMixin) {
     await this.configService.updateBasicConfiguratin({
       brightness: this.basicConfiguration.brightness
     });
+
+    NotificationModule.notify({
+      type: NotificationType.Success,
+      content: "Successfully updated brightness"
+    });
   }
 
   private async updateTimezone(): Promise<void> {
@@ -168,6 +176,11 @@ export default class BasicConfigurationView extends Mixins(DataLoaderMixin) {
 
     await this.configService.updateBasicConfiguratin({
       timezone: this.basicConfiguration.timezone
+    });
+
+    NotificationModule.notify({
+      type: NotificationType.Success,
+      content: "Successfully updated timezone"
     });
   }
 

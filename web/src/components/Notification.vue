@@ -41,7 +41,8 @@ export default class Notification extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.v-alert__content {
+.v-alert__content,
+.text-body-1 {
   margin: 0;
 }
 </style>

@@ -94,6 +94,9 @@ import DataLoaderError from "@/components/DataLoaderError.vue";
 import { DataLoaderMixin } from "@/mixins";
 import { UpdateWifiConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService, EnvironmentService } from "@/services";
+import NotificationModule, {
+  NotificationType
+} from "@/store/modules/notification";
 import { Wifi } from "@/models/environment";
 import { required } from "@/validation";
 
@@ -128,6 +131,11 @@ export default class WifiConfigurationView extends Mixins(DataLoaderMixin) {
     }
 
     this.configService.updateWifiConfiguration(this.wifiConfiguration);
+
+    NotificationModule.notify({
+      type: NotificationType.Success,
+      content: "Successfully updated WiFi configuration"
+    });
   }
 
   private async created(): Promise<void> {
