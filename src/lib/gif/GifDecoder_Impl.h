@@ -36,9 +36,9 @@
 #endif
 
 // This file contains C code, and ESP32 Arduino has changed to use the C++ template version of min()/max() which we can't use with C, so we can't depend on a #define min() from Arduino anymore
-#ifndef min
-#define min(a,b) ((a)<(b)?(a):(b))
-#endif
+// #ifndef min
+// #define min(a,b) ((a)<(b)?(a):(b))
+// #endif
 
 #include "GifDecoder.h"
 
@@ -680,6 +680,20 @@ extern void show_free_mem(const char *);
 extern void *mallocordie(const char *varname, uint32_t req, bool psram);
 
 template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
+GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::~GifDecoder(void) {
+    if (stack) {
+        // use PSRAM if available for those bigger buffers.
+        free(stack);
+        free(prefix);
+        free(suffix);
+        free(imageData);
+        free(imageDataBU);
+        free(palette);
+        free(tempBuffer);
+    }
+}
+
+template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
 int GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::startDecoding(void) {
     if (!stack) {
         // use PSRAM if available for those bigger buffers.
@@ -730,9 +744,16 @@ int GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::startDecoding(void) {
 }
 
 template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
+void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::stop(void) {
+    stopped = true;
+}
+
+template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
 void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::loop(void) {
-    if (nextFrameTime_ms <= millis()) {
-        decodeFrame();
+    if (!stopped) {
+        if (nextFrameTime_ms <= millis()) {
+            decodeFrame();
+        }
     }
 }
 
