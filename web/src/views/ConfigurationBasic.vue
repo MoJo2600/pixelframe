@@ -4,10 +4,12 @@
       <v-col cols="12">
         <h4 class="text-h4">
           Basic configuration
-          <spinner-text text="loading" :visible="loading" />
+          <spinner-text text="loading" v-if="loading" />
         </h4>
       </v-col>
     </v-row>
+
+    <data-loader-error v-if="error" text="Failed to load basic configuration" />
 
     <v-row>
       <v-col cols="12">
@@ -25,7 +27,8 @@
               </v-col>
               <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
                 <v-skeleton-loader
-                  v-if="loading"
+                  v-if="loading || error"
+                  :boilerplate="error"
                   class="mx-auto mt-2"
                   type="text"
                 ></v-skeleton-loader>
@@ -35,7 +38,6 @@
                   max="255"
                   v-model="basicConfiguration.brightness"
                   hide-details
-                  :disabled="error"
                   @end="updateBrightness"
                 ></v-slider>
               </v-col>
@@ -49,7 +51,8 @@
                 <v-row>
                   <v-col cols="6">
                     <v-skeleton-loader
-                      v-if="loading"
+                      v-if="loading || error"
+                      :boilerplate="error"
                       class="mx-auto mt-1 mb-3"
                       max-width="200"
                       type="text"
@@ -60,7 +63,8 @@
                   </v-col>
                   <v-col cols="6">
                     <v-skeleton-loader
-                      v-if="loading"
+                      v-if="loading || error"
+                      :boilerplate="error"
                       class="mx-auto mt-1 mb-3"
                       max-width="200"
                       type="text"
@@ -98,7 +102,8 @@
               </v-col>
               <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
                 <v-skeleton-loader
-                  v-if="loading"
+                  v-if="loading || error"
+                  :boilerplate="error"
                   class="skeleton-child-full-width"
                   type="button"
                 ></v-skeleton-loader>
@@ -109,7 +114,6 @@
                   outlined
                   dense
                   hide-details
-                  :disabled="error"
                   @change="updateTimezone"
                 ></v-autocomplete>
               </v-col>
@@ -118,10 +122,6 @@
         </v-card>
       </v-col>
     </v-row>
-
-    <v-row v-if="error">
-      Error loading data
-    </v-row>
   </v-container>
 </template>
 
@@ -129,6 +129,7 @@
 import Component from "vue-class-component";
 import { Mixins } from "vue-property-decorator";
 import SpinnerText from "@/components/SpinnerText.vue";
+import DataLoaderError from "@/components/DataLoaderError.vue";
 import { DataLoaderMixin } from "@/mixins";
 import { BasicConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService } from "@/services";
@@ -136,7 +137,8 @@ import timezones from "@/assets/timezones.json";
 
 @Component({
   components: {
-    SpinnerText
+    SpinnerText,
+    DataLoaderError
   }
 })
 export default class BasicConfigurationView extends Mixins(DataLoaderMixin) {

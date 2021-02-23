@@ -1,5 +1,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
+import NotificationModule, {
+  NotificationType
+} from "@/store/modules/notification";
 
 @Component
 export class DataLoaderMixin extends Vue {
@@ -10,8 +13,12 @@ export class DataLoaderMixin extends Vue {
     try {
       await fn();
     } catch (error) {
-      // console.log(error);
       this.error = true;
+      NotificationModule.notify({
+        type: NotificationType.Error,
+        content: "Failed to load data",
+        details: error.message
+      });
     } finally {
       this.loading = false;
     }

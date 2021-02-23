@@ -14,7 +14,10 @@ export abstract class Service {
     this.baseUrl = process.env.VUE_APP_API_BASE_URL;
 
     this.httpClient = Axios.create({
-      baseURL: this.baseUrl
+      baseURL: this.baseUrl,
+      timeout: process.env.VUE_APP_HTTP_CLIENT_TIMEOUT
+        ? Number(process.env.VUE_APP_HTTP_CLIENT_TIMEOUT)
+        : 5000
     });
   }
 

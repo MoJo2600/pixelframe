@@ -4,10 +4,12 @@
       <v-col cols="12">
         <h4 class="text-h4">
           WiFi configuration
-          <spinner-text text="loading" :visible="loading" />
+          <spinner-text text="loading" v-if="loading" />
         </h4>
       </v-col>
     </v-row>
+
+    <data-loader-error v-if="error" text="Failed to load WiFi configuration" />
 
     <v-row>
       <v-col cols="12">
@@ -20,7 +22,8 @@
                 </v-col>
                 <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
                   <v-skeleton-loader
-                    v-if="loading"
+                    v-if="loading || error"
+                    :boilerplate="error"
                     class="skeleton-child-full-width"
                     type="button"
                   ></v-skeleton-loader>
@@ -31,7 +34,6 @@
                     outlined
                     dense
                     hide-details
-                    :disabled="error"
                     :rules="[required]"
                   ></v-autocomplete>
                 </v-col>
@@ -43,7 +45,8 @@
                 </v-col>
                 <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
                   <v-skeleton-loader
-                    v-if="loading"
+                    v-if="loading || error"
+                    :boilerplate="error"
                     class="skeleton-child-full-width"
                     type="button"
                   ></v-skeleton-loader>
@@ -52,7 +55,6 @@
                     v-model="wifiConfiguration.password"
                     outlined
                     dense
-                    :disabled="error"
                     :rules="[required]"
                     :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                     @click:append="showPassword = !showPassword"
@@ -68,7 +70,7 @@
                     class="float-right"
                     color="primary"
                     type="submit"
-                    :disabled="loading || !formValid"
+                    :disabled="loading || error || !formValid"
                     depressed
                   >
                     Save
@@ -88,6 +90,7 @@ import { orderBy } from "lodash";
 import Component from "vue-class-component";
 import { Mixins } from "vue-property-decorator";
 import SpinnerText from "@/components/SpinnerText.vue";
+import DataLoaderError from "@/components/DataLoaderError.vue";
 import { DataLoaderMixin } from "@/mixins";
 import { UpdateWifiConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService, EnvironmentService } from "@/services";
@@ -96,7 +99,8 @@ import { required } from "@/validation";
 
 @Component({
   components: {
-    SpinnerText
+    SpinnerText,
+    DataLoaderError
   }
 })
 export default class WifiConfigurationView extends Mixins(DataLoaderMixin) {

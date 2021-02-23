@@ -1,5 +1,5 @@
 <template>
-  <span v-if="visible" class="ml-4 text-overline primary--text">
+  <span class="ml-4 text-overline primary--text">
     {{ text }}
     <v-progress-circular
       class="ml-2"
@@ -17,11 +17,6 @@ import { Prop } from "vue-property-decorator";
 
 @Component
 export default class SpinnerText extends Vue {
-  @Prop({
-    required: true
-  })
-  private visible!: boolean;
-
   @Prop({
     required: true
   })

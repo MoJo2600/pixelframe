@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer v-model="drawerVisible" app hide>
+  <v-navigation-drawer v-model="drawerVisible" app hide-overlay>
     <v-list nav>
       <template v-for="item in $router.options.routes">
         <v-list-item v-if="!item.children" :key="item.name" :to="item.path">
