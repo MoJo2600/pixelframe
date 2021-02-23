@@ -57,23 +57,26 @@ LoopEvent loopUpdate;
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
 void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, payload, length);
-  String pattern = doc["pattern"]; // e.g. "blink_slowly"
-  JsonArray color = doc["color"];
-  int R = color[0]; // e.g. 255
-  int G = color[1]; // e.g. 255
-  int B = color[2]; // e.g. 255
-  int duration = doc["duration"]; // e.g. 10
+  Serial.println((String)"[MQTT] message on (" + topic + ")");
+  fsm_handle::dispatch(toggle);
 
-  // Print received MQTT message. TODO: format JSON
-  Serial.print("[MQTT] message on (");
-  Serial.print(topic);
-  Serial.println("): ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
+  // StaticJsonDocument<256> doc;
+  // deserializeJson(doc, payload, length);
+  // String pattern = doc["pattern"]; // e.g. "blink_slowly"
+  // JsonArray color = doc["color"];
+  // int R = color[0]; // e.g. 255
+  // int G = color[1]; // e.g. 255
+  // int B = color[2]; // e.g. 255
+  // int duration = doc["duration"]; // e.g. 10
+
+  // // Print received MQTT message. TODO: format JSON
+  // Serial.print("[MQTT] message on (");
+  // Serial.print(topic);
+  // Serial.println("): ");
+  // for (int i = 0; i < length; i++) {
+  //   Serial.print((char)payload[i]);
+  // }
+  // Serial.println();
 }
 
 void setup() {
@@ -155,12 +158,12 @@ void setup() {
 
 unsigned long _timer = millis();
 void loop() {
-  if ((millis() - _timer) >= 10*1000) {  // 1*1000
-    fsm_handle::dispatch(toggle);
-    Serial.println("Memory after state switch");
-    show_free_mem();
-    _timer = millis();
-  };
+  // if ((millis() - _timer) >= 10*1000) {  // 1*1000
+  //   fsm_handle::dispatch(toggle);
+  //   Serial.println("Memory after state switch");
+  //   show_free_mem();
+  //   _timer = millis();
+  // };
 
   // should be checking for MQTT connection and reconnect
   if (!mqtt_connected()) {
