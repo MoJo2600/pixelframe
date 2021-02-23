@@ -71,6 +71,7 @@
                     color="primary"
                     type="submit"
                     :disabled="loading || error || !formValid"
+                    :loading="!!writing"
                     depressed
                   >
                     Save
@@ -91,12 +92,9 @@ import Component from "vue-class-component";
 import { Mixins } from "vue-property-decorator";
 import SpinnerText from "@/components/SpinnerText.vue";
 import DataLoaderError from "@/components/DataLoaderError.vue";
-import { DataLoaderMixin } from "@/mixins";
+import { DataHandlerMixin, WriteAction } from "@/mixins";
 import { UpdateWifiConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService, EnvironmentService } from "@/services";
-import NotificationModule, {
-  NotificationType
-} from "@/store/modules/notification";
 import { Wifi } from "@/models/environment";
 import { required } from "@/validation";
 
@@ -106,7 +104,7 @@ import { required } from "@/validation";
     DataLoaderError
   }
 })
-export default class WifiConfigurationView extends Mixins(DataLoaderMixin) {
+export default class WifiConfigurationView extends Mixins(DataHandlerMixin) {
   required = required;
 
   private readonly configService = Service.get(ConfigurationService);
@@ -126,20 +124,23 @@ export default class WifiConfigurationView extends Mixins(DataLoaderMixin) {
   }
 
   private async updateWifiConfiguration(): Promise<void> {
-    if (!this.wifiConfiguration) {
-      return;
-    }
+    await this.wrapDataWrite(
+      async () => {
+        if (!this.wifiConfiguration) {
+          return;
+        }
 
-    this.configService.updateWifiConfiguration(this.wifiConfiguration);
-
-    NotificationModule.notify({
-      type: NotificationType.Success,
-      content: "Successfully updated WiFi configuration"
-    });
+        await this.configService.updateWifiConfiguration(
+          this.wifiConfiguration
+        );
+      },
+      WriteAction.Update,
+      "WiFi configuration"
+    );
   }
 
   private async created(): Promise<void> {
-    await this.wrapDataLoading(async () => {
+    await this.wrapDataRead(async () => {
       this.wifiConfiguration = {
         ...(await this.configService.getWifiConfiguration()),
         password: ""

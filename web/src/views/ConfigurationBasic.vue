@@ -130,12 +130,9 @@ import Component from "vue-class-component";
 import { Mixins } from "vue-property-decorator";
 import SpinnerText from "@/components/SpinnerText.vue";
 import DataLoaderError from "@/components/DataLoaderError.vue";
-import { DataLoaderMixin } from "@/mixins";
+import { DataHandlerMixin, WriteAction } from "@/mixins";
 import { BasicConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService } from "@/services";
-import NotificationModule, {
-  NotificationType
-} from "@/store/modules/notification";
 import timezones from "@/assets/timezones.json";
 
 @Component({
@@ -144,7 +141,7 @@ import timezones from "@/assets/timezones.json";
     DataLoaderError
   }
 })
-export default class BasicConfigurationView extends Mixins(DataLoaderMixin) {
+export default class BasicConfigurationView extends Mixins(DataHandlerMixin) {
   private readonly configService = Service.get(ConfigurationService);
   private basicConfiguration: BasicConfiguration | null = null;
   private timezoneItems = timezones.map(t => {
@@ -155,37 +152,39 @@ export default class BasicConfigurationView extends Mixins(DataLoaderMixin) {
   });
 
   private async updateBrightness(): Promise<void> {
-    if (!this.basicConfiguration) {
-      return;
-    }
+    await this.wrapDataWrite(
+      async () => {
+        if (!this.basicConfiguration) {
+          return;
+        }
 
-    await this.configService.updateBasicConfiguratin({
-      brightness: this.basicConfiguration.brightness
-    });
-
-    NotificationModule.notify({
-      type: NotificationType.Success,
-      content: "Successfully updated brightness"
-    });
+        await this.configService.updateBasicConfiguratin({
+          brightness: this.basicConfiguration.brightness
+        });
+      },
+      WriteAction.Update,
+      "brightness"
+    );
   }
 
   private async updateTimezone(): Promise<void> {
-    if (!this.basicConfiguration) {
-      return;
-    }
+    await this.wrapDataWrite(
+      async () => {
+        if (!this.basicConfiguration) {
+          return;
+        }
 
-    await this.configService.updateBasicConfiguratin({
-      timezone: this.basicConfiguration.timezone
-    });
-
-    NotificationModule.notify({
-      type: NotificationType.Success,
-      content: "Successfully updated timezone"
-    });
+        await this.configService.updateBasicConfiguratin({
+          timezone: this.basicConfiguration.timezone
+        });
+      },
+      WriteAction.Update,
+      "timezone"
+    );
   }
 
   private async created(): Promise<void> {
-    await this.wrapDataLoading(async () => {
+    await this.wrapDataRead(async () => {
       this.basicConfiguration = await this.configService.getBasicConfiguration();
     });
   }

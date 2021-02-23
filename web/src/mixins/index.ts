@@ -1,1 +1,1 @@
-export * from "./dataLoader";
+export * from "./data-handler";

@@ -140,6 +140,7 @@
                     color="primary"
                     type="submit"
                     :disabled="loading || error || !formValid"
+                    :loading="!!writing"
                     depressed
                   >
                     Save
@@ -159,12 +160,9 @@ import Component from "vue-class-component";
 import { Mixins } from "vue-property-decorator";
 import SpinnerText from "@/components/SpinnerText.vue";
 import DataLoaderError from "@/components/DataLoaderError.vue";
-import { DataLoaderMixin } from "@/mixins";
+import { DataHandlerMixin, WriteAction } from "@/mixins";
 import { UpdateMqttConfiguration } from "@/models/configuration";
 import { Service, ConfigurationService } from "@/services";
-import NotificationModule, {
-  NotificationType
-} from "@/store/modules/notification";
 import { required, validPort } from "@/validation";
 
 @Component({
@@ -173,7 +171,7 @@ import { required, validPort } from "@/validation";
     DataLoaderError
   }
 })
-export default class MqttConfigurationView extends Mixins(DataLoaderMixin) {
+export default class MqttConfigurationView extends Mixins(DataHandlerMixin) {
   required = required;
   validPort = validPort;
 
@@ -183,20 +181,23 @@ export default class MqttConfigurationView extends Mixins(DataLoaderMixin) {
   private formValid = false;
 
   private async updateMqttConfiguration(): Promise<void> {
-    if (!this.mqttConfiguration) {
-      return;
-    }
+    await this.wrapDataWrite(
+      async () => {
+        if (!this.mqttConfiguration) {
+          return;
+        }
 
-    this.configService.updateMqttConfiguration(this.mqttConfiguration);
-
-    NotificationModule.notify({
-      type: NotificationType.Success,
-      content: "Successfully updated WiFi configuration"
-    });
+        await this.configService.updateMqttConfiguration(
+          this.mqttConfiguration
+        );
+      },
+      WriteAction.Update,
+      "MQTT configuration"
+    );
   }
 
   private async created(): Promise<void> {
-    await this.wrapDataLoading(async () => {
+    await this.wrapDataRead(async () => {
       this.mqttConfiguration = {
         ...(await this.configService.getMqttConfiguration()),
         password: ""
