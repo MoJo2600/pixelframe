@@ -8,6 +8,7 @@ WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
 void mqtt_setup(const char* mqtt_host, const unsigned int mqtt_port, mqtt_callback f) {
+  printf("[mqtt_setup]  begin %p\n",(void*)&mqtt_client);
   // Create MQTT connection
   Serial.print("[mqtt_setup] mqtt_host: ");
   Serial.println(mqtt_host);
@@ -15,10 +16,12 @@ void mqtt_setup(const char* mqtt_host, const unsigned int mqtt_port, mqtt_callba
   Serial.println(mqtt_port);
   mqtt_client.setServer(mqtt_host, mqtt_port);
   mqtt_client.setCallback(f);
+  printf("[mqtt_setup] end %p\n",(void*)&mqtt_client);
 }
 
 // Should be MQTT reconnection function
 void mqtt_connect(const char* mqtt_user, const char* mqtt_pass, const char* mqtt_sub_topic) {
+  printf("[mqtt_connect] begin %p\n",(void*)&mqtt_client);
   Serial.print("[mqtt_connect] mqtt_user: ");
   Serial.println(mqtt_user);
   Serial.print("[mqtt_connect] mqtt_pass: ");
@@ -34,6 +37,7 @@ void mqtt_connect(const char* mqtt_user, const char* mqtt_pass, const char* mqtt
     // Attempt to connect
     Serial.print("[mqtt_connect] mqtt_client_id: ");
     Serial.println(mqtt_client_id);
+    printf("[mqtt_connect] middle %p\n",(void*)&mqtt_client);
     if (mqtt_client.connect(mqtt_client_id.c_str(), mqtt_user, mqtt_pass)) {
       Serial.println("[MQTT] connected!");
       mqtt_client.subscribe(mqtt_sub_topic);
