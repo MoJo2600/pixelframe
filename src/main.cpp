@@ -57,7 +57,9 @@ LoopEvent loopUpdate;
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
 void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
-  Serial.println((String)"[MQTT] message on (" + topic + ")");
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println(")");
   fsm_handle::dispatch(toggle);
 
   // StaticJsonDocument<256> doc;
@@ -125,7 +127,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.println("[WIFI] Connect wifi");
+  Serial.print("[WIFI] Connecting wifi");
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
@@ -133,7 +135,8 @@ void setup() {
     delay(500);
     Serial.print('.');
   }
-  Serial.print("[WIFI] ");
+  Serial.println("");
+  Serial.print("[WIFI] IP: ");
   Serial.println(WiFi.localIP());
 
   // Read MQTT settings
@@ -147,8 +150,10 @@ void setup() {
   const char* tzConf = configuration["timezone"];
   waitForSync();
   tz->setLocation(tzConf);
+  Serial.print("[TZ] ");
   Serial.println(tz->dateTime());
-  Serial.println((String)"[TZ] Timezone: " + tzConf);
+  Serial.print("[TZ] Timezone: ");
+  Serial.println(tzConf);
 
   setup_webserver();
 

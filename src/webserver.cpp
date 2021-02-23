@@ -56,7 +56,7 @@ String getContentType(String filename) { // determine the filetype of a given fi
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  Serial.println("handleFileRead: " + path);
+  Serial.println("[WEBSERVER] handleFileRead: " + path);
   if (path.endsWith("/")) path += "index.html";          // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
@@ -66,10 +66,10 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     File file = LittleFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
+    Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
     return true;
   }
-  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  Serial.println(String("\t[WEBSERVER]  File Not Found: ") + path);   // If the file doesn't exist, return false
   return false;
 }
 
@@ -91,7 +91,7 @@ void handleFileList() {
     return replyBadRequest("BAD PATH");
   }
 
-  Serial.println(String("handleFileList: ") + path);
+  Serial.println(String("[WEBSERVER] handleFileList: ") + path);
   Dir dir = fileSystem->openDir(path);
   path.clear();
 
@@ -219,17 +219,17 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 void startWebSocket() { // Start a WebSocket server
   webSocket.begin();                          // start the websocket server
   webSocket.onEvent(webSocketEvent);          // if there's an incomming websocket message, go to function 'webSocketEvent'
-  Serial.println("WebSocket server started.");
+  Serial.println("[WEBSERVER] WebSocket server started.");
 }
 
 void startMDNS() { // Start the mDNS responder
   // start the multicast domain name server
   if (!MDNS.begin(mdnsName)) {
-    Serial.print("Could not start MDNS service!");
+    Serial.print("[WEBSERVER] Could not start MDNS service!");
   }
   else
   {
-    Serial.print("mDNS responder started: http://");
+    Serial.print("[WEBSERVER] mDNS responder started: http://");
     Serial.print(mdnsName);
     Serial.println(".local");
   }
@@ -244,7 +244,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
                                               // and check if the file exists
 
   server.begin();                             // start the HTTP server
-  Serial.println("HTTP server started.");
+  Serial.println("[WEBSERVER] HTTP server started.");
 }
 
 

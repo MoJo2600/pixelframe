@@ -9,19 +9,31 @@ PubSubClient mqtt_client(wifi_client);
 
 void mqtt_setup(const char* mqtt_host, const unsigned int mqtt_port, mqtt_callback f) {
   // Create MQTT connection
+  Serial.print("[mqtt_setup] mqtt_host: ");
+  Serial.println(mqtt_host);
+  Serial.print("[mqtt_setup] mqtt_port: ");
+  Serial.println(mqtt_port);
   mqtt_client.setServer(mqtt_host, mqtt_port);
   mqtt_client.setCallback(f);
 }
 
 // Should be MQTT reconnection function
-void mqtt_connect(const  char* mqtt_user, const char* mqtt_pass, const char* mqtt_sub_topic) {
+void mqtt_connect(const char* mqtt_user, const char* mqtt_pass, const char* mqtt_sub_topic) {
+  Serial.print("[mqtt_connect] mqtt_user: ");
+  Serial.println(mqtt_user);
+  Serial.print("[mqtt_connect] mqtt_pass: ");
+  Serial.println(mqtt_pass);
+  Serial.print("[mqtt_connect] mqtt_sub_topic: ");
+  Serial.println(mqtt_sub_topic);
   // Loop until we're reconnected
   while (!mqtt_client.connected()) {
-    Serial.println("[MQTT] reconnecting..");
+    Serial.println("[MQTT] connecting..");
     // Create a random client ID
     String mqtt_client_id = "pixelframe-";
     mqtt_client_id += String(random(0xffff), HEX);
     // Attempt to connect
+    Serial.print("[mqtt_connect] mqtt_client_id: ");
+    Serial.println(mqtt_client_id);
     if (mqtt_client.connect(mqtt_client_id.c_str(), mqtt_user, mqtt_pass)) {
       Serial.println("[MQTT] connected!");
       mqtt_client.subscribe(mqtt_sub_topic);
