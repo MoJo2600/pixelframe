@@ -1,9 +1,10 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import NestedViewWrapper from "@/components/NestedViewWrapper.vue";
-import ConfigurationBasic from "@/views/ConfigurationBasic.vue";
-import ConfigurationWifi from "@/views/ConfigurationWifi.vue";
-import ConfigurationMqtt from "@/views/ConfigurationMqtt.vue";
+import ConfigurationBasicView from "@/views/ConfigurationBasic.vue";
+import ConfigurationWifiView from "@/views/ConfigurationWifi.vue";
+import ConfigurationMqttView from "@/views/ConfigurationMqtt.vue";
+import ImagesView from "@/views/Images.vue";
 
 Vue.use(VueRouter);
 
@@ -19,19 +20,27 @@ const routes: Array<RouteConfig> = [
       {
         path: "basic",
         name: "Basic",
-        component: ConfigurationBasic
+        component: ConfigurationBasicView
       },
       {
         path: "wifi",
         name: "WiFi",
-        component: ConfigurationWifi
+        component: ConfigurationWifiView
       },
       {
         path: "mqtt",
         name: "MQTT",
-        component: ConfigurationMqtt
+        component: ConfigurationMqttView
       }
     ]
+  },
+  {
+    path: "/images",
+    name: "Images",
+    component: ImagesView,
+    meta: {
+      icon: "mdi-image"
+    }
   }
 ];
 

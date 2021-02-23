@@ -20,6 +20,9 @@ export default new Vuetify({
         accent: colors.red.base,
         background: colors.grey.darken4
       }
+    },
+    options: {
+      customProperties: true
     }
   }
 });

@@ -49,3 +49,13 @@ export default class Navigation extends Vue {
   public readonly drawerVisible!: boolean;
 }
 </script>
+
+<style lang="scss" scoped>
+.v-list-item--active {
+  color: var(--v-primary-base) !important;
+}
+
+.v-list-item--active::before {
+  background: var(--v-primary-base);
+}
+</style>
