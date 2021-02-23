@@ -17,7 +17,6 @@
 // #define _stackSize (6748/4)
 #include "SPI.h"
 #include "lib/stdinout.h"
-#include "lib/gif/GifDecoder.h"
 // #define FASTLED_ALLOW_INTERRUPTS 0  // https://github.com/FastLED/FastLED/issues/306
 // #define FASTLED_ESP8266_DMA
 
@@ -38,10 +37,11 @@ bool
 
 StaticJsonDocument<512> configuration;
 
-// Timezone tz;
+Timezone * tz = new Timezone();
 
 // Statemachine handle
 FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
+Timezone * PixelframeStateMachine::timezone{tz};
 using fsm_handle = PixelframeStateMachine;
 
 // Error messages stored in flash.
@@ -110,12 +110,13 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Time
-  // const char* tzConf = configuration["timezone"];
-  // Serial.println("Timezone");
-  // Serial.println(tzConf);
-  // waitForSync();
-  // tz.setLocation(tzConf);
-  // Serial.println(tz.dateTime());
+  Serial.println("Adjusting Clock");
+  const char* tzConf = configuration["timezone"];
+  waitForSync();
+  tz->setLocation(tzConf);
+  Serial.println(tz->dateTime());
+  Serial.println((String)"Timezone: " + tzConf);
+
   setup_webserver();
 
   fsm_handle::start();
@@ -123,10 +124,12 @@ void setup() {
 
 unsigned long _timer = millis();
 void loop() {
-  // if ((millis() - _timer) >= 10*1000) {
-  //   fsm_handle::dispatch(toggle);
-  //   _timer = millis();
-  // };
+  if ((millis() - _timer) >= 10*1000) {  // 1*1000
+    fsm_handle::dispatch(toggle);
+    Serial.println("Memory after state switch");
+    show_free_mem();
+    _timer = millis();
+  };
 
   webserver_loop();
 

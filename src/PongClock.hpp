@@ -1,15 +1,13 @@
 #pragma once
 
-// #include "lib/gifdec.h"
 #include "FastLED.h"
 #include "FastLED_NeoMatrix.h"
 #include "ezTime.h"
 
-
 class PongClockClass {
     public:
         //, NTPClient &client
-        PongClockClass(FastLED_NeoMatrix * matrix, const char* tzConf);
+        PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz);
         ~PongClockClass();
         void setup();
         void start();
@@ -38,9 +36,7 @@ class PongClockClass {
         pong_celebrate = false,
         pongclock = false, // pong clock mode
         pong_reset = false,
-        pong_ball_direction = 0,
-
-        wifiConnected = false;
+        pong_ball_direction = 0;
 
         unsigned long
         pong_celebration_end = 0,
@@ -55,7 +51,7 @@ class PongClockClass {
         current_minute = 0,
         current_hour = 0;
 
-        Timezone tz;
+        Timezone * tz;
         FastLED_NeoMatrix * matrix;
 
         void printDigits(int digits);
@@ -69,5 +65,4 @@ class PongClockClass {
         byte getScreenIndex(byte x, byte y);
         void fastledshow();
         int pong_predict_y(int x, int y, int angle);
-
 };

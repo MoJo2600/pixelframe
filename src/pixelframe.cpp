@@ -2,9 +2,14 @@
 #include <pixelframe.hpp>
 #include <iostream>
 #include <PongClock.h>
+#define FS_NO_GLOBALS
+#include <LittleFS.h>
 #include "lib/gif/GifDecoder.h"
+#include "ezTime.h"
 
 using namespace std;
+
+class GifDecoderState; // Forward declaration
 
 class ClockState
 : public PixelframeStateMachine
@@ -17,20 +22,23 @@ class ClockState
   public:
     void entry() override {
         cout << "Entering Clock mode" << endl;
-        clock = new PongClockClass(base::pixel_matrix, "Europe/Berlin");
+        clock = new PongClockClass(base::pixel_matrix, base::timezone);
         clock->setup();
     }
 
     void react(ToggleEvent const &) override {
-        cout << "Clock: react" << endl;
+      cout << "Clock: react" << endl;
+      base::pixel_matrix->clear();
+      transit<GifDecoderState>();
     }
 
     void react(LoopEvent const &) override { 
-        clock->loop();
+      clock->loop();
     };
 
-    void exit() {
-        delete clock;
+    void exit() override {
+      cout << "Exit Clock mode" << endl;
+      delete clock;
     }
 };
 
@@ -60,41 +68,80 @@ class ClockState
 //   }
 // };
 
-// class PixelframeGifState : PixelframeState
-// {
-//   private:
-//     int OFFSETX = 0;
-//     int OFFSETY = 0;
-//     const char *pathname = "/gifs/bird.gif";
-//     fs::File file;
-//     GifDecoder<kMatrixWidth, kMatrixHeight, 10> decoder;
-//     bool fileSeekCallback(unsigned long position) { return file.seek(position); }
-//     unsigned long filePositionCallback(void) { return file.position(); }
-//     int fileReadCallback(void) { return file.read(); }
-//     int fileReadBlockCallback(void * buffer, int numberOfBytes) { return file.read((uint8_t*)buffer, numberOfBytes); }
-//     void screenClearCallback(void) {}
-//     void updateScreenCallback(void) {}
-//     void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) {
-//       CRGB color = CRGB(matrix->gamma[red], matrix->gamma[green], matrix->gamma[blue]);
-//       matrix->drawPixel(x+OFFSETX, y+OFFSETY, color);
-//     }
+// Base Class for any state that needs to utilize GifDecoder
+class GifDecoderState :
+public PixelframeStateMachine
+{
+  using base = PixelframeStateMachine;
 
-//   public:
-//     PixelframeGifState() {
-//       decoder.setScreenClearCallback(screenClearCallback);
-//       decoder.setUpdateScreenCallback(updateScreenCallback);
-//       decoder.setDrawPixelCallback(drawPixelCallback);
-//       decoder.setFileSeekCallback(fileSeekCallback);
-//       decoder.setFilePositionCallback(filePositionCallback);
-//       decoder.setFileReadCallback(fileReadCallback);
-//       decoder.setFileReadBlockCallback(fileReadBlockCallback);
-//     }
+  protected:
+    // static FS * fileSystem;
+    static fs::File file;
+    static GifDecoder<16, 16, 10> * decoder;
+    const char * filename = "/gifs/city.gif";
 
-//     ~PixelframeGifState() {
-//       delete decoder;
-//     }
+  // protected:
+    // GifDecoder<16, 16, 10> decoder;
+    // const char * filename = "/gifs/bird.gif";
 
-// }
+    static unsigned long filePositionCallback(void) { return file.position(); }
+    static int fileReadCallback(void) { return file.read(); }
+    static int fileReadBlockCallback(void * buffer, int numberOfBytes) { return file.read((uint8_t*)buffer, numberOfBytes); }
+    static void screenClearCallback(void) {}
+    static void updateScreenCallback(void) {}
+    static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) {
+      CRGB color = CRGB(base::pixel_matrix->gamma[red], base::pixel_matrix->gamma[green], base::pixel_matrix->gamma[blue]);
+      base::pixel_matrix->drawPixel(x, y, color);
+    }
+    static bool fileSeekCallback(unsigned long position) { return file.seek(position); }
+
+  public:
+    // 
+
+    void entry() override {
+      decoder = new GifDecoder<16, 16, 10>();
+      decoder->setFilePositionCallback(filePositionCallback);
+      decoder->setFileReadCallback(fileReadCallback);
+      decoder->setFileReadBlockCallback(fileReadBlockCallback);
+      decoder->setScreenClearCallback(screenClearCallback);
+      decoder->setUpdateScreenCallback(updateScreenCallback);
+      decoder->setDrawPixelCallback(drawPixelCallback);
+      decoder->setFileSeekCallback(fileSeekCallback);
+
+      //TODO: Move to sub states, that will use the gif decoder
+      if (file) file.close();
+      file = LittleFS.open(filename, "r");
+      if (!file) {
+        cout << "Error opening GIF file" << endl;
+      }
+      cout << "Opened GIF file, start decoding" << endl;
+      decoder->startDecoding();
+    }
+
+    void react(ToggleEvent const &) override {
+      base::pixel_matrix->clear();
+      transit<ClockState>();
+    }
+
+    void react(LoopEvent const &) override {
+      decoder->loop();
+    }
+
+    void exit() override {
+      cout << "Exit Gif mode" << endl;
+      decoder->stop();
+      if (file) {
+        cout << "Close file" << endl;
+        file.close();
+      } 
+      cout << "Delete decoder" << endl;
+      delete decoder;
+    }
+};
+
+// FS * GifDecoderState::fileSystem = &LittleFS;
+fs::File GifDecoderState::file;
+GifDecoder<16, 16, 10> * GifDecoderState::decoder; //  = new GifDecoder<16, 16, 10>()
 
 // class Gif
 // : public PixelframeGifState
@@ -112,14 +159,14 @@ class ClockState
 //       while (1) { delay(1000); }; // while 1 loop only triggers watchdog on ESP chips
 //     }
 //     Serial.println(": Opened GIF file, start decoding");
-//     decoder.startDecoding();
+//     decoder->startDecoding();
 //   };
 //   void react(ToggleEvent const &) override { 
 //     matrix->clear();
 //     transit<Clock>(); 
 //   };
 //   void react(LoopEvent const &) override {
-//     decoder.loop();
+//     decoder->loop();
 //   };
 // };
 
