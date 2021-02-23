@@ -124,7 +124,7 @@ void setup() {
 
 unsigned long _timer = millis();
 void loop() {
-  if ((millis() - _timer) >= 500) {  // 1*1000
+  if ((millis() - _timer) >= 10*1000) {  // 1*1000
     fsm_handle::dispatch(toggle);
     Serial.println("Memory after state switch");
     show_free_mem();

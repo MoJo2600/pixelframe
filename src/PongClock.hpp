@@ -36,7 +36,7 @@ class PongClockClass {
         pong_celebrate = false,
         pongclock = false, // pong clock mode
         pong_reset = false,
-        pong_ball_direction = 0,
+        pong_ball_direction = 0;
 
         unsigned long
         pong_celebration_end = 0,

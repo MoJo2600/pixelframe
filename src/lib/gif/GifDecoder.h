@@ -27,6 +27,7 @@ typedef struct rgb_24 {
 template <int maxGifWidth, int maxGifHeight, int lzwMaxBits>
 class GifDecoder {
 public:
+    ~GifDecoder(void);
     int startDecoding(void);
     int decodeFrame(void);
     
@@ -40,6 +41,7 @@ public:
     void setFileReadCallback(file_read_callback f);
     void setFileReadBlockCallback(file_read_block_callback f);
 
+    void stop();
     void loop();
 
 private:
@@ -66,6 +68,8 @@ private:
     int lzw_decode(uint8_t *buf, int len, uint8_t *bufend);
     void lzw_setTempBuffer(uint8_t * tempBuffer);
     int lzw_get_code(void);
+
+    bool stopped;
 
     // Logical screen descriptor attributes
     int lsdWidth;

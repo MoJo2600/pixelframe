@@ -29,14 +29,14 @@ class ClockState
     void react(ToggleEvent const &) override {
       cout << "Clock: react" << endl;
       base::pixel_matrix->clear();
-      transit<ClockState>();
+      transit<GifDecoderState>();
     }
 
     void react(LoopEvent const &) override { 
-        clock->loop();
+      clock->loop();
     };
 
-    void exit() {
+    void exit() override {
       cout << "Exit Clock mode" << endl;
       delete clock;
     }
@@ -75,9 +75,10 @@ public PixelframeStateMachine
   using base = PixelframeStateMachine;
 
   protected:
+    // static FS * fileSystem;
     static fs::File file;
     static GifDecoder<16, 16, 10> * decoder;
-    const char * filename = "/gifs/bird.gif";
+    const char * filename = "/gifs/city.gif";
 
   // protected:
     // GifDecoder<16, 16, 10> decoder;
@@ -98,7 +99,7 @@ public PixelframeStateMachine
     // 
 
     void entry() override {
-      // decoder = new GifDecoder<16, 16, 10>();
+      decoder = new GifDecoder<16, 16, 10>();
       decoder->setFilePositionCallback(filePositionCallback);
       decoder->setFileReadCallback(fileReadCallback);
       decoder->setFileReadBlockCallback(fileReadBlockCallback);
@@ -119,21 +120,28 @@ public PixelframeStateMachine
 
     void react(ToggleEvent const &) override {
       base::pixel_matrix->clear();
-      transit<GifDecoderState>();
+      transit<ClockState>();
     }
 
     void react(LoopEvent const &) override {
       decoder->loop();
     }
 
-    void exit() {
-      if (file) file.close();
+    void exit() override {
+      cout << "Exit Gif mode" << endl;
+      decoder->stop();
+      if (file) {
+        cout << "Close file" << endl;
+        file.close();
+      } 
+      cout << "Delete decoder" << endl;
       delete decoder;
     }
 };
 
+// FS * GifDecoderState::fileSystem = &LittleFS;
 fs::File GifDecoderState::file;
-GifDecoder<16, 16, 10> * GifDecoderState::decoder = new GifDecoder<16, 16, 10>();
+GifDecoder<16, 16, 10> * GifDecoderState::decoder; //  = new GifDecoder<16, 16, 10>()
 
 // class Gif
 // : public PixelframeGifState
