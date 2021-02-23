@@ -98,11 +98,11 @@ void setup() {
   startLittleFS();
 
   // ### READ CONFIG
-  Serial.print("Opening configuration file... ");
+  Serial.print("[CONFIG] Opening configuration file.. ");
   file = LittleFS.open("system/config.json", "r");
   Serial.println("ok");
 
-  Serial.println("reading json config");
+  Serial.println("[CONFIG] Reading json config..");
   char jsonData[file.size() + 1];
   int stringIndex = 0;
   int data;
@@ -117,7 +117,7 @@ void setup() {
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(configuration, jsonData);
   if (error)
-    Serial.println(F("Failed to read configuration file"));
+    Serial.println(F("[CONFIG] Failed to read configuration file!"));
 
   // ### END: READ CONFIG
 
@@ -125,7 +125,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.println("Connect wifi");
+  Serial.println("[WIFI] Connect wifi");
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
@@ -133,6 +133,7 @@ void setup() {
     delay(500);
     Serial.print('.');
   }
+  Serial.print("[WIFI] ");
   Serial.println(WiFi.localIP());
 
   // Read MQTT settings
@@ -142,21 +143,20 @@ void setup() {
   mqtt_setup(mqtt_host, mqtt_port, my_mqtt_callback);
 
   // Time
-  Serial.println("Adjusting Clock");
+  Serial.println("[TZ] Adjusting clock..");
   const char* tzConf = configuration["timezone"];
   waitForSync();
   tz->setLocation(tzConf);
   Serial.println(tz->dateTime());
-  Serial.println((String)"Timezone: " + tzConf);
+  Serial.println((String)"[TZ] Timezone: " + tzConf);
 
   setup_webserver();
 
   fsm_handle::start();
 }
 
-
-
 unsigned long _timer = millis();
+
 void loop() {
   // if ((millis() - _timer) >= 10*1000) {  // 1*1000
   //   fsm_handle::dispatch(toggle);
