@@ -54,6 +54,28 @@ fs::File file;
 ToggleEvent toggle;
 LoopEvent loopUpdate;
 
+
+// mqtt subscription callback. This function is called when new messages arrive at the client.
+void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
+  StaticJsonDocument<256> doc;
+  deserializeJson(doc, payload, length);
+  String pattern = doc["pattern"]; // e.g. "blink_slowly"
+  JsonArray color = doc["color"];
+  int R = color[0]; // e.g. 255
+  int G = color[1]; // e.g. 255
+  int B = color[2]; // e.g. 255
+  int duration = doc["duration"]; // e.g. 10
+
+  // Print received MQTT message. TODO: format JSON
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println("): ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(74880);
@@ -113,11 +135,8 @@ void setup() {
   // Read MQTT settings
   const char* mqtt_host = configuration["mqtt"]["host"];
   const unsigned int mqtt_port = configuration["mqtt"]["port"];
-  const char* mqtt_user = configuration["mqtt"]["user"];
-  const char* mqtt_pass = configuration["mqtt"]["password"];
-  const char* mqtt_sub_topic = configuration["mqtt"]["topic"];
 
-  mqtt_setup(mqtt_host, mqtt_port);
+  mqtt_setup(mqtt_host, mqtt_port, my_mqtt_callback);
 
   // Time
   // const char* tzConf = configuration["timezone"];
@@ -131,6 +150,8 @@ void setup() {
   fsm_handle::start();
 }
 
+
+
 unsigned long _timer = millis();
 void loop() {
   // if ((millis() - _timer) >= 10*1000) {
@@ -139,10 +160,10 @@ void loop() {
   // };
 
   // should be checking for MQTT connection and reconnect
-  if (!mqtt_client.connected()) {
-    mqtt_connect(mqtt_user, mqtt_pass, mqtt_sub_topic);
+  if (!mqtt_connected()) {
+    mqtt_connect(configuration["mqtt"]["user"], configuration["mqtt"]["password"], configuration["mqtt"]["topic"]);
   }
-  mqtt_client.loop();
+  mqtt_loop();
 
   webserver_loop();
 
