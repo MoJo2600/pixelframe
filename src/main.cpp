@@ -37,6 +37,9 @@ bool
 #define SD_CS_PIN 4
 
 StaticJsonDocument<512> configuration;
+const char* mqtt_user;
+const char* mqtt_pass;
+const char* mqtt_sub_topic;
 
 Timezone * tz = new Timezone();
 
@@ -62,23 +65,19 @@ void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
   Serial.println(")");
   fsm_handle::dispatch(toggle);
 
-  // StaticJsonDocument<256> doc;
-  // deserializeJson(doc, payload, length);
-  // String pattern = doc["pattern"]; // e.g. "blink_slowly"
-  // JsonArray color = doc["color"];
-  // int R = color[0]; // e.g. 255
-  // int G = color[1]; // e.g. 255
-  // int B = color[2]; // e.g. 255
-  // int duration = doc["duration"]; // e.g. 10
+  StaticJsonDocument<256> doc;
+  deserializeJson(doc, payload, length);
+  String pattern = doc["pattern"]; // e.g. "blink_slowly"
+  JsonArray color = doc["color"];
+  int R = color[0]; // e.g. 255
+  int G = color[1]; // e.g. 255
+  int B = color[2]; // e.g. 255
+  int duration = doc["duration"]; // e.g. 10
 
-  // // Print received MQTT message. TODO: format JSON
-  // Serial.print("[MQTT] message on (");
-  // Serial.print(topic);
-  // Serial.println("): ");
-  // for (int i = 0; i < length; i++) {
-  //   Serial.print((char)payload[i]);
-  // }
-  // Serial.println();
+  // Print received MQTT message. TODO: format JSON
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println(")");
 }
 
 void setup() {
@@ -142,6 +141,9 @@ void setup() {
   // Read MQTT settings
   const char* mqtt_host = configuration["mqtt"]["host"];
   const unsigned int mqtt_port = configuration["mqtt"]["port"];
+  mqtt_user = configuration["mqtt"]["user"];
+  mqtt_pass = configuration["mqtt"]["password"];
+  mqtt_sub_topic = configuration["mqtt"]["topic"];
 
   mqtt_setup(mqtt_host, mqtt_port, my_mqtt_callback);
 
@@ -172,7 +174,7 @@ void loop() {
 
   // should be checking for MQTT connection and reconnect
   if (!mqtt_connected()) {
-    mqtt_connect(configuration["mqtt"]["user"], configuration["mqtt"]["password"], configuration["mqtt"]["topic"]);
+    mqtt_connect(mqtt_user, mqtt_pass, mqtt_sub_topic);
   }
   mqtt_loop();
 
