@@ -29,12 +29,12 @@ dev-prune: ## Cleanup the development docker environment
 
 .PHONY: mock-api
 mock-api: ## Start up mock api
-	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR}
 
 .PHONY: mock-api-delay
 mock-api-delay: ## Start up mock api with delay
-	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --delay 3000
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR} --delay 3000
 
 .PHONY: mock-api-error
 mock-api-error: ## Start up mock api with error middleware
-	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --middlewares ${MOCK_API_DIR}/middlewares/internalServerError.js
+	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR} --middlewares ${MOCK_API_DIR}/middlewares/internalServerError.js
