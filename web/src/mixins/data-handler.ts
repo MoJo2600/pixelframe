@@ -7,7 +7,8 @@ import NotificationModule, {
 export enum WriteAction {
   Create = "create",
   Update = "update",
-  Delete = "delete"
+  Delete = "delete",
+  Command = "command"
 }
 
 @Component
@@ -46,12 +47,18 @@ export class DataHandlerMixin extends Vue {
 
       NotificationModule.notify({
         type: NotificationType.Success,
-        content: `Successfully ${action}d ${item}`
+        content:
+          action === WriteAction.Command
+            ? `Successfully sent command '${item}'`
+            : `Successfully ${action}d ${item}`
       });
     } catch (error) {
       NotificationModule.notify({
         type: NotificationType.Error,
-        content: `Failed to ${action} ${item}`,
+        content:
+          action === WriteAction.Command
+            ? `Failed to send command '${item}'`
+            : `Failed to ${action} ${item}`,
         details: error.message
       });
     } finally {
