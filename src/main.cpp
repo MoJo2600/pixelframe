@@ -42,7 +42,6 @@ Timezone * tz = new Timezone();
 // Statemachine handle
 FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
 Timezone * PixelframeStateMachine::timezone{tz};
-using fsm_handle = PixelframeStateMachine;
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -52,6 +51,7 @@ fs::File file;
 // instantiate events
 ToggleEvent toggle;
 LoopEvent loopUpdate;
+
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -72,11 +72,11 @@ void setup() {
   startLittleFS();
 
   // ### READ CONFIG
-  Serial.print("Opening configuration file... ");
+  Serial.print(F("Opening configuration file... "));
   file = LittleFS.open("system/config.json", "r");
-  Serial.println("ok");
+  Serial.println(F("ok"));
 
-  Serial.println("reading json config");
+  Serial.println(F("reading json config"));
   char jsonData[file.size() + 1];
   int stringIndex = 0;
   int data;
@@ -99,7 +99,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.println("Connect wifi");
+  Serial.println(F("Connect wifi"));
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
@@ -110,7 +110,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Time
-  Serial.println("Adjusting Clock");
+  Serial.println(F("Adjusting Clock"));
   const char* tzConf = configuration["timezone"];
   waitForSync();
   tz->setLocation(tzConf);
@@ -124,12 +124,12 @@ void setup() {
 
 unsigned long _timer = millis();
 void loop() {
-  if ((millis() - _timer) >= 10*1000) {  // 1*1000
-    fsm_handle::dispatch(toggle);
-    Serial.println("Memory after state switch");
-    show_free_mem();
-    _timer = millis();
-  };
+  // if ((millis() - _timer) >= 10*1000) {  // 1*1000
+  //   fsm_handle::dispatch(toggle);
+  //   Serial.println(F("[Main] Memory after state switch"));
+  //   show_free_mem();
+  //   _timer = millis();
+  // };
 
   webserver_loop();
 

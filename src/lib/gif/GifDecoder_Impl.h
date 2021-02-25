@@ -587,8 +587,8 @@ void GifDecoder<maxGifWidth, maxGifHeight, lzwMaxBits>::parseTableBasedImage() {
     lzw_setTempBuffer((uint8_t*)tempBuffer);
 
     // Make sure there is at least some delay between frames
-    if (frameDelay < 1) {
-        frameDelay = 1;
+    if (frameDelay <= 1) {
+        frameDelay = 10;
     }
 
     // Decompress LZW data and display the frame
