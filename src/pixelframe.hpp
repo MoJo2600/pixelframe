@@ -31,4 +31,6 @@ class PixelframeStateMachine
     };  /* no exit actions */
 
     static FastLED_NeoMatrix * getMatrix() { return pixel_matrix; }
+
+    static void update(void);
 };

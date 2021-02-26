@@ -180,7 +180,9 @@ void loop() {
 
   webserver_loop();
 
-  fsm_handle::dispatch(loopUpdate);
+  PixelframeStateMachine::update();
+
+  // fsm_handle::dispatch(loopUpdate);
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of

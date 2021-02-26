@@ -32,13 +32,19 @@ class ClockState
       transit<GifDecoderState>();
     }
 
-    void react(LoopEvent const &) override { 
-      clock->loop();
-    };
+    // void react(LoopEvent const &) override { 
+    //   clock->loop();
+    // };
 
     void exit() override {
       cout << "[PIXELFRAME] Exit Clock mode" << endl;
       delete clock;
+    }
+
+    void update(void) {
+      if (clock) {
+        clock->loop();
+      }
     }
 };
 
@@ -123,9 +129,9 @@ public PixelframeStateMachine
       transit<ClockState>();
     }
 
-    void react(LoopEvent const &) override {
-      decoder->loop();
-    }
+    // void react(LoopEvent const &) override {
+    //   decoder->loop();
+    // }
 
     void exit() override {
       cout << "[PIXELFRAME] Exit Gif mode" << endl;
@@ -137,6 +143,13 @@ public PixelframeStateMachine
       cout << "[PIXELFRAME] Delete decoder" << endl;
       delete decoder;
     }
+
+    void update(void) {
+      if (decoder) {
+        decoder->loop();
+      }
+    }
+
 };
 
 // FS * GifDecoderState::fileSystem = &LittleFS;
