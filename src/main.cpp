@@ -46,7 +46,6 @@ Timezone * tz = new Timezone();
 // Statemachine handle
 FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
 Timezone * PixelframeStateMachine::timezone{tz};
-using fsm_handle = PixelframeStateMachine;
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
@@ -56,7 +55,6 @@ fs::File file;
 // instantiate events
 ToggleEvent toggle;
 LoopEvent loopUpdate;
-
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
 void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
@@ -99,11 +97,11 @@ void setup() {
   startLittleFS();
 
   // ### READ CONFIG
-  Serial.print("[CONFIG] Opening configuration file.. ");
-  file = LittleFS.open("system/config.json", "r");
-  Serial.println("ok");
 
-  Serial.println("[CONFIG] Reading json config..");
+  Serial.print(F("[CONFIG] Opening configuration file.. "));
+  file = LittleFS.open("system/config.json", "r");
+  Serial.println(F("ok"));
+  Serial.println(F("[CONFIG] Reading json config.."));
   char jsonData[file.size() + 1];
   int stringIndex = 0;
   int data;
@@ -126,7 +124,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.print("[WIFI] Connecting wifi");
+  Serial.print(F("[WIFI] Connecting wifi"));
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
@@ -148,13 +146,13 @@ void setup() {
   mqtt_setup(mqtt_host, mqtt_port, my_mqtt_callback);
 
   // Time
-  Serial.println("[TZ] Adjusting clock..");
+  Serial.println(F("[TZ] Adjusting clock.."));
   const char* tzConf = configuration["timezone"];
   waitForSync();
   tz->setLocation(tzConf);
-  Serial.print("[TZ] ");
+  Serial.print(F("[TZ] "));
   Serial.println(tz->dateTime());
-  Serial.print("[TZ] Timezone: ");
+  Serial.print(F("[TZ] Timezone: "));
   Serial.println(tzConf);
 
   setup_webserver();

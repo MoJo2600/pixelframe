@@ -12,6 +12,9 @@ using namespace std;
 
 struct ToggleEvent : tinyfsm::Event { };
 struct LoopEvent : tinyfsm::Event { };
+struct PlayGifEvent : tinyfsm::Event {
+  String file;
+};
 
 class PixelframeStateMachine
 : public tinyfsm::Fsm<PixelframeStateMachine>
@@ -25,8 +28,9 @@ class PixelframeStateMachine
     void PixelframeState(FastLED_NeoMatrix *, Timezone *);
     virtual void react(ToggleEvent const &);
     virtual void react(LoopEvent const &);
+    virtual void react(PlayGifEvent const &);
     virtual void entry(void) { };  /* entry actions in some states */
-    virtual void exit(void)  {
+    virtual void exit(void) {
       cout << "Exit event ignored" << endl;
     };  /* no exit actions */
 
@@ -34,3 +38,5 @@ class PixelframeStateMachine
 
     static void update(void);
 };
+
+using fsm_handle = PixelframeStateMachine;

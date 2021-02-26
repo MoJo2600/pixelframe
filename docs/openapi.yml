@@ -190,17 +190,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /images/{id}:
+  /images/{name}:
     delete:
       operationId: deleteImage
       summary: Delete image
       tags:
         - images
       parameters:
-        - name: id
+        - name: name
           in: path
           required: true
-          description: The id of the image to delete
+          description: The name of the image to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No content
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      operationId: getImage
+      summary: Get image
+      tags:
+        - images
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: The name of the image to delete
           schema:
             type: string
       responses:
@@ -286,11 +313,11 @@ components:
         - url
         - fileType
       properties:
-        id:
+        type:
           type: string
-        url:
+        size:
           type: string
-        fileType:
+        name:
           type: string
 
     ImagesList:
