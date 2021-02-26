@@ -29,13 +29,20 @@
 #include "webserver.h"                  // Web interface
 #include "pixelframe.hpp"               // Statemachine
 #include <filesystem.hpp>
-
-bool
-  wifiConnected = false;
+#include "mqtt.h"                  // MQTT support
 
 #define SD_CS_PIN 4
 
-StaticJsonDocument<512> configuration;
+bool
+  wifiConnected = false,
+  MQTT_ENABLED = false;
+
+StaticJsonDocument<512>
+  configuration;
+
+const char* MQTT_USER;
+const char* MQTT_PASS;
+const char* MQTT_SUB_TOPIC;
 
 Timezone * tz = new Timezone();
 
@@ -52,6 +59,27 @@ fs::File file;
 ToggleEvent toggle;
 LoopEvent loopUpdate;
 
+// mqtt subscription callback. This function is called when new messages arrive at the client.
+void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println(")");
+  fsm_handle::dispatch(toggle);
+
+  StaticJsonDocument<256> doc;
+  deserializeJson(doc, payload, length);
+  String pattern = doc["pattern"]; // e.g. "blink_slowly"
+  JsonArray color = doc["color"];
+  int R = color[0]; // e.g. 255
+  int G = color[1]; // e.g. 255
+  int B = color[2]; // e.g. 255
+  int duration = doc["duration"]; // e.g. 10
+
+  // Print received MQTT message. TODO: format JSON
+  Serial.print("[MQTT] message on (");
+  Serial.print(topic);
+  Serial.println(")");
+}
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -72,11 +100,11 @@ void setup() {
   startLittleFS();
 
   // ### READ CONFIG
-  Serial.print(F("Opening configuration file... "));
+
+  Serial.print(F("[CONFIG] Opening configuration file.. "));
   file = LittleFS.open("system/config.json", "r");
   Serial.println(F("ok"));
-
-  Serial.println(F("reading json config"));
+  Serial.println(F("[CONFIG] Reading json config.."));
   char jsonData[file.size() + 1];
   int stringIndex = 0;
   int data;
@@ -91,7 +119,7 @@ void setup() {
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(configuration, jsonData);
   if (error)
-    Serial.println(F("Failed to read configuration file"));
+    Serial.println(F("[CONFIG] Failed to read configuration file!"));
 
   // ### END: READ CONFIG
 
@@ -99,7 +127,7 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
-  Serial.println(F("Connect wifi"));
+  Serial.print(F("[WIFI] Connecting wifi"));
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
@@ -107,15 +135,30 @@ void setup() {
     delay(500);
     Serial.print('.');
   }
+  Serial.println("");
+  Serial.print("[WIFI] IP: ");
   Serial.println(WiFi.localIP());
 
+  // Read MQTT settings
+  MQTT_ENABLED = configuration.containsKey("mqtt");
+  if (MQTT_ENABLED) {
+    const char* MQTT_HOST = configuration["mqtt"]["host"];
+    const unsigned int MQTT_PORT = configuration["mqtt"]["port"];
+    MQTT_USER = configuration["mqtt"]["user"];
+    MQTT_PASS = configuration["mqtt"]["password"];
+    MQTT_SUB_TOPIC = configuration["mqtt"]["topic"];
+    mqtt_setup(MQTT_HOST, MQTT_PORT, my_mqtt_callback);
+  }
+
   // Time
-  Serial.println(F("Adjusting Clock"));
+  Serial.println(F("[TZ] Adjusting clock.."));
   const char* tzConf = configuration["timezone"];
   waitForSync();
   tz->setLocation(tzConf);
+  Serial.print(F("[TZ] "));
   Serial.println(tz->dateTime());
-  Serial.println((String)"Timezone: " + tzConf);
+  Serial.print(F("[TZ] Timezone: "));
+  Serial.println(tzConf);
 
   setup_webserver();
 
@@ -123,16 +166,24 @@ void setup() {
 }
 
 unsigned long _timer = millis();
+
 void loop() {
   // if ((millis() - _timer) >= 10*1000) {  // 1*1000
   //   fsm_handle::dispatch(toggle);
-  //   Serial.println(F("[Main] Memory after state switch"));
+  //   Serial.println("Memory after state switch");
   //   show_free_mem();
   //   _timer = millis();
   // };
 
-  webserver_loop();
+  if (MQTT_ENABLED) {
+    // should be checking for MQTT connection and reconnect
+    if (!mqtt_connected()) {
+      mqtt_connect(MQTT_USER, MQTT_PASS, MQTT_SUB_TOPIC);
+    }
+    mqtt_loop();
+  }
 
+  webserver_loop();
   fsm_handle::dispatch(loopUpdate);
 
 #ifdef ESP8266

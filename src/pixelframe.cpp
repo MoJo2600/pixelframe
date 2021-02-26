@@ -22,13 +22,13 @@ class ClockState
 
   public:
     void entry() override {
-        cout << "Entering Clock mode" << endl;
+        cout << "[PIXELFRAME] Entering Clock mode" << endl;
         clock = new PongClockClass(base::pixel_matrix, base::timezone);
         clock->setup();
     }
 
     void react(ToggleEvent const &) override {
-      cout << "Clock: react" << endl;
+      cout << "[PIXELFRAME] Clock: react" << endl;
       base::pixel_matrix->clear();
       transit<GifDecoderState>();
     }
@@ -42,12 +42,14 @@ class ClockState
       transit<GifDecoderState>(action);
     }
 
-    void react(LoopEvent const &) override { 
-      clock->loop();
-    };
+    void react(LoopEvent const &) {
+      if (clock) {
+        clock->loop();
+      }
+    }
 
     void exit() override {
-      cout << "Exit Clock mode" << endl;
+      cout << "[PIXELFRAME] Exit Clock mode" << endl;
       delete clock;
     }
 };
@@ -92,9 +94,9 @@ public PixelframeStateMachine
       if (file) file.close();
       file = LittleFS.open(e.file, "r");
       if (!file) {
-        cout << F("Error opening GIF file") << endl;
+        cout << "[PIXELFRAME] Error opening GIF file" << endl;
       }
-      cout << F("Opened GIF file, start decoding") << endl;
+      cout << "[PIXELFRAME] Opened GIF file, start decoding" << endl;
       decoder->startDecoding();
     }
 
@@ -103,20 +105,20 @@ public PixelframeStateMachine
       transit<ClockState>();
     }
 
-    void react(LoopEvent const &) override {
-      if (file) {
+    void react(LoopEvent const &) {
+      if (decoder) {
         decoder->loop();
       }
     }
 
     void exit() override {
-      cout << F("Exit Gif mode") << endl;
+      cout << "[PIXELFRAME] Exit Gif mode" << endl;
       decoder->stop();
       if (file) {
-        cout << F("Close file") << endl;
+        cout << "[PIXELFRAME] Close file" << endl;
         file.close();
       } 
-      cout << F("Delete decoder") << endl;
+      cout << "[PIXELFRAME] Delete decoder" << endl;
       delete decoder;
     }
 };
@@ -156,18 +158,18 @@ GifDecoder<16, 16, 10> * GifDecoderState::decoder; //  = new GifDecoder<16, 16, 
 // Base state: default implementations
 //
 void PixelframeStateMachine::react(ToggleEvent const &) {
-  cout << F("ToggleEvent event ignored") << endl;
+  cout << "[PIXELFRAME] ToggleEvent event ignored" << endl;
 }
 
 void PixelframeStateMachine::react(LoopEvent const &) {
-  cout << F("LoopEvent event ignored") << endl;
+  cout << "[PIXELFRAME] LoopEvent event ignored" << endl;
 }
 
 void PixelframeStateMachine::react(PlayGifEvent const &) {
-  cout << F("PlayGif event ignored") << endl;
+  cout << "[PIXELFRAME] PlayGif event ignored" << endl;
 }
 
 // ----------------------------------------------------------------------------
 // Initial state definition
 //
-FSM_INITIAL_STATE(PixelframeStateMachine, GifDecoderState)
+FSM_INITIAL_STATE(PixelframeStateMachine, ClockState)

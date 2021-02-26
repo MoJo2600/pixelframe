@@ -60,7 +60,7 @@ String getContentType(String filename) { // determine the filetype of a given fi
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  Serial.println("handleFileRead: " + path);
+  Serial.println("[WEBSERVER] handleFileRead: " + path);
   if (path.endsWith("/")) path += "index.html";          // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
@@ -70,10 +70,10 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     File file = LittleFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
+    Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
     return true;
   }
-  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  Serial.println(String("\t[WEBSERVER]  File Not Found: ") + path);   // If the file doesn't exist, return false
   return false;
 }
 
@@ -82,7 +82,7 @@ void handleGetFiles(String path) {
     return replyBadRequest("BAD PATH");
   }
 
-  Serial.println(String("handleFileList: ") + path);
+  Serial.println(String("[WEBSERVER] handleFileList: ") + path);
   Dir dir = fileSystem->openDir(path);
   path.clear();
 
@@ -137,10 +137,6 @@ void handleGetFiles(String path) {
    Also demonstrates the use of chuncked responses.
 */
 void handleFileList() {
-  // if (!fsOK) {
-  //   return replyServerError(FPSTR(FS_INIT_ERROR));
-  // }
-
   if (!server.hasArg("dir")) {
     return replyBadRequest(F("DIR ARG MISSING"));
   }
@@ -149,53 +145,6 @@ void handleFileList() {
 
   handleGetFiles(path);
 }
-
-// void handleGetBasicConfiguration() {
-//   server.sendHeader("Access-Control-Allow-Origin", "*");
-//   // use HTTP/1.1 Chunked response to avoid building a huge temporary string
-//   if (!server.chunkedResponseModeStart(200, "application/json")) {
-//     server.send(505, F("text/html"), F("HTTP1.1 required"));
-//     return;
-//   }
-
-//   // use the same string for every line
-//   String output;
-//   output.reserve(64);
-//   while (dir.next()) {
-
-//     if (output.length()) {
-//       // send string from previous iteration
-//       // as an HTTP chunk
-//       server.sendContent(output);
-//       output = ',';
-//     } else {
-//       output = '[';
-//     }
-
-//     output += "{\"type\":\"";
-//     if (dir.isDirectory()) {
-//       output += "dir";
-//     } else {
-//       output += F("file\",\"size\":\"");
-//       output += dir.fileSize();
-//     }
-
-//     output += F("\",\"name\":\"");
-//     // Always return names without leading "/"
-//     if (dir.fileName()[0] == '/') {
-//       output += &(dir.fileName()[1]);
-//     } else {
-//       output += dir.fileName();
-//     }
-
-//     output += "\"}";
-//   }
-
-//   // send last string
-//   output += "]";
-//   server.sendContent(output);
-//   server.chunkedResponseFinalize();
-// }
 
 void handleNotFound(){ // if the requested file or page doesn't exist, return a 404 not found error
   if(!handleFileRead(server.uri())){          // check if the file exists in the flash memory (LittleFS), if so, send it
@@ -206,27 +155,23 @@ void handleNotFound(){ // if the requested file or page doesn't exist, return a 
 void startMDNS() { // Start the mDNS responder
   // start the multicast domain name server
   if (!MDNS.begin(mdnsName)) {
-    Serial.print("Could not start MDNS service!");
+    Serial.print("[WEBSERVER] Could not start MDNS service!");
   }
   else
   {
-    Serial.print("mDNS responder started: http://");
+    Serial.print("[WEBSERVER] mDNS responder started: http://");
     Serial.print(mdnsName);
     Serial.println(".local");
   }
 }
 
-void handlePlayGif() {
-
-}
-
 void startServer() { // Start a HTTP server with a file read handler and an upload handler
 
   // List directory
-  server.on("/files", HTTP_GET, handleFileList);
+  server.on("/api/files", HTTP_GET, handleFileList);
 
   // Gif handling
-  server.on(UriBraces("/show/{}"), HTTP_GET, []() {
+  server.on(UriBraces("/api/show/{}"), HTTP_GET, []() {
     String name = server.pathArg(0);
     if (name == "toggle") {
       ToggleEvent event;
@@ -236,7 +181,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   });
 
   // Gif handling
-  server.on("/play", HTTP_GET, []() {
+  server.on("/api/play", HTTP_GET, []() {
     if (!server.hasArg("image")) {
       return replyBadRequest(F("IMAGE ARG MISSING"));
     }
@@ -247,23 +192,20 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     replyOKWithMsg(F("Playing file"));
   });
 
-  server.on(UriBraces("/images/{}"), []() {
+  server.on(UriBraces("/api/images/{}"), []() {
     String name = server.pathArg(0);
     handleFileRead("gifs/"+ name);
   });
 
-  server.on("/images", HTTP_GET, []() {
+  server.on("/api/images", HTTP_GET, []() {
     handleGetFiles("/gifs");
   });
-
-  // Basic settings
-  // server.on("/configuration/basic", HTTP_GET, handleGetBasicConfiguration);
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
                                               // and check if the file exists
 
   server.begin();                             // start the HTTP server
-  Serial.println("HTTP server started.");
+  Serial.println("[WEBSERVER] HTTP server started.");
 }
 
 

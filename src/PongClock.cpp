@@ -5,7 +5,13 @@
 #include "fonts/TomThumbPatched.h"
 
 // #define DEBUG
+/************************************************
+  PongClock
 
+  based on the awesome work of Jeremy Williams
+  https://github.com/Jerware/GameFrameV2
+  LEDSEQ.COM
+*************************************************/
 PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz) : matrix(matrix), tz{tz} {};
 
 PongClockClass::~PongClockClass(){ };
