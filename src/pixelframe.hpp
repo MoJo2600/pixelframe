@@ -36,7 +36,7 @@ class PixelframeStateMachine
 
     static FastLED_NeoMatrix * getMatrix() { return pixel_matrix; }
 
-    static void update(void);
+    static void loop(void);
 };
 
 using fsm_handle = PixelframeStateMachine;

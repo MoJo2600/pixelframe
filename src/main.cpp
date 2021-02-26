@@ -31,15 +31,18 @@
 #include <filesystem.hpp>
 #include "mqtt.h"                  // MQTT support
 
-bool
-  wifiConnected = false;
-
 #define SD_CS_PIN 4
 
-StaticJsonDocument<512> configuration;
-const char* mqtt_user;
-const char* mqtt_pass;
-const char* mqtt_sub_topic;
+bool
+  wifiConnected = false,
+  MQTT_ENABLED = false;
+
+StaticJsonDocument<512>
+  configuration;
+
+const char* MQTT_USER;
+const char* MQTT_PASS;
+const char* MQTT_SUB_TOPIC;
 
 Timezone * tz = new Timezone();
 
@@ -137,13 +140,15 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Read MQTT settings
-  const char* mqtt_host = configuration["mqtt"]["host"];
-  const unsigned int mqtt_port = configuration["mqtt"]["port"];
-  mqtt_user = configuration["mqtt"]["user"];
-  mqtt_pass = configuration["mqtt"]["password"];
-  mqtt_sub_topic = configuration["mqtt"]["topic"];
-
-  mqtt_setup(mqtt_host, mqtt_port, my_mqtt_callback);
+  MQTT_ENABLED = configuration.containsKey("mqtt");
+  if (MQTT_ENABLED) {
+    const char* MQTT_HOST = configuration["mqtt"]["host"];
+    const unsigned int MQTT_PORT = configuration["mqtt"]["port"];
+    MQTT_USER = configuration["mqtt"]["user"];
+    MQTT_PASS = configuration["mqtt"]["password"];
+    MQTT_SUB_TOPIC = configuration["mqtt"]["topic"];
+    mqtt_setup(MQTT_HOST, MQTT_PORT, my_mqtt_callback);
+  }
 
   // Time
   Serial.println(F("[TZ] Adjusting clock.."));
@@ -170,17 +175,16 @@ void loop() {
   //   _timer = millis();
   // };
 
-  // should be checking for MQTT connection and reconnect
-  if (!mqtt_connected()) {
-    mqtt_connect(mqtt_user, mqtt_pass, mqtt_sub_topic);
+  if (MQTT_ENABLED) {
+    // should be checking for MQTT connection and reconnect
+    if (!mqtt_connected()) {
+      mqtt_connect(MQTT_USER, MQTT_PASS, MQTT_SUB_TOPIC);
+    }
+    mqtt_loop();
   }
-  mqtt_loop();
 
   webserver_loop();
-
-  PixelframeStateMachine::update();
-
-  // fsm_handle::dispatch(loopUpdate);
+  fsm_handle::dispatch(loopUpdate);
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of
