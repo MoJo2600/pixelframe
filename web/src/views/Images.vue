@@ -102,7 +102,7 @@ export default class ImagesView extends Mixins(DataHandlerMixin) {
   required = required;
 
   private readonly imgService = Service.get(ImagesService);
-  private imageHost = process.env.VUE_APP_API_BASE_URL + "/images";
+  private imageHost = process.env.VUE_APP_API_BASE_URL + "/api/images";
   private images: Image[] = [];
   private file: string | null = null;
   private formValid = false;
