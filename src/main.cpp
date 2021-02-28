@@ -128,6 +128,7 @@ void setup() {
   const char* password = configuration["wifi"]["password"];
 
   Serial.print(F("[WIFI] Connecting wifi"));
+  WiFi.hostname("Pixelframe");
   WiFi.begin(ssid, password);
 
   // Wait for the Wi-Fi to connect
