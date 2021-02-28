@@ -1,0 +1,114 @@
+{
+  "configuration-basic": {
+    "brightness": 164,
+    "timezone": "Europe/Berlin"
+  },
+  "configuration-wifi": {
+    "ssid": "ssid1",
+    "password": "asdf"
+  },
+  "configuration-mqtt": {
+    "host": "host",
+    "port": "8080",
+    "user": "user",
+    "password": "asdf",
+    "baseTopic": "topic"
+  },
+  "environment-wifis": [
+    {
+      "ssid": "ssid1",
+      "signalStrength": 0
+    },
+    {
+      "ssid": "ssid2",
+      "signalStrength": 0
+    }
+  ],
+  "images": [
+    {
+      "type": "file",
+      "size": "1771",
+      "name": "bird.gif"
+    },
+    {
+      "type": "file",
+      "size": "1358",
+      "name": "bomb.gif"
+    },
+    {
+      "type": "file",
+      "size": "425",
+      "name": "boy.gif"
+    },
+    {
+      "type": "file",
+      "size": "2831",
+      "name": "bridge.gif"
+    },
+    {
+      "type": "file",
+      "size": "1545",
+      "name": "bridggy.gif"
+    },
+    {
+      "type": "file",
+      "size": "1408",
+      "name": "bug.gif"
+    },
+    {
+      "type": "file",
+      "size": "1813",
+      "name": "butterfly.gif"
+    },
+    {
+      "type": "file",
+      "size": "1530",
+      "name": "candles.gif"
+    },
+    {
+      "type": "file",
+      "size": "1489",
+      "name": "car.gif"
+    },
+    {
+      "type": "file",
+      "size": "1631",
+      "name": "caterpillar.gif"
+    },
+    {
+      "type": "file",
+      "size": "5169",
+      "name": "city.gif"
+    },
+    {
+      "type": "file",
+      "size": "1363",
+      "name": "coffee.gif"
+    },
+    {
+      "type": "file",
+      "size": "1593",
+      "name": "girl.gif"
+    },
+    {
+      "type": "file",
+      "size": "1375",
+      "name": "girl2.gif"
+    },
+    {
+      "type": "file",
+      "size": "2268",
+      "name": "progress.gif"
+    },
+    {
+      "type": "file",
+      "size": "1336",
+      "name": "rain.gif"
+    },
+    {
+      "type": "file",
+      "size": "8572",
+      "name": "sunmoon.gif"
+    }
+  ]
+}

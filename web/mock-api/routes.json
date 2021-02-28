@@ -1,0 +1,5 @@
+{
+  "/api/configuration/*": "/configuration-$1",
+  "/api/environment/*": "/environment-$1",
+  "/api/images": "/images"
+}
