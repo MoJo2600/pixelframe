@@ -27,6 +27,14 @@ dev-build: ## Build the development docker environment
 dev-prune: ## Cleanup the development docker environment
 	docker-compose down -v --remove-orphans --rmi all
 
+.PHONY: run
+run: ## Start up web application locally
+	npm run serve
+
+.PHONY: build
+build: ## Build web application
+	npm run build
+
 .PHONY: mock-api
 mock-api: ## Start up mock api
 	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR}
