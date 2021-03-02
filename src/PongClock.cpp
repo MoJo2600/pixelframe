@@ -241,7 +241,7 @@ void PongClockClass::loop()
         {
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
-          // 24 hour conversion
+          current_hour = tz->hour();
           current_minute = tz->minute();
           drawDigits();
         }
@@ -265,6 +265,7 @@ void PongClockClass::loop()
           pong_celebrate = true;
           pong_celebration_end = millis() + 2000;
           current_hour = tz->hour();
+          current_minute = tz->minute();
           drawDigits();
         }
       }
