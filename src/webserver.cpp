@@ -9,7 +9,7 @@
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include <FastLED.h>
-#include <pixelframe.hpp>
+// #include <pixelframe.hpp>
 
 const char* fsName = "LittleFS";
 FS* fileSystem = &LittleFS;
@@ -173,10 +173,10 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   // Gif handling
   server.on(UriBraces("/api/show/{}"), HTTP_GET, []() {
     String name = server.pathArg(0);
-    if (name == "toggle") {
-      ToggleEvent event;
-      fsm_handle::dispatch(event);
-    }
+    // if (name == "toggle") {
+    //   ToggleEvent event;
+    //   fsm_handle::dispatch(event);
+    // }
     replyOKWithMsg(F("Everyday I'm toggeling"));
   });
 
@@ -186,9 +186,13 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
       return replyBadRequest(F("IMAGE ARG MISSING"));
     }
     String path = server.arg("image");
-    PlayGifEvent playGif;
-    playGif.file = String("/gifs/")+ path;
-    fsm_handle::dispatch(playGif);
+
+    // PlayGifEvent playGif;
+    // playGif.file = String("/gifs/")+ path;
+
+    // ???
+    // fsm_handle::dispatch(playGif);
+
     replyOKWithMsg(F("Playing file"));
   });
 

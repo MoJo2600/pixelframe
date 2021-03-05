@@ -7,8 +7,11 @@
 #include <FastLED_NeoMatrix.h>
 #include "ezTime.h"
 #include <iostream>
+#include <bits/stdc++.h>
 
 using namespace std;
+
+extern queue<tinyfsm::Event> event_queue;
 
 struct ToggleEvent : tinyfsm::Event { };
 struct LoopEvent : tinyfsm::Event { };

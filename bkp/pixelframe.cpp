@@ -10,6 +10,8 @@
 
 using namespace std;
 
+queue<tinyfsm::Event> event_queue;
+
 class GifDecoderState; // Forward declaration
 
 class ClockState
@@ -17,7 +19,6 @@ class ClockState
 {
   using base = PixelframeStateMachine;
 
-  int counter;
   PongClockClass * clock;
 
   public:
@@ -36,10 +37,10 @@ class ClockState
     void react(PlayGifEvent const & event) override {
       cout << "[ClockState] PlayGif event received, toggle to gif" << endl;
       /* lambda function used for transition action */
-      auto action = [event] {
-        fsm_handle::dispatch(event);
-      };
-      transit<GifDecoderState>(action);
+      // auto action = [event] {
+      //   state<GifDecoderState>.image = event.file;
+      // };
+      transit<GifDecoderState>();
     }
 
     void react(LoopEvent const &) {
@@ -59,6 +60,8 @@ class GifDecoderState :
 public PixelframeStateMachine
 {
   using base = PixelframeStateMachine;
+  public:
+    String image;
 
   protected:
     static fs::File file;
@@ -89,6 +92,7 @@ public PixelframeStateMachine
 
     void react(PlayGifEvent const & e) override {
       cout << "Got play gif event with file: " << e.file << endl;
+      // image = e.file;
       base::pixel_matrix->clear();
       //TODO: Move to sub states, that will use the gif decoder
       if (file) file.close();

@@ -27,9 +27,11 @@
 #include "config.h"                     // Set up the LED matrix here
 #include "ezTime.h"
 #include "webserver.h"                  // Web interface
-#include "pixelframe.hpp"               // Statemachine
+// #include "pixelframe.hpp"               // Statemachine
 #include <filesystem.hpp>
 #include "mqtt.h"                  // MQTT support
+#include "components/orchestrator.hpp"
+#include "frames/frame.hpp"
 
 #define SD_CS_PIN 4
 
@@ -46,25 +48,30 @@ const char* MQTT_SUB_TOPIC;
 
 Timezone * tz = new Timezone();
 
-// Statemachine handle
-FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
-Timezone * PixelframeStateMachine::timezone{tz};
+// // Statemachine handle
+// FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
+// Timezone * PixelframeStateMachine::timezone{tz};
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
 
 fs::File file;
 
-// instantiate events
-ToggleEvent toggle;
-LoopEvent loopUpdate;
+// // instantiate events
+// ToggleEvent toggle;
+// LoopEvent loopUpdate;
+
+// frame orchestrator & frame base
+Orchestrator* orchestrator;
+FastLED_NeoMatrix* Frame::pixelMatrix = matrix;
+Timezone* Frame::timezone = tz;
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
 void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("[MQTT] message on (");
   Serial.print(topic);
   Serial.println(")");
-  fsm_handle::dispatch(toggle);
+  // fsm_handle::dispatch(toggle);
 
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);
@@ -163,7 +170,10 @@ void setup() {
 
   setup_webserver();
 
-  fsm_handle::start();
+  // TODO: Start orchestartor
+  // fsm_handle::start();
+  orchestrator = new Orchestrator();
+  orchestrator->setup();
 }
 
 unsigned long _timer = millis();
@@ -185,7 +195,11 @@ void loop() {
   }
 
   webserver_loop();
-  fsm_handle::dispatch(loopUpdate);
+
+  // TODO: Orchestartor loop
+  // fsm_handle::dispatch(loopUpdate);
+  
+  orchestrator->loop();
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of
