@@ -10,6 +10,9 @@
 #include <ArduinoJson.h>
 #include <FastLED.h>
 // #include <pixelframe.hpp>
+#include "components/orchestrator.hpp"
+#include "frames/clockframe.hpp"
+#include "frames/gifframe.hpp"
 
 const char* fsName = "LittleFS";
 FS* fileSystem = &LittleFS;
@@ -169,6 +172,28 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
 
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
+
+  // TODO: remove TEST
+  server.on(UriBraces("/api/test/clock"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive test - switch to clock");
+
+    auto ev = new ClockFrameEvent();
+
+    Orchestrator::Instance()->react(ev);
+    
+    replyOKWithMsg(F("Switching to clock"));
+  });
+  
+  // TODO: remove TEST
+  server.on(UriBraces("/api/test/gif"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive test - switch to gif");
+
+    auto ev = new GifFrameEvent();
+
+    Orchestrator::Instance()->react(ev);
+    
+    replyOKWithMsg(F("Switching to gif"));
+  });
 
   // Gif handling
   server.on(UriBraces("/api/show/{}"), HTTP_GET, []() {

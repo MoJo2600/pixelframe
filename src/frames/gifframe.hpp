@@ -4,6 +4,11 @@
 #include "frames/frame.hpp"
 #include "lib/gif/GifDecoder.h"
 
+class GifFrameEvent : public FrameEvent {
+  public:
+    Frame* getFrame(void);
+};
+
 class GifFrame : public Frame {
   public:
     void loop(void);

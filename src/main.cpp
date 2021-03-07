@@ -62,7 +62,6 @@ fs::File file;
 // LoopEvent loopUpdate;
 
 // frame orchestrator & frame base
-Orchestrator* orchestrator;
 FastLED_NeoMatrix* Frame::pixelMatrix = matrix;
 Timezone* Frame::timezone = tz;
 
@@ -172,8 +171,7 @@ void setup() {
 
   // TODO: Start orchestartor
   // fsm_handle::start();
-  orchestrator = new Orchestrator();
-  orchestrator->setup();
+  Orchestrator::Instance()->setup();
 }
 
 unsigned long _timer = millis();
@@ -199,7 +197,7 @@ void loop() {
   // TODO: Orchestartor loop
   // fsm_handle::dispatch(loopUpdate);
   
-  orchestrator->loop();
+  Orchestrator::Instance()->loop();
 
 #ifdef ESP8266
   // Disable watchdog interrupt so that it does not trigger in the middle of

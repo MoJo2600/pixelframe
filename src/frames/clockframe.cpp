@@ -6,6 +6,10 @@
 
 using namespace std;
 
+Frame* ClockFrameEvent::getFrame() {
+  return new ClockFrame();
+}
+
 void ClockFrame::loop(void) {
   if (this->clock) {
     this->clock->loop();

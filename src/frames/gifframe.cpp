@@ -6,6 +6,10 @@
 
 using namespace std;
 
+Frame* GifFrameEvent::getFrame() {
+  return new GifFrame();
+}
+
 void GifFrame::loop(void) {
   if (decoder) {
     decoder->loop();
@@ -22,7 +26,7 @@ void GifFrame::enter(void) {
   decoder->setDrawPixelCallback(GifFrame::drawPixelCallback);
   decoder->setFileSeekCallback(GifFrame::fileSeekCallback);
 
-  const char * filename = "/gifs/city.gif";
+  const char * filename = "/gifs/bird.gif";
   cout << "Got play gif event with file: " << filename << endl;
   // image = e.file;
   this->pixelMatrix->clear();

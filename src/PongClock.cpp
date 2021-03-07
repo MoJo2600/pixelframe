@@ -4,7 +4,7 @@
 #include "ezTime.h"
 #include "fonts/TomThumbPatched.h"
 
-#define DEBUG
+// #define DEBUG
 /************************************************
   PongClock
 
