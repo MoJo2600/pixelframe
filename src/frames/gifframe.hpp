@@ -1,22 +1,33 @@
 #pragma once
 
+#include <string>
 #include <LittleFS.h>
 #include "frames/frame.hpp"
 #include "lib/gif/GifDecoder.h"
 
-class GifFrameEvent : public FrameEvent {
+class RandomGifFrameEvent : public FrameEvent {
   public:
     Frame* getFrame(void);
+    std::string getEventId(void);
+};
+
+class SingleGifFrameEvent : public FrameEvent {
+  public:
+    Frame* getFrame(void);
+    std::string getEventId(void);
+    std::string filename;
 };
 
 class GifFrame : public Frame {
   public:
     void loop(void);
     void enter(void);
-    // void react(ClockFrameEvent event);
+    void react(FrameEvent* event);
     void exit(void);
 
   private:
+    void playGif(std::string filename);
+
     static fs::File file;
     static GifDecoder<16, 16, 10> * decoder;
     static unsigned long filePositionCallback(void);

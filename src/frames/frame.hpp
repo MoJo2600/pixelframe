@@ -7,11 +7,13 @@
 #include <FastLED_NeoMatrix.h>
 #include "ezTime.h"
 
+class FrameEvent;
+
 class Frame {
   public:
     virtual void loop(void) = 0;
     virtual void enter(void) = 0;
-    // TODO: virtual void react(Event event) = 0;
+    virtual void react(FrameEvent* event) = 0;
     virtual void exit(void) = 0;
 
     static FastLED_NeoMatrix* pixelMatrix;
@@ -21,4 +23,5 @@ class Frame {
 class FrameEvent {
   public:
     virtual Frame* getFrame(void) = 0;
+    virtual std::string getEventId(void) = 0;
 };

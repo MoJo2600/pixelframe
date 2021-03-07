@@ -186,9 +186,9 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   
   // TODO: remove TEST
   server.on(UriBraces("/api/test/gif"), HTTP_GET, []() {
-    Serial.println("[WEBSERVER] Receive test - switch to gif");
+    Serial.println("[WEBSERVER] Receive test - switch to random gif");
 
-    auto ev = new GifFrameEvent();
+    auto ev = new RandomGifFrameEvent();
 
     Orchestrator::Instance()->react(ev);
     
@@ -196,27 +196,18 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   });
 
   // Gif handling
-  server.on(UriBraces("/api/show/{}"), HTTP_GET, []() {
-    String name = server.pathArg(0);
-    // if (name == "toggle") {
-    //   ToggleEvent event;
-    //   fsm_handle::dispatch(event);
-    // }
-    replyOKWithMsg(F("Everyday I'm toggeling"));
-  });
-
-  // Gif handling
   server.on("/api/play", HTTP_GET, []() {
     if (!server.hasArg("image")) {
       return replyBadRequest(F("IMAGE ARG MISSING"));
     }
-    String path = server.arg("image");
+    String filename = server.arg("image");
 
-    // PlayGifEvent playGif;
-    // playGif.file = String("/gifs/")+ path;
+    Serial.println("[WEBSERVER] Receive play, switch to gif");
 
-    // ???
-    // fsm_handle::dispatch(playGif);
+    auto ev = new SingleGifFrameEvent();
+    ev->filename = std::string(filename.c_str());
+
+    Orchestrator::Instance()->react(ev);
 
     replyOKWithMsg(F("Playing file"));
   });
