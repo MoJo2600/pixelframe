@@ -3,6 +3,7 @@
 #include "frames/frame.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"
+#include "frames/visualsframe.hpp"
 
 Orchestrator* Orchestrator::instance = nullptr;
 

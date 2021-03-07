@@ -18,6 +18,8 @@ class Frame {
 
     static FastLED_NeoMatrix* pixelMatrix;
     static Timezone* timezone;
+
+    CRGB* matrixleds;
 };
 
 class FrameEvent {

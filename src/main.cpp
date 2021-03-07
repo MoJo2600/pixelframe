@@ -57,12 +57,9 @@ Timezone * tz = new Timezone();
 
 fs::File file;
 
-// // instantiate events
-// ToggleEvent toggle;
-// LoopEvent loopUpdate;
-
 // frame orchestrator & frame base
 FastLED_NeoMatrix* Frame::pixelMatrix = matrix;
+// CRGB* Frame::matrixleds = matrixleds; // direct access to matrix leds
 Timezone* Frame::timezone = tz;
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
@@ -169,9 +166,15 @@ void setup() {
 
   setup_webserver();
 
+  // TODO: remove
+  // Frame::matrixleds[128] = CRGB(255,253,10);
+  // Frame::matrixleds[129] = CRGB(0,253,100);
+  // Frame::matrixleds[130] = CRGB(10,0,255);
+  // matrix->show();
+
   // TODO: Start orchestartor
   // fsm_handle::start();
-  Orchestrator::Instance()->setup();
+  Orchestrator::Instance()->setup(matrixleds);
 }
 
 unsigned long _timer = millis();
