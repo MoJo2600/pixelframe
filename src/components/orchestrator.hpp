@@ -5,7 +5,7 @@
 class Orchestrator
 {
   public:
-    void setup(void);
+    void setup();
     void loop(void);
     void react(FrameEvent* e);
 

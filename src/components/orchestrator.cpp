@@ -2,11 +2,12 @@
 #include "components/orchestrator.hpp"
 #include "frames/frame.hpp"
 #include "frames/clockframe.hpp"
-#include "frames/gifframe.hpp"
+// #include "frames/gifframe.hpp"
+// #include "frames/visualsframe.hpp"
 
 Orchestrator* Orchestrator::instance = nullptr;
 
-void Orchestrator::setup(void) {
+void Orchestrator::setup() {
   this->currentFrame = nullptr;
 
   // TODO: define default behavior

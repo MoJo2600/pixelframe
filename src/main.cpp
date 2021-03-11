@@ -24,7 +24,7 @@
 #include "ArduinoJson.h"
 //#include "NTPClient.h"
 #include "WiFiUdp.h"
-#include "config.h"                     // Set up the LED matrix here
+#include "config.hpp"                     // Set up the LED matrix here
 #include "ezTime.h"
 #include "webserver.h"                  // Web interface
 // #include "pixelframe.hpp"               // Statemachine
@@ -46,8 +46,6 @@ const char* MQTT_USER;
 const char* MQTT_PASS;
 const char* MQTT_SUB_TOPIC;
 
-Timezone * tz = new Timezone();
-
 // // Statemachine handle
 // FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
 // Timezone * PixelframeStateMachine::timezone{tz};
@@ -56,14 +54,6 @@ Timezone * tz = new Timezone();
 #define error(msg) sd.errorHalt(F(msg))
 
 fs::File file;
-
-// // instantiate events
-// ToggleEvent toggle;
-// LoopEvent loopUpdate;
-
-// frame orchestrator & frame base
-FastLED_NeoMatrix* Frame::pixelMatrix = matrix;
-Timezone* Frame::timezone = tz;
 
 // mqtt subscription callback. This function is called when new messages arrive at the client.
 void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
@@ -161,13 +151,19 @@ void setup() {
   Serial.println(F("[TZ] Adjusting clock.."));
   const char* tzConf = configuration["timezone"];
   waitForSync();
-  tz->setLocation(tzConf);
+  timezone->setLocation(tzConf);
   Serial.print(F("[TZ] "));
-  Serial.println(tz->dateTime());
+  Serial.println(timezone->dateTime());
   Serial.print(F("[TZ] Timezone: "));
   Serial.println(tzConf);
 
   setup_webserver();
+
+  // TODO: remove
+  // Frame::matrixleds[128] = CRGB(255,253,10);
+  // Frame::matrixleds[129] = CRGB(0,253,100);
+  // Frame::matrixleds[130] = CRGB(10,0,255);
+  // matrix->show();
 
   // TODO: Start orchestartor
   // fsm_handle::start();

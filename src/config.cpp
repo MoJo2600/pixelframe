@@ -1,100 +1,27 @@
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
-/***************************************************************************************
-*    Title: <title of program/source code>
-*    Author: <author(s) names>
-*    Date: <date>
-*    Code version: <code version>
-*    Availability: <where it's located>
-*
-***************************************************************************************/
+#include "config.hpp"
 
-// #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
-// #include <FS.h>
-#define FS_NO_GLOBALS
-#include <LittleFS.h>
-#include <Adafruit_GFX.h>
 bool init_done = 0;
-#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
-#include <FastLED_NeoMatrix.h>
-#define FASTLED_NEOMATRIX
-
-// LED setup
-#define FRAMES_PER_SECOND 60
-
-#define DATA_PIN          5
 uint8_t matrix_brightness = 64;
-// Used by LEDMatrix
-const uint16_t MATRIX_TILE_WIDTH = 16; // width of EACH NEOPIXEL MATRIX (not total display)
-const uint16_t MATRIX_TILE_HEIGHT= 16; // height of each matrix
-const uint8_t MATRIX_TILE_H     = 1;  // number of matrices arranged horizontally
-const uint8_t MATRIX_TILE_V     = 1;  // number of matrices arranged vertically
-
-// Used by NeoMatrix
-const uint16_t mw = MATRIX_TILE_WIDTH *  MATRIX_TILE_H;
-const uint16_t mh = MATRIX_TILE_HEIGHT * MATRIX_TILE_V;
-
-CRGB *matrixleds;
-
-// MATRIX DECLARATION:
-// Parameter 1 = width of EACH NEOPIXEL MATRIX (not total display)
-// Parameter 2 = height of each matrix
-// Parameter 3 = number of matrices arranged horizontally
-// Parameter 4 = number of matrices arranged vertically
-// Parameter 5 = pin number (most are valid)
-// Parameter 6 = matrix layout flags, add together as needed:
-//   NEO_MATRIX_TOP, NEO_MATRIX_BOTTOM, NEO_MATRIX_LEFT, NEO_MATRIX_RIGHT:
-//     Position of the FIRST LED in the FIRST MATRIX; pick two, e.g.
-//     NEO_MATRIX_TOP + NEO_MATRIX_LEFT for the top-left corner.
-//   NEO_MATRIX_ROWS, NEO_MATRIX_COLUMNS: LEDs WITHIN EACH MATRIX are
-//     arranged in horizontal rows or in vertical columns, respectively;
-//     pick one or the other.
-//   NEO_MATRIX_PROGRESSIVE, NEO_MATRIX_ZIGZAG: all rows/columns WITHIN
-//     EACH MATRIX proceed in the same order, or alternate lines reverse
-//     direction; pick one.
-//   NEO_TILE_TOP, NEO_TILE_BOTTOM, NEO_TILE_LEFT, NEO_TILE_RIGHT:
-//     Position of the FIRST MATRIX (tile) in the OVERALL DISPLAY; pick
-//     two, e.g. NEO_TILE_TOP + NEO_TILE_LEFT for the top-left corner.
-//   NEO_TILE_ROWS, NEO_TILE_COLUMNS: the matrices in the OVERALL DISPLAY
-//     are arranged in horizontal rows or in vertical columns, respectively;
-//     pick one or the other.
-//   NEO_TILE_PROGRESSIVE, NEO_TILE_ZIGZAG: the ROWS/COLUMS OF MATRICES
-//     (tiles) in the OVERALL DISPLAY proceed in the same order for every
-//     line, or alternate lines reverse direction; pick one.  When using
-//     zig-zag order, the orientation of the matrices in alternate rows
-//     will be rotated 180 degrees (this is normal -- simplifies wiring).
-//   See example below for these values in action.
-FastLED_NeoMatrix * matrix = new FastLED_NeoMatrix(matrixleds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V,
-  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
-    NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
-    NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE);
-
-// Compat for some other demos
-const uint32_t NUMMATRIX = mw*mh;
-const uint32_t NUM_LEDS = NUMMATRIX;
-const uint16_t MATRIX_HEIGHT = mh;
-const uint16_t MATRIX_WIDTH = mw;
-
-// Compat with SmartMatrix code that uses those variables
-// (but don't redefine for SmartMatrix backend)
-#ifndef SMARTMATRIX
-const uint16_t kMatrixWidth = mw;
-const uint16_t kMatrixHeight = mh;
-#endif
-
-#include "ESP8266WiFi.h"
-extern "C" {
-#include "user_interface.h"
-}
-
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 uint16_t speed = 255;
-
 float matrix_gamma = 1; // higher number is darker, needed for Neomatrix more than SmartMatrix
 
-// Like XY, but for a mirror image from the top (used by misconfigured code)
-int XY2( int x, int y, bool wrap=false) {
+CRGB* matrixleds = nullptr;
+FastLED_NeoMatrix* matrix = new FastLED_NeoMatrix(
+  matrixleds, 
+  MATRIX_TILE_WIDTH, 
+  MATRIX_TILE_HEIGHT, 
+  MATRIX_TILE_H, 
+  MATRIX_TILE_V,
+  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
+      NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
+      NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE
+);
+
+Timezone* timezone = new Timezone();
+
+int XY2( int x, int y, bool wrap) {
     wrap = wrap; // squelch compiler warning
     return matrix->XY(x,MATRIX_HEIGHT-1-y);
 }
@@ -109,7 +36,7 @@ int wrapX(int x) {
     return x;
 }
 
-void show_free_mem(const char *pre=NULL) {
+void show_free_mem(const char *pre) {
     Framebuffer_GFX::show_free_mem(pre);
 }
 
@@ -118,7 +45,7 @@ void die(const char *mesg) {
     while(1) delay((uint32_t)1); // while 1 loop only triggers watchdog on ESP chips
 }
 
-void *mallocordie(const char *varname, uint32_t req, bool psram=true) {
+void *mallocordie(const char *varname, uint32_t req, bool psram) {
 #ifndef BOARD_HAS_PSRAM
     psram = false;
 #endif
@@ -143,7 +70,7 @@ void *mallocordie(const char *varname, uint32_t req, bool psram=true) {
     return NULL;
 }
 
-void matrix_setup(bool initserial=true, int reservemem = 40000) {
+void matrix_setup(bool initserial, int reservemem) {
     reservemem = reservemem; // squelch compiler warning if var is unused.
     // It's bad to call Serial.begin twice, so it's disabled here now, make sure you have it enabled
     // in your calling script.
@@ -224,5 +151,3 @@ void matrix_setup(bool initserial=true, int reservemem = 40000) {
     // Hence, flush input.
     while(Serial.available() > 0) { char t = Serial.read(); t = t; }
 }
-#endif // CONFIG_H_INCLUDED
-// vim:sts=4:sw=4:et

@@ -13,6 +13,7 @@
 #include "components/orchestrator.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"
+#include "frames/visualsframe.hpp"
 
 const char* fsName = "LittleFS";
 FS* fileSystem = &LittleFS;
@@ -178,7 +179,6 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     Serial.println("[WEBSERVER] Receive test - switch to clock");
 
     auto ev = new ClockFrameEvent();
-
     Orchestrator::Instance()->react(ev);
     
     replyOKWithMsg(F("Switching to clock"));
@@ -189,10 +189,19 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     Serial.println("[WEBSERVER] Receive test - switch to random gif");
 
     auto ev = new RandomGifFrameEvent();
-
     Orchestrator::Instance()->react(ev);
     
     replyOKWithMsg(F("Switching to gif"));
+  });
+  
+  // TODO: remove TEST
+  server.on(UriBraces("/api/test/visual"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive test - switch to visuals frame");
+
+    auto ev = new VisualsFrameEvent();
+    Orchestrator::Instance()->react(ev);
+    
+    replyOKWithMsg(F("Switching to visual frame"));
   });
 
   // Gif handling
@@ -206,7 +215,6 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
 
     auto ev = new SingleGifFrameEvent();
     ev->filename = std::string(filename.c_str());
-
     Orchestrator::Instance()->react(ev);
 
     replyOKWithMsg(F("Playing file"));
