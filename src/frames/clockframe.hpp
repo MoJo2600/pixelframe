@@ -2,6 +2,7 @@
 
 #include <string>
 #include "frames/frame.hpp"
+#include <Arduino.h>
 #include "PongClock.h"
 
 class ClockFrameEvent : public FrameEvent {

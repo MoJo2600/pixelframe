@@ -1,18 +1,25 @@
 #pragma once
 
+#include <string.h>
 #include <FastLED_NeoMatrix.h>
 #include <FastLED.h>
 #include "frames/frame.hpp"
 
 #define SECONDS_PER_PALETTE 10
 
+class VisualsFrameEvent : public FrameEvent {
+  public:
+    Frame* getFrame(void);
+    std::string getEventId(void);
+};
+
 class VisualsFrame
 : public Frame 
 {
   public:
-    VisualsFrame(CRGB* matrixleds);
     void loop(void);
     void enter(void);
+    void react(FrameEvent* event);
     void exit(void);
 
   private:

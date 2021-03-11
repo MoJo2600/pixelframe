@@ -62,7 +62,18 @@
 
 #include <FastLED_NeoMatrix.h>
 #include <FastLED.h>
+#include "config.hpp"
 #include "frames/visualsframe.hpp"
+
+
+Frame* VisualsFrameEvent::getFrame() {
+  return new VisualsFrame();
+}
+
+std::string VisualsFrameEvent::getEventId(void) {
+  return "frame.event.visuals.default";
+}
+
 
 // Overall twinkle speed.
 // 0 (VERY slow) to 8 (VERY fast).  
@@ -193,11 +204,6 @@ const TProgmemRGBPalette16* ActivePaletteList[] = {
   &Ice_p  
 };
 
-VisualsFrame::VisualsFrame(CRGB* matrixleds) {
-  Frame::matrixleds = matrixleds;
-};
-
-
 // This function is like 'triwave8', which produces a 
 // symmetrical up-and-down triangle sawtooth waveform, except that this
 // function produces a triangle wave with a faster attack and a slower decay:
@@ -325,15 +331,15 @@ void VisualsFrame::drawTwinkles( )
     if( deltabright >= 32 || (!bg)) {
       // If the new pixel is significantly brighter than the background color, 
       // use the new color.
-      this->matrixleds[idx] = c;
+      matrixleds[idx] = c;
     } else if( deltabright > 0 ) {
       // If the new pixel is just slightly brighter than the background color,
       // mix a blend of the new color and the background color
-      this->matrixleds[idx] = blend( bg, c, deltabright * 8);
+      matrixleds[idx] = blend( bg, c, deltabright * 8);
     } else { 
       // if the new pixel is not at all brighter than the background color,
       // just use the background color.
-      this->matrixleds[idx] = bg;
+      matrixleds[idx] = bg;
     }
   }
 }
@@ -366,7 +372,11 @@ void VisualsFrame::loop()
 
   drawTwinkles();
   
-  Frame::pixelMatrix->show();
+  matrix->show();
+}
+
+
+void VisualsFrame::react(FrameEvent* event) {
 }
 
 void VisualsFrame::exit() {}

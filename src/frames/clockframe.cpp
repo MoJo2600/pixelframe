@@ -1,7 +1,6 @@
-#pragma once
-
 #include <iostream>
 #include "frames/clockframe.hpp"
+#include "config.hpp"
 #include "PongClock.h"
 
 using namespace std;
@@ -22,7 +21,7 @@ void ClockFrame::loop(void) {
 
 void ClockFrame::enter(void) {
   cout << "[PIXELFRAME] Entering Clock mode" << endl;
-  this->clock = new PongClockClass(Frame::pixelMatrix, Frame::timezone);
+  this->clock = new PongClockClass(matrix, timezone);
   this->clock->setup();
 }
 

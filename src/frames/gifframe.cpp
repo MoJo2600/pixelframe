@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <FastLED_NeoMatrix.h>
+#include "config.hpp"
 #include "frames/gifframe.hpp"
 
 using namespace std;
@@ -72,7 +73,7 @@ void GifFrame::exit(void) {
 void GifFrame::playGif(std::string filename) {
   cout << "Got play gif event with file: " << filename << endl;
   // image = e.file;
-  this->pixelMatrix->clear();
+  matrix->clear();
   //TODO: Move to sub states, that will use the gif decoder
   if (file) file.close();
   file = LittleFS.open(filename.c_str(), "r");
@@ -102,8 +103,8 @@ void GifFrame::updateScreenCallback(void) {
 }
 
 void GifFrame::drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) {
-  CRGB color = CRGB(Frame::pixelMatrix->gamma[red], Frame::pixelMatrix->gamma[green], Frame::pixelMatrix->gamma[blue]);
-  Frame::pixelMatrix->drawPixel(x, y, color);
+  CRGB color = CRGB(matrix->gamma[red], matrix->gamma[green], matrix->gamma[blue]);
+  matrix->drawPixel(x, y, color);
 }
 
 bool GifFrame::fileSeekCallback(unsigned long position) {
