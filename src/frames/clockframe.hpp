@@ -1,9 +1,10 @@
-#pragma once
+#ifndef CLOCKFRAME_HPP_INCLUDED
+#define CLOCKFRAME_HPP_INCLUDED
 
 #include <string>
 #include "frames/frame.hpp"
 #include <Arduino.h>
-#include "PongClock.h"
+#include "PongClock.hpp"
 
 class ClockFrameEvent : public FrameEvent {
   public:
@@ -22,3 +23,5 @@ class ClockFrame : public Frame {
     PongClockClass* clock;
 
 };
+
+#endif // CLOCKFRAME_HPP_INCLUDED

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GIFFRAME_HPP_INCLUDED
+#define GIFFRAME_HPP_INCLUDED
 
 #include <string>
 #include <LittleFS.h>
@@ -37,5 +38,6 @@ class GifFrame : public Frame {
     static void updateScreenCallback(void);
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue);
     static bool fileSeekCallback(unsigned long position);
-
 };
+
+#endif // GIFFRAME_HPP_INCLUDED

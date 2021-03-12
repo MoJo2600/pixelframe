@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FRAME_HPP_INCLUDED
+#define FRAME_HPP_INCLUDED
 
 #include <string>
 
@@ -17,3 +18,5 @@ class FrameEvent {
     virtual Frame* getFrame(void) = 0;
     virtual std::string getEventId(void) = 0;
 };
+
+#endif // FRAME_HPP_INCLUDED

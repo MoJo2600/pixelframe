@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ORCHESTRATOR_HPP_INCLUDED
+#define ORCHESTRATOR_HPP_INCLUDED
 
 #include "frames/frame.hpp"
 
@@ -27,3 +28,5 @@ class Orchestrator
     Frame* currentFrame;
     Frame* getFrameByEvent(FrameEvent* e);
 };
+
+#endif // ORCHESTRATOR_HPP_INCLUDED

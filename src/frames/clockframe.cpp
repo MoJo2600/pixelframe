@@ -1,7 +1,7 @@
 #include <iostream>
 #include "frames/clockframe.hpp"
 #include "config.hpp"
-#include "PongClock.h"
+#include "PongClock.hpp"
 
 using namespace std;
 

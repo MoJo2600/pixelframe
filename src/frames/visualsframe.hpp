@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VISUALSFRAME_HPP_INCLUDED
+#define VISUALSFRAME_HPP_INCLUDED
 
 #include <string.h>
 #include <FastLED_NeoMatrix.h>
@@ -28,3 +29,5 @@ class VisualsFrame
     CRGB computeOneTwinkle( uint32_t ms, uint8_t salt);
     void chooseNextColorPalette( CRGBPalette16& pal);
 };
+
+#endif // VISUALSFRAME_HPP_INCLUDED

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PONGCLOCK_HPP_INCLUDED
+#define PONGCLOCK_HPP_INCLUDED
 
 #include "FastLED_NeoMatrix.h"
 #include "ezTime.h"
@@ -65,3 +66,5 @@ class PongClockClass {
         void fastledshow();
         int pong_predict_y(int x, int y, int angle);
 };
+
+#endif // PONGCLOCK_HPP_INCLUDED

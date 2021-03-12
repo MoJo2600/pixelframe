@@ -1,72 +1,31 @@
 /*
   PixelFrame
 
- TODO: LED connection
- LED - D7
- 
+  Hardware connection:
+  LED - D7
  */
-// #define _stackSize (6748/4)
 #include "SPI.h"
 #include "lib/stdinout.h"
-// #define FASTLED_ALLOW_INTERRUPTS 0  // https://github.com/FastLED/FastLED/issues/306
-// #define FASTLED_ESP8266_DMA
-
 #include "ESP8266WiFi.h"
 #include "ArduinoJson.h"
-//#include "NTPClient.h"
 #include "WiFiUdp.h"
-#include "config.hpp"                     // Set up the LED matrix here
+#include "config.hpp"                    // Set up the LED matrix here
 #include "ezTime.h"
-#include "webserver.h"                  // Web interface
-// #include "pixelframe.hpp"               // Statemachine
+#include "webserver.h"                   // Web interface
 #include <filesystem.hpp>
-#include "mqtt.h"                  // MQTT support
 #include "components/orchestrator.hpp"
 #include "frames/frame.hpp"
 
-#define SD_CS_PIN 4
-
 bool
-  wifiConnected = false,
-  MQTT_ENABLED = false;
+  wifiConnected = false;
 
 StaticJsonDocument<512>
   configuration;
-
-const char* MQTT_USER;
-const char* MQTT_PASS;
-const char* MQTT_SUB_TOPIC;
-
-// // Statemachine handle
-// FastLED_NeoMatrix * PixelframeStateMachine::pixel_matrix{matrix};
-// Timezone * PixelframeStateMachine::timezone{tz};
 
 // Error messages stored in flash.
 #define error(msg) sd.errorHalt(F(msg))
 
 fs::File file;
-
-// mqtt subscription callback. This function is called when new messages arrive at the client.
-void my_mqtt_callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("[MQTT] message on (");
-  Serial.print(topic);
-  Serial.println(")");
-  // fsm_handle::dispatch(toggle);
-
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, payload, length);
-  String pattern = doc["pattern"]; // e.g. "blink_slowly"
-  JsonArray color = doc["color"];
-  int R = color[0]; // e.g. 255
-  int G = color[1]; // e.g. 255
-  int B = color[2]; // e.g. 255
-  int duration = doc["duration"]; // e.g. 10
-
-  // Print received MQTT message. TODO: format JSON
-  Serial.print("[MQTT] message on (");
-  Serial.print(topic);
-  Serial.println(")");
-}
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -75,7 +34,6 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  delay(500);
 
   // stdout to serial setup
   hal_printf_init();
@@ -87,7 +45,6 @@ void setup() {
   startLittleFS();
 
   // ### READ CONFIG
-
   Serial.print(F("[CONFIG] Opening configuration file.. "));
   file = LittleFS.open("system/config.json", "r");
   Serial.println(F("ok"));
@@ -127,17 +84,6 @@ void setup() {
   Serial.print("[WIFI] IP: ");
   Serial.println(WiFi.localIP());
 
-  // Read MQTT settings
-  MQTT_ENABLED = configuration.containsKey("mqtt");
-  if (MQTT_ENABLED) {
-    const char* MQTT_HOST = configuration["mqtt"]["host"];
-    const unsigned int MQTT_PORT = configuration["mqtt"]["port"];
-    MQTT_USER = configuration["mqtt"]["user"];
-    MQTT_PASS = configuration["mqtt"]["password"];
-    MQTT_SUB_TOPIC = configuration["mqtt"]["topic"];
-    mqtt_setup(MQTT_HOST, MQTT_PORT, my_mqtt_callback);
-  }
-
   // Time
   Serial.println(F("[TZ] Adjusting clock.."));
   const char* tzConf = configuration["timezone"];
@@ -150,40 +96,15 @@ void setup() {
 
   setup_webserver();
 
-  // TODO: remove
-  // Frame::matrixleds[128] = CRGB(255,253,10);
-  // Frame::matrixleds[129] = CRGB(0,253,100);
-  // Frame::matrixleds[130] = CRGB(10,0,255);
-  // matrix->show();
-
-  // TODO: Start orchestartor
-  // fsm_handle::start();
   Orchestrator::Instance()->setup();
 }
 
 unsigned long _timer = millis();
 
 void loop() {
-  // if ((millis() - _timer) >= 10*1000) {  // 1*1000
-  //   fsm_handle::dispatch(toggle);
-  //   Serial.println("Memory after state switch");
-  //   show_free_mem();
-  //   _timer = millis();
-  // };
-
-  if (MQTT_ENABLED) {
-    // should be checking for MQTT connection and reconnect
-    if (!mqtt_connected()) {
-      mqtt_connect(MQTT_USER, MQTT_PASS, MQTT_SUB_TOPIC);
-    }
-    mqtt_loop();
-  }
 
   webserver_loop();
 
-  // TODO: Orchestartor loop
-  // fsm_handle::dispatch(loopUpdate);
-  
   Orchestrator::Instance()->loop();
 
 #ifdef ESP8266

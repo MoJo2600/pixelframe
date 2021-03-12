@@ -9,12 +9,7 @@ Orchestrator* Orchestrator::instance = nullptr;
 
 void Orchestrator::setup() {
   this->currentFrame = nullptr;
-
-  // TODO: define default behavior
-
-  // auto ev = new RandomGifFrameEvent();
   auto ev = new ClockFrameEvent();
-
   this->react(ev);
 }
 
@@ -31,6 +26,9 @@ void Orchestrator::react(FrameEvent* e) {
     this->currentFrame->exit();
 
     delete this->currentFrame;
+
+    std::cout << "[COMPONENT::ORCHESTRATOR] Memory after state switch" << std::endl;
+    show_free_mem();
   }
 
   std::cout << "[COMPONENT::ORCHESTRATOR] Initializing new frame" << std::endl;
