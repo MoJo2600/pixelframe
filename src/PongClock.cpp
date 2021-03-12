@@ -1,5 +1,4 @@
 #include "PongClock.hpp"
-#include "FastLED.h"
 #include "ESP8266TrueRandom.h"
 #include "ezTime.h"
 #include "fonts/TomThumbPatched.h"

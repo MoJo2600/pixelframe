@@ -61,7 +61,6 @@
 //  -Mark Kriegsman, December 2015
 
 #include <FastLED_NeoMatrix.h>
-#include <FastLED.h>
 #include "config.hpp"
 #include "frames/visualsframe.hpp"
 

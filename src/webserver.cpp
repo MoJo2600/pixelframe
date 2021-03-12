@@ -8,8 +8,6 @@
 #include <LittleFS.h>
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
-#include <FastLED.h>
-// #include <pixelframe.hpp>
 #include "components/orchestrator.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"

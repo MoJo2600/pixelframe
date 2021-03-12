@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FastLED.h"
 #include "FastLED_NeoMatrix.h"
 #include "ezTime.h"
 

@@ -2,7 +2,6 @@
 
 #include <string.h>
 #include <FastLED_NeoMatrix.h>
-#include <FastLED.h>
 #include "frames/frame.hpp"
 
 #define SECONDS_PER_PALETTE 10

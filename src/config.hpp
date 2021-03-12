@@ -17,6 +17,11 @@
 // #include <FS.h>
 #define FS_NO_GLOBALS
 #include <LittleFS.h>
+
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+// #define ESP8266_SPI
+#include <FastLED.h>
+
 #include <Adafruit_GFX.h>
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
@@ -26,7 +31,7 @@
 // LED setup
 #define FRAMES_PER_SECOND 60
 
-#define DATA_PIN          5
+#define DATA_PIN          D7
 extern uint8_t matrix_brightness;
 // Used by LEDMatrix
 const uint16_t MATRIX_TILE_WIDTH = 16; // width of EACH NEOPIXEL MATRIX (not total display)
