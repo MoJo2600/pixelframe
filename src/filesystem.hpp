@@ -17,6 +17,7 @@ String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
   } else if (bytes < (1024 * 1024 * 1024)) {
     return String(bytes / 1024.0 / 1024.0) + "MB";
   }
+  return "0B";
 }
 
 void startLittleFS() { // Start the LittleFS and list all contents

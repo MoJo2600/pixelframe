@@ -18,8 +18,6 @@
 #define FS_NO_GLOBALS
 #include <LittleFS.h>
 
-#define FASTLED_ALL_PINS_HARDWARE_SPI
-// #define ESP8266_SPI
 #include <FastLED.h>
 
 #include <Adafruit_GFX.h>
