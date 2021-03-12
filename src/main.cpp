@@ -1,18 +1,9 @@
 /*
   PixelFrame
 
- The circuit:
- * SD card attached to SPI bus as follows:
- ** MOSI - pin 13 - D7
- ** MISO - pin 12 - D6
- ** CLK  - pin 14 - D5
- ** CS   - pin 4  - D2
-
  TODO: LED connection
- LED - pin 5 - D1
-
- created   July 2020
- by Christian Erhardt
+ LED - D7
+ 
  */
 // #define _stackSize (6748/4)
 #include "SPI.h"

@@ -12,6 +12,10 @@ pixelframe - a box w/ a DIY 16x16 LED matrix, that displays low res images, gif.
 
 ## Components
 
+### Hardware
+
+We are using NodeMCU pro mini ESP8266 boards. Connect the LED strip to 5V, GND and the data pin to `D7`
+
 ### ESP8266 Firmware
 
 The firmware code is found in the base directory. A vscode development container can be used for easier development.
