@@ -20,7 +20,9 @@ class VisualsFrame
     void loop(void);
     void enter(void);
     void react(FrameEvent* event);
+    // void signalExit(void);
     void exit(void);
+    // ~VisualsFrame();
 
   private:
     void drawTwinkles(void);

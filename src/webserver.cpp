@@ -67,11 +67,11 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
   if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
-    if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
-      path += ".gz";                                         // Use the compressed verion
-    File file = LittleFS.open(path, "r");                    // Open the file
-    size_t sent = server.streamFile(file, contentType);    // Send it to the client
-    file.close();                                          // Close the file again
+    if (LittleFS.exists(pathWithGz))                          // If there's a compressed version available
+      path += ".gz";                                          // Use the compressed verion
+    File file = LittleFS.open(path, "r");                     // Open the file
+    server.streamFile(file, contentType);                     // Send it to the client
+    file.close();                                             // Close the file again
     Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
     return true;
   }

@@ -144,22 +144,6 @@ byte PongClockClass::getScreenIndex(byte x, byte y)
   return index;
 }
 
-void PongClockClass::fastledshow()
-{
-  // if (fadeStartTime + fadeLength > millis())
-  // {
-  //   memmove( leds_buf, leds, NUM_LEDS * sizeof( CRGB) );
-  //   uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 255, 0);
-  //   for (int i = 0; i < NUM_LEDS; i++)
-  //   {
-  //     leds[i].fadeToBlackBy(fadeAmount);
-  //   }
-  // }
-  // FastLED.show();
-  // Serial.println("fastled show");
-  // matrix->show();
-}
-
 int PongClockClass::pong_predict_y(int x, int y, int angle)
 {
   while (x >= 16 && x <= 256-16)

@@ -114,6 +114,8 @@ void matrix_setup(bool initserial, int reservemem) {
 
     Serial.println("matrix_setup done");
 
+
+
     // ESP32 speed tests
     // - Adafruit::ILI9341 speed at 80Mhz is 
     // - WROVER at 24Mhz is 25fps, doesn't seem to work any faster
@@ -138,16 +140,18 @@ void matrix_setup(bool initserial, int reservemem) {
     // ST7735_128b128: 20Mhz: TFT 66fps, NO PSRAM: 56fps, PSRAM show: 36fps
     //
     // SSD1331: SWSPI: TFT  9fps, NO PSRAM:  9fps, PSRAM show:  8fps => stable
-    uint32_t before;
-    before = millis();
-    for (uint8_t i=0; i<5; i++) {
-      matrix->show();
-    }
-    Serial.print("Matrix->show() Speed Test fps: ");
-    Serial.println((5* 1000/(millis() - before)));
+    // uint32_t before;
+    // before = millis();
+    // for (uint8_t i=0; i<5; i++) {
+    //   matrix->show();
+    // }
+    // Serial.print("Matrix->show() Speed Test fps: ");
+    // Serial.println((5* 1000/(millis() - before)));
 
     // At least on teensy, due to some framework bug it seems, early
     // serial output gets looped back into serial input
     // Hence, flush input.
     while(Serial.available() > 0) { char t = Serial.read(); t = t; }
+
+    matrix->clear();
 }

@@ -2,23 +2,63 @@
 #include "components/orchestrator.hpp"
 #include "frames/frame.hpp"
 #include "frames/clockframe.hpp"
+#include "config.hpp"
 // #include "frames/gifframe.hpp"
 // #include "frames/visualsframe.hpp"
 
 Orchestrator* Orchestrator::instance = nullptr;
 
+unsigned long fadeStartTime = 0;
+unsigned int fadeLength = 500;
+
 void Orchestrator::setup() {
   this->currentFrame = nullptr;
+  this->lastEvent = nullptr;
+  this->currentEvent = nullptr;
+  this->nextEvent = nullptr;
+
   auto ev = new ClockFrameEvent();
   this->react(ev);
 }
 
 void Orchestrator::loop(void) {
-  this->currentFrame->loop();
+  // Fade out and switch after fade
+  if (this->currentFrame != nullptr) {
+
+    this->currentFrame->loop();
+
+    // Fade in
+    if (fadeStartTime + fadeLength > millis())
+    {
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 0, 64); // TODO: replace 64 with current brightness setting
+      FastLED.setBrightness(fadeAmount);
+    }
+  }
+  if (this->nextEvent != nullptr) {
+    // Fade out
+    if (fadeStartTime + fadeLength > millis())
+    {
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 64, 0); // TODO: replace 64 with current brightness setting
+      FastLED.setBrightness(fadeAmount);
+    } else {
+      this->switchFrame(this->nextEvent);
+      fadeStartTime = millis(); // fade in
+    }
+  }
+  matrix->show();
+
 }
 
 void Orchestrator::react(FrameEvent* e) {
   std::cout << "[COMPONENT::ORCHESTRATOR] Reacting" << std::endl;
+  fadeStartTime = millis(); // fade out
+  this->nextEvent = e;
+}
+
+void Orchestrator::switchFrame(FrameEvent* e) {
+  std::cout << "[COMPONENT::ORCHESTRATOR] Switching" << std::endl;
+
+  this->nextEvent = nullptr;
 
   if (this->currentFrame != nullptr) {
     std::cout << "[COMPONENT::ORCHESTRATOR] Cleaning up old frame" << std::endl;

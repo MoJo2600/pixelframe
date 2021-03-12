@@ -63,7 +63,6 @@ class PongClockClass {
         long realRandom(int max);
         int realRandom(int min, int max);
         byte getScreenIndex(byte x, byte y);
-        void fastledshow();
         int pong_predict_y(int x, int y, int angle);
 };
 

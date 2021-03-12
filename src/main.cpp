@@ -34,13 +34,13 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  delay(500);
 
   // stdout to serial setup
   hal_printf_init();
 
   // Setup matrix
   matrix_setup();
-  matrix->clear();
 
   startLittleFS();
 
@@ -106,17 +106,4 @@ void loop() {
   webserver_loop();
 
   Orchestrator::Instance()->loop();
-
-#ifdef ESP8266
-  // Disable watchdog interrupt so that it does not trigger in the middle of
-  // updates. and break timing of pixels, causing random corruption on interval
-  // https://github.com/esp8266/Arduino/issues/34
-  ESP.wdtDisable();
-#endif
-  // insert a delay to keep the framerate modest
-  FastLED.delay(1000/FRAMES_PER_SECOND); 
-#ifdef ESP8266
-  ESP.wdtEnable(1000);
-#endif
-
 }

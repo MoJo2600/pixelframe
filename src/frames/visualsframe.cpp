@@ -62,6 +62,7 @@
 
 #include <FastLED_NeoMatrix.h>
 #include "config.hpp"
+#include "frames/frame.hpp"
 #include "frames/visualsframe.hpp"
 
 
@@ -358,7 +359,6 @@ void VisualsFrame::enter() {
   this->chooseNextColorPalette(gTargetPalette);
 }
 
-
 void VisualsFrame::loop()
 {
   EVERY_N_SECONDS( SECONDS_PER_PALETTE ) { 
@@ -370,13 +370,13 @@ void VisualsFrame::loop()
   }
 
   drawTwinkles();
-  
-  matrix->show();
 }
-
 
 void VisualsFrame::react(FrameEvent* event) {
 }
 
 void VisualsFrame::exit() {}
 
+// void VisualsFrame::signalExit() {
+//   this->readyToExit = true;
+// }

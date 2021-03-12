@@ -10,7 +10,12 @@ class Frame {
     virtual void loop(void) = 0;
     virtual void enter(void) = 0;
     virtual void react(FrameEvent* event) = 0;
+    // virtual void signalExit(void) = 0;
     virtual void exit(void) = 0;
+    virtual ~Frame() {};
+
+    // bool
+    //   readyToExit = false;
 };
 
 class FrameEvent {

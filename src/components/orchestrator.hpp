@@ -25,8 +25,13 @@ class Orchestrator
     Orchestrator & operator = (const Orchestrator &); //Verhindert weitere Instanz durch Kopie
     ~Orchestrator () { }
 
+    void switchFrame(FrameEvent* e);
+
+    FrameEvent* lastEvent;
+    FrameEvent* currentEvent;
+    FrameEvent* nextEvent;
+
     Frame* currentFrame;
-    Frame* getFrameByEvent(FrameEvent* e);
 };
 
 #endif // ORCHESTRATOR_HPP_INCLUDED
