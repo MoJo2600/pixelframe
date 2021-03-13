@@ -11,6 +11,7 @@ all: build-frontend build-firmware upload-firmware upload-fs
 .PHONY: build-frontend
 build-frontend:  ## build and start backend
 	cd web && ./build.sh && cd ..
+	rm -rf ./data/js ./data/css && cp -rf web/dist/* ./data/
 
 .PHONY: generate-filesystem
 generate-filesystem: ## generate filesystem
