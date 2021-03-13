@@ -1,7 +1,9 @@
 <template>
   <v-navigation-drawer v-model="drawerVisible" app hide-overlay>
     <v-list nav>
-      <template v-for="item in $router.options.routes">
+      <template
+        v-for="item in $router.options.routes.filter(r => r.path !== '/')"
+      >
         <v-list-item v-if="!item.children" :key="item.name" :to="item.path">
           <v-list-item-icon>
             <v-icon>{{ item.meta.icon }}</v-icon>

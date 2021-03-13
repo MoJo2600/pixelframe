@@ -17,7 +17,7 @@ export class ImagesService extends Service {
   }
 
   public async playImage(name: string): Promise<void> {
-    await this.httpClient.get(`play?image=${name}`);
+    await this.httpClient.get(`show/gif?image=${name}`);
   }
 
   public async deleteImage(name: string): Promise<void> {

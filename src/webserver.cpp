@@ -34,20 +34,24 @@ void replyOK() {
 }
 
 void replyOKWithMsg(String msg) {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, FPSTR(TEXT_PLAIN), msg);
 }
 
 void replyNotFound(String msg) {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(404, FPSTR(TEXT_PLAIN), msg);
 }
 
 void replyBadRequest(String msg) {
   Serial.println(msg);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
 }
 
 void replyServerError(String msg) {
   Serial.println(msg);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
 }
 
@@ -172,50 +176,41 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
 
-  // TODO: remove TEST
-  server.on(UriBraces("/api/test/clock"), HTTP_GET, []() {
-    Serial.println("[WEBSERVER] Receive test - switch to clock");
+  server.on(UriBraces("/api/show/clock"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive command - switch to clock");
 
     auto ev = new ClockFrameEvent();
     Orchestrator::Instance()->react(ev);
     
     replyOKWithMsg(F("Switching to clock"));
   });
-  
-  // TODO: remove TEST
-  server.on(UriBraces("/api/test/gif"), HTTP_GET, []() {
-    Serial.println("[WEBSERVER] Receive test - switch to random gif");
 
-    auto ev = new RandomGifFrameEvent();
-    Orchestrator::Instance()->react(ev);
-    
+  server.on(UriBraces("/api/show/gif"), HTTP_GET, []() {
+    if (server.hasArg("image")) {
+      String filename = server.arg("image");
+      Serial.print("[WEBSERVER] Receive command - switch to ");
+      Serial.println(filename);
+
+      auto ev = new SingleGifFrameEvent();
+      ev->filename = std::string(filename.c_str());
+      Orchestrator::Instance()->react(ev);
+    } else {
+      Serial.println("[WEBSERVER] Receive command - switch to random gif");
+
+      auto ev = new RandomGifFrameEvent();
+      Orchestrator::Instance()->react(ev);
+    }
+
     replyOKWithMsg(F("Switching to gif"));
   });
   
-  // TODO: remove TEST
-  server.on(UriBraces("/api/test/visual"), HTTP_GET, []() {
-    Serial.println("[WEBSERVER] Receive test - switch to visuals frame");
+  server.on(UriBraces("/api/show/visuals"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
 
     auto ev = new VisualsFrameEvent();
     Orchestrator::Instance()->react(ev);
     
     replyOKWithMsg(F("Switching to visual frame"));
-  });
-
-  // Gif handling
-  server.on("/api/play", HTTP_GET, []() {
-    if (!server.hasArg("image")) {
-      return replyBadRequest(F("IMAGE ARG MISSING"));
-    }
-    String filename = server.arg("image");
-
-    Serial.println("[WEBSERVER] Receive play, switch to gif");
-
-    auto ev = new SingleGifFrameEvent();
-    ev->filename = std::string(filename.c_str());
-    Orchestrator::Instance()->react(ev);
-
-    replyOKWithMsg(F("Playing file"));
   });
 
   server.on(UriBraces("/api/images/{}"), []() {

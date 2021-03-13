@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import NestedViewWrapper from "@/components/NestedViewWrapper.vue";
+import FramesView from "@/views/Frames.vue";
 import ConfigurationBasicView from "@/views/ConfigurationBasic.vue";
 import ConfigurationWifiView from "@/views/ConfigurationWifi.vue";
 import ConfigurationMqttView from "@/views/ConfigurationMqtt.vue";
@@ -9,6 +10,20 @@ import ImagesView from "@/views/Images.vue";
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
+  {
+    path: "/",
+    redirect: {
+      path: "/frames"
+    }
+  },
+  {
+    path: "/frames",
+    name: "Frames",
+    component: FramesView,
+    meta: {
+      icon: "mdi-view-grid"
+    }
+  },
   {
     path: "/configuration",
     name: "Configuration",
