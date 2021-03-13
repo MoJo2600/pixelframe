@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <FastLED_NeoMatrix.h>
+#include "filesystem.hpp"
 #include "config.hpp"
 #include "frames/gifframe.hpp"
 
@@ -45,12 +46,18 @@ void GifFrame::enter(void) {
 void GifFrame::react(FrameEvent* event) {
   if (event->getEventId() == EVENT_ID_RANDOM) {
     cout << "[FRAME::GIF] reacting to random gif event" << endl;
-    this->playGif("/gifs/bird.gif");
+
+    int gif = rand() % gifs_vec.size();
+    String gifPath = gifs_vec[gif];
+
+    this->playGif(std::string(gifPath.c_str()));
   } else if (event->getEventId() == EVENT_ID_SINGLE) {
     cout << "[FRAME::GIF] reacting to single gif event" << endl;
+
     auto e = (SingleGifFrameEvent*) event;
     auto gifPath = "/gifs/" + e->filename;
     cout << "[FRAME::GIF] path to single gif: " << gifPath << endl;
+
     this->playGif(gifPath);
   } else {
     // TODO:
