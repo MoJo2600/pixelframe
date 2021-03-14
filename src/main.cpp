@@ -2,7 +2,8 @@
   PixelFrame
 
   Hardware connection:
-  LED - D7
+  LED_DATA_PIN - D7
+  LED_CLK_PIN - D5, if required, see confg.hpp,34
  */
 #include "SPI.h"
 #include "lib/stdinout.h"
