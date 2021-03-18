@@ -120,6 +120,8 @@ void *mallocordie(const char *varname, uint32_t req, bool psram=true);
 
 void matrix_setup(bool initserial=true, int reservemem = 40000);
 
+void set_brightness(uint8_t brightness);
+
 //
 // TIMEZONE
 //

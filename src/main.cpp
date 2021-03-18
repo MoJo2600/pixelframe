@@ -40,9 +40,6 @@ void setup() {
   // stdout to serial setup
   hal_printf_init();
 
-  // Setup matrix
-  matrix_setup();
-
   startLittleFS();
 
   // ### READ CONFIG
@@ -67,6 +64,11 @@ void setup() {
     Serial.println(F("[CONFIG] Failed to read configuration file!"));
 
   // ### END: READ CONFIG
+
+  // Setup matrix
+  matrix_brightness = configuration["brightness"];
+  matrix_setup();
+
 
   // ### CONNECT WIFI
   const char* ssid = configuration["wifi"]["ssid"];

@@ -159,3 +159,13 @@ void matrix_setup(bool initserial, int reservemem) {
 
     matrix->clear();
 }
+
+void set_brightness(uint8_t brightness) {
+    Serial.print("Setting Brightness: ");
+    Serial.println(brightness);
+
+    // TODO: write in config json
+
+    matrix_brightness = brightness;
+    FastLED.setBrightness(matrix_brightness);
+}

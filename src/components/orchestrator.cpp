@@ -30,7 +30,7 @@ void Orchestrator::loop(void) {
     // Fade in
     if (fadeStartTime + fadeLength > millis())
     {
-      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 0, 64); // TODO: replace 64 with current brightness setting
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 0, matrix_brightness);
       FastLED.setBrightness(fadeAmount);
     }
   }
@@ -38,7 +38,7 @@ void Orchestrator::loop(void) {
     // Fade out
     if (fadeStartTime + fadeLength > millis())
     {
-      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 64, 0); // TODO: replace 64 with current brightness setting
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, matrix_brightness, 0);
       FastLED.setBrightness(fadeAmount);
     } else {
       this->switchFrame(this->nextEvent);
