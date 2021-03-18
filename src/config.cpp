@@ -93,7 +93,11 @@ void matrix_setup(bool initserial, int reservemem) {
     matrix->newLedsPtr(matrixleds);
     show_free_mem("After matrixleds malloc");
 
-    FastLED.addLeds<WS2812B, DATA_PIN, GRB>(matrixleds, NUMMATRIX); 
+    #ifdef LED_CLK_PIN
+    FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_CLK_PIN, LED_ORDER>(matrixleds, NUMMATRIX);
+    #else
+    FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_ORDER>(matrixleds, NUMMATRIX);
+    #endif
 
     //============================================================================================
     // Matrix Init End
