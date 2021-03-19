@@ -67,12 +67,12 @@
 // Overall twinkle speed.
 // 0 (VERY slow) to 8 (VERY fast).  
 // 4, 5, and 6 are recommended, default is 4.
-#define TWINKLE_SPEED 4
+#define TWINKLE_SPEED 3
 
 // Overall twinkle density.
 // 0 (NONE lit) to 8 (ALL lit at once).  
 // Default is 5.
-#define TWINKLE_DENSITY 5
+#define TWINKLE_DENSITY 4
 
 #define SECONDS_PER_PALETTE 30
 

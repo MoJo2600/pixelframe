@@ -72,14 +72,6 @@ void setup() {
 
   matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
   matrix->show();
-  //matrix->drawRect(9,5,8,4, matrix->Color(155, 155, 155));
-
-  // matrix->setTextColor(matrix->Color(155, 155, 155));
-  // matrix->setTextSize(0,6);
-  // matrix->setFont(&TomThumbPatched);
-  // matrix->setCursor(0, 0);
-  // matrix->print("load...");
-  // matrix->show();
 
   // ### CONNECT WIFI
   const char* ssid = configuration["wifi"]["ssid"];

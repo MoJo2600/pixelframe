@@ -17,7 +17,7 @@ void Orchestrator::setup() {
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  // auto ev = new VisualsFrameEvent();
+  //auto ev = new VisualsFrameEvent();
   auto ev = new ClockFrameEvent();
   // auto ev = new RandomGifFrameEvent();
   this->react(ev);
@@ -48,7 +48,8 @@ void Orchestrator::loop(void) {
     }
   }
 
-  EVERY_N_MILLISECONDS(12) { matrix->show(); }; // Limit to 80fps
+  matrix->show();
+  // EVERY_N_MILLISECONDS(12) { matrix->show(); }; // Limit to 80fps
 }
 
 void Orchestrator::react(FrameEvent* e) {

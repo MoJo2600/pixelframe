@@ -10,7 +10,7 @@
 #include "frames/visuals/pacifica.hpp"
 
 #define NUM_PATTERNS 5
-#define PATTERN_DURATION 45
+#define PATTERN_DURATION 45 // TODO: make configurable
 uint8_t gCurrentPatternNumber = 1; // Index number of which pattern is current
 
 using namespace std;
