@@ -4,8 +4,7 @@
 #include <string.h>
 #include <FastLED_NeoMatrix.h>
 #include "frames/frame.hpp"
-
-#define SECONDS_PER_PALETTE 10
+#include "frames/visuals/visual.hpp"
 
 class VisualsFrameEvent : public FrameEvent {
   public:
@@ -23,13 +22,10 @@ class VisualsFrame
     // void signalExit(void);
     void exit(void);
     // ~VisualsFrame();
-
+  
   private:
-    void drawTwinkles(void);
-    void coolLikeIncandescent( CRGB& c, uint8_t phase);
-    uint8_t attackDecayWave8( uint8_t i);
-    CRGB computeOneTwinkle( uint32_t ms, uint8_t salt);
-    void chooseNextColorPalette( CRGBPalette16& pal);
+    Visual* currentPattern;
+    void nextPattern(void);
 };
 
 #endif // VISUALSFRAME_HPP_INCLUDED
