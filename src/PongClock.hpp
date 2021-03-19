@@ -7,7 +7,7 @@
 class PongClockClass {
     public:
         //, NTPClient &client
-        PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz);
+        PongClockClass(Timezone * tz);
         ~PongClockClass();
         void setup();
         void start();
@@ -52,7 +52,6 @@ class PongClockClass {
         current_hour = 0;
 
         Timezone * tz;
-        FastLED_NeoMatrix * matrix;
 
         void printDigits(int digits);
         void debugClockDisplay();

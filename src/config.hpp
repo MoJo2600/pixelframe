@@ -18,6 +18,9 @@
 #define FS_NO_GLOBALS
 #include <LittleFS.h>
 
+// #ifdef ESP8266
+// #define FASTLED_ALLOW_INTERRUPTS 0                            // Used for ESP8266 with WS2812 LED's. Ugh!!!
+// #endif
 #include <FastLED.h>
 
 #include <Adafruit_GFX.h>

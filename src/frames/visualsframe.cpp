@@ -9,8 +9,8 @@
 #include "frames/visuals/rainbow_beat.hpp"
 #include "frames/visuals/pacifica.hpp"
 
-#define NUM_PATTERNS 1
-#define PATTERN_DURATION 15
+#define NUM_PATTERNS 5
+#define PATTERN_DURATION 45
 uint8_t gCurrentPatternNumber = 1; // Index number of which pattern is current
 
 using namespace std;
@@ -65,7 +65,7 @@ void VisualsFrame::loop()
   if (currentPattern != nullptr) {
     currentPattern->loop();
   }
-  // EVERY_N_SECONDS( PATTERN_DURATION ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( PATTERN_DURATION ) { nextPattern(); } // change patterns periodically
 }
 
 void VisualsFrame::react(FrameEvent* event) {

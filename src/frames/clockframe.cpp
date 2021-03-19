@@ -21,7 +21,7 @@ void ClockFrame::loop(void) {
 
 void ClockFrame::enter(void) {
   cout << "[PIXELFRAME] Entering Clock mode" << endl;
-  this->clock = new PongClockClass(matrix, timezone);
+  this->clock = new PongClockClass(timezone);
   this->clock->setup();
 }
 

@@ -8,8 +8,5 @@ class RainbowBeat
   public:
     void loop(void);
     void enter(void);
-    ~RainbowBeat(void);
-  private:
-    CRGB matrixleds_buf[NUM_LEDS];
 };
 #endif // RAINBOW_BEAT_HPP_INCLUDED

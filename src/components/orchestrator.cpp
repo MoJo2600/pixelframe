@@ -3,7 +3,7 @@
 #include "frames/frame.hpp"
 #include "frames/clockframe.hpp"
 #include "config.hpp"
-// #include "frames/gifframe.hpp"
+#include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 
 Orchestrator* Orchestrator::instance = nullptr;
@@ -17,7 +17,9 @@ void Orchestrator::setup() {
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
+  // auto ev = new VisualsFrameEvent();
   auto ev = new ClockFrameEvent();
+  // auto ev = new RandomGifFrameEvent();
   this->react(ev);
 }
 

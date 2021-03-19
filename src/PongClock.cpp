@@ -2,6 +2,7 @@
 #include "ESP8266TrueRandom.h"
 #include "ezTime.h"
 #include "fonts/TomThumbPatched.h"
+#include "config.hpp"
 
 // #define DEBUG
 /************************************************
@@ -11,7 +12,7 @@
   https://github.com/Jerware/GameFrameV2
   LEDSEQ.COM
 *************************************************/
-PongClockClass::PongClockClass(FastLED_NeoMatrix * matrix, Timezone * tz) : matrix(matrix), tz{tz} {};
+PongClockClass::PongClockClass(Timezone * tz) : tz{tz} {};
 
 PongClockClass::~PongClockClass(){ };
 
@@ -92,7 +93,7 @@ void PongClockClass::swapXdirection()
 
 void PongClockClass::drawDigits()
 {
-  matrix->clear();
+  // matrix->clear();
   matrix->setTextColor(matrix->Color(155, 155, 155));
   matrix->setTextSize(1);
   matrix->setFont(&TomThumbPatched);
@@ -182,6 +183,7 @@ int PongClockClass::pong_predict_y(int x, int y, int angle)
 
 void PongClockClass::loop()
 {
+  matrix->clear();
   if (tz->second() != lastSecond)
   {
     secondCounter++;
@@ -333,7 +335,6 @@ void PongClockClass::loop()
   Serial.print(getScreenIndex(0, pong_paddle_right_y)/16);
   Serial.println(")");
 #endif
-
   matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16-1, CRGB(pongHue_paddle));
   matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16, CRGB(pongHue_paddle));
   matrix->drawPixel(15, getScreenIndex(255, pong_paddle_left_y)/16+1, CRGB(pongHue_paddle));
