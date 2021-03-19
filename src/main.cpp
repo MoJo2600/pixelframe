@@ -16,6 +16,7 @@
 #include <filesystem.hpp>
 #include "components/orchestrator.hpp"
 #include "frames/frame.hpp"
+#include "fonts/TomThumbPatched.h"
 
 bool
   wifiConnected = false;
@@ -66,9 +67,19 @@ void setup() {
   // ### END: READ CONFIG
 
   // Setup matrix
-  matrix_brightness = configuration["brightness"];
+  // matrix_brightness = configuration["brightness"];
   matrix_setup();
 
+  matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
+  matrix->show();
+  //matrix->drawRect(9,5,8,4, matrix->Color(155, 155, 155));
+
+  // matrix->setTextColor(matrix->Color(155, 155, 155));
+  // matrix->setTextSize(0,6);
+  // matrix->setFont(&TomThumbPatched);
+  // matrix->setCursor(0, 0);
+  // matrix->print("load...");
+  // matrix->show();
 
   // ### CONNECT WIFI
   const char* ssid = configuration["wifi"]["ssid"];
@@ -78,6 +89,9 @@ void setup() {
   WiFi.hostname("Pixelframe");
   WiFi.begin(ssid, password);
 
+  matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
+
   // Wait for the Wi-Fi to connect
   while (WiFi.status() != WL_CONNECTED) { 
     delay(500);
@@ -86,6 +100,9 @@ void setup() {
   Serial.println("");
   Serial.print("[WIFI] IP: ");
   Serial.println(WiFi.localIP());
+
+  matrix->drawRect(5,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
 
   // Time
   Serial.println(F("[TZ] Adjusting clock.."));
@@ -97,9 +114,18 @@ void setup() {
   Serial.print(F("[TZ] Timezone: "));
   Serial.println(tzConf);
 
+  matrix->drawRect(7,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
+
   setup_webserver();
 
+  matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
+
   Orchestrator::Instance()->setup();
+
+  matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
 }
 
 unsigned long _timer = millis();
