@@ -66,7 +66,7 @@ void setup() {
   // ### END: READ CONFIG
 
   // Setup matrix
-  matrix_brightness = configuration["brightness"];
+  // matrix_brightness = configuration["brightness"];
   matrix_setup();
 
 

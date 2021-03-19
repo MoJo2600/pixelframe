@@ -100,9 +100,6 @@ void *mallocordie(const char *varname, uint32_t req, bool psram) {
 
 void matrix_setup(bool initserial, int reservemem) {
     reservemem = reservemem; // squelch compiler warning if var is unused.
-    // It's bad to call Serial.begin twice, so it's disabled here now, make sure you have it enabled
-    // in your calling script.
-    Serial.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Serial.begin");
 
     if (init_done) {
         Serial.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUG: matrix_setup called twice");
