@@ -123,8 +123,6 @@ void setup() {
 unsigned long _timer = millis();
 
 void loop() {
-
   webserver_loop();
-
   Orchestrator::Instance()->loop();
 }

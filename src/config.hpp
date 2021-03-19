@@ -30,8 +30,6 @@
 #define FASTLED_NEOMATRIX
 
 // LED setup
-#define FRAMES_PER_SECOND 60
-
 extern uint8_t matrix_brightness;
 
 // Choose one of:
