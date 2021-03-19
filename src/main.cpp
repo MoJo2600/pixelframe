@@ -2,7 +2,8 @@
   PixelFrame
 
   Hardware connection:
-  LED - D7
+  LED_DATA_PIN - D7
+  LED_CLK_PIN - D5, if required, see confg.hpp,34
  */
 #include "SPI.h"
 #include "lib/stdinout.h"
@@ -39,9 +40,6 @@ void setup() {
   // stdout to serial setup
   hal_printf_init();
 
-  // Setup matrix
-  matrix_setup();
-
   startLittleFS();
 
   // ### READ CONFIG
@@ -66,6 +64,11 @@ void setup() {
     Serial.println(F("[CONFIG] Failed to read configuration file!"));
 
   // ### END: READ CONFIG
+
+  // Setup matrix
+  matrix_brightness = configuration["brightness"];
+  matrix_setup();
+
 
   // ### CONNECT WIFI
   const char* ssid = configuration["wifi"]["ssid"];

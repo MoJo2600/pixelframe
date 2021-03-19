@@ -121,7 +121,11 @@ void matrix_setup(bool initserial, int reservemem) {
     matrix->newLedsPtr(matrixleds);
     show_free_mem("After matrixleds malloc");
 
-    FastLED.addLeds<WS2812B, DATA_PIN, GRB>(matrixleds, NUMMATRIX).setCorrection(TypicalLEDStrip);   // Use this for WS2801 or APA102;
+    #ifdef LED_CLK_PIN
+    FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_CLK_PIN, LED_ORDER>(matrixleds, NUMMATRIX).setCorrection(TypicalLEDStrip);
+    #else
+    FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_ORDER>(matrixleds, NUMMATRIX).setCorrection(TypicalLEDStrip);
+    #endif
 
     //============================================================================================
     // Matrix Init End
@@ -179,4 +183,14 @@ void matrix_setup(bool initserial, int reservemem) {
     while(Serial.available() > 0) { char t = Serial.read(); t = t; }
 
     matrix->clear();
+}
+
+void set_brightness(uint8_t brightness) {
+    Serial.print("Setting Brightness: ");
+    Serial.println(brightness);
+
+    // TODO: write in config json
+
+    matrix_brightness = brightness;
+    FastLED.setBrightness(matrix_brightness);
 }

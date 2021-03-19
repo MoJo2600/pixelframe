@@ -8,6 +8,7 @@
 #include <LittleFS.h>
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
+#include "config.hpp"
 #include "components/orchestrator.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"
@@ -23,6 +24,7 @@ ESP8266WebServer server(80);       // Create a webserver object that listens for
 const char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
 static const char TEXT_PLAIN[] PROGMEM = "text/plain";
+static const char APPLICATION_JSON[] PROGMEM = "application/json";
 static const char FS_INIT_ERROR[] PROGMEM = "FS INIT ERROR";
 static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
 
@@ -36,6 +38,11 @@ void replyOK() {
 void replyOKWithMsg(String msg) {
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, FPSTR(TEXT_PLAIN), msg);
+}
+
+void replyOKWithJson(String serializedJson) {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, FPSTR(APPLICATION_JSON), serializedJson);
 }
 
 void replyNotFound(String msg) {
@@ -217,6 +224,38 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     String name = server.pathArg(0);
     handleFileRead("gifs/"+ name);
   });
+
+  server.on(UriBraces("/api/configuration/basic"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] GET /configuration/basic");
+
+    StaticJsonDocument<200> config;
+    config["brightness"] = matrix_brightness;
+    config["timezone"] = "Europe/Berlin";
+
+    char json_string[200];
+    serializeJson(config, json_string);
+
+    replyOKWithJson(String(json_string));
+  });
+  
+  server.on(UriBraces("/api/configuration/basic"), HTTP_PATCH, []() {
+    Serial.println("[WEBSERVER] PATCH /configuration/basic");
+
+    StaticJsonDocument<200> config;
+
+    DeserializationError error = deserializeJson(config, server.arg("plain"));
+
+    if (error) {
+      replyBadRequest(F("Unable to parse body"));
+      return;
+    }
+
+    // TODO: check if brightness exists
+    set_brightness(config["brightness"]);
+
+    replyOKWithMsg(F("Updating basic configuration"));
+  });
+
 
   server.on("/api/images", HTTP_GET, []() {
     handleGetFiles("/gifs");

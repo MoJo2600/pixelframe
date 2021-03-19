@@ -29,13 +29,23 @@
 // LED setup
 #define FRAMES_PER_SECOND 60
 
-#define DATA_PIN          D7
 extern uint8_t matrix_brightness;
+
+// Choose one of:
+#define LED_CHIP WS2812B
+#define LED_ORDER GRB
+#define LED_DATA_PIN D7
+
+// #define LED_CHIP APA102
+// #define LED_ORDER BGR
+// #define LED_DATA_PIN D7
+// #define LED_CLK_PIN D5
+
 // Used by LEDMatrix
-const uint16_t MATRIX_TILE_WIDTH = 16; // width of EACH NEOPIXEL MATRIX (not total display)
-const uint16_t MATRIX_TILE_HEIGHT= 16; // height of each matrix
-const uint8_t MATRIX_TILE_H     = 1;  // number of matrices arranged horizontally
-const uint8_t MATRIX_TILE_V     = 1;  // number of matrices arranged vertically
+const uint16_t MATRIX_TILE_WIDTH  = 16; // width of EACH NEOPIXEL MATRIX (not total display)
+const uint16_t MATRIX_TILE_HEIGHT = 16; // height of each matrix
+const uint8_t MATRIX_TILE_H = 1; // number of matrices arranged horizontally
+const uint8_t MATRIX_TILE_V = 1; // number of matrices arranged vertically
 
 // Used by NeoMatrix
 const uint16_t mw = MATRIX_TILE_WIDTH *  MATRIX_TILE_H;
@@ -79,6 +89,8 @@ void die(const char *mesg);
 void *mallocordie(const char *varname, uint32_t req, bool psram=true);
 
 void matrix_setup(bool initserial=true, int reservemem = 40000);
+
+void set_brightness(uint8_t brightness);
 
 //
 // TIMEZONE
