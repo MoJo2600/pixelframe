@@ -17,8 +17,8 @@ void Orchestrator::setup() {
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  // auto ev = new ClockFrameEvent();
-  auto ev = new VisualsFrameEvent();
+  auto ev = new ClockFrameEvent();
+  // auto ev = new VisualsFrameEvent();
   this->react(ev);
 }
 
@@ -46,8 +46,9 @@ void Orchestrator::loop(void) {
       fadeStartTime = millis(); // fade in
     }
   }
-  matrix->show();
 
+  //  EVERY_N_MILLISECONDS(12) { }; // Limit to 80fps
+  matrix->show();
 }
 
 void Orchestrator::react(FrameEvent* e) {
