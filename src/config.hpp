@@ -96,7 +96,6 @@ void set_brightness(uint8_t brightness);
 //
 // TIMEZONE
 //
-
 #include <Arduino.h>
 #include "ezTime.h"
 

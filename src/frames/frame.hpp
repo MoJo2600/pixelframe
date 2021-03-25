@@ -22,6 +22,9 @@ class FrameEvent {
   public:
     virtual Frame* getFrame(void) = 0;
     virtual std::string getEventId(void) = 0;
+
+    // Event duration in seconds (how long should this event be shown)
+    int duration = 0;
 };
 
 #endif // FRAME_HPP_INCLUDED

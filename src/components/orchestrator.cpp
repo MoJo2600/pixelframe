@@ -6,10 +6,11 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 
+#define FADE_LENGTH 500
+
 Orchestrator* Orchestrator::instance = nullptr;
 
 unsigned long fadeStartTime = 0;
-unsigned int fadeLength = 500;
 
 void Orchestrator::setup() {
   this->currentFrame = nullptr;
@@ -24,23 +25,32 @@ void Orchestrator::setup() {
 }
 
 void Orchestrator::loop(void) {
+
+  // If the event has a duration, switch back to the last event after the time has passed
+  if (this->currentEvent != nullptr &&
+      this->currentEvent->duration > 0 && 
+      millis() - this->frameActiveSince > this->currentEvent->duration * 1000u) {
+    std::cout << "[COMPONENT::ORCHESTRATOR] Event timeout, switching back to last event" << std::endl;
+    this->switchFrame(this->lastEvent);
+  }
+
   // Fade out and switch after fade
   if (this->currentFrame != nullptr) {
 
     this->currentFrame->loop();
 
     // Fade in
-    if (fadeStartTime + fadeLength > millis())
+    if (fadeStartTime + FADE_LENGTH > millis())
     {
-      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, 0, matrix_brightness);
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + FADE_LENGTH, 0, matrix_brightness);
       FastLED.setBrightness(fadeAmount);
     }
   }
   if (this->nextEvent != nullptr) {
     // Fade out
-    if (fadeStartTime + fadeLength > millis())
+    if (fadeStartTime + FADE_LENGTH > millis())
     {
-      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + fadeLength, matrix_brightness, 0);
+      uint8_t fadeAmount = map(millis(), fadeStartTime, fadeStartTime + FADE_LENGTH, matrix_brightness, 0);
       FastLED.setBrightness(fadeAmount);
     } else {
       this->switchFrame(this->nextEvent);
@@ -55,12 +65,15 @@ void Orchestrator::loop(void) {
 void Orchestrator::react(FrameEvent* e) {
   std::cout << "[COMPONENT::ORCHESTRATOR] Reacting" << std::endl;
   fadeStartTime = millis(); // fade out
+  this->lastEvent = this->currentEvent;
   this->nextEvent = e;
 }
 
 void Orchestrator::switchFrame(FrameEvent* e) {
   std::cout << "[COMPONENT::ORCHESTRATOR] Switching" << std::endl;
 
+  this->lastEvent = this->currentEvent;
+  this->currentEvent = e;
   this->nextEvent = nullptr;
 
   if (this->currentFrame != nullptr) {
@@ -82,4 +95,5 @@ void Orchestrator::switchFrame(FrameEvent* e) {
 
   this->currentFrame->enter();
   this->currentFrame->react(e);
+  this->frameActiveSince = millis();
 }
