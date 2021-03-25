@@ -9,6 +9,7 @@
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include "config.hpp"
+#include "webserver.h"
 #include "components/orchestrator.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"
@@ -21,7 +22,7 @@ LittleFSConfig fileSystemConfig = LittleFSConfig();
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 // WebSocketsServer webSocket(81);    // create a websocket server on port 81
 
-const char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
+char* mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
 static const char TEXT_PLAIN[] PROGMEM = "text/plain";
 static const char APPLICATION_JSON[] PROGMEM = "application/json";

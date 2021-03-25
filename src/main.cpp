@@ -80,8 +80,13 @@ void setup() {
   const char* ssid = configuration["wifi"]["ssid"];
   const char* password = configuration["wifi"]["password"];
 
+  mdnsName = strdup("pixelframe");
+  if (configuration["framename"] != nullptr) {
+    mdnsName = strdup(configuration["framename"]);
+  }
+
   Serial.print(F("[WIFI] Connecting wifi"));
-  WiFi.hostname("Pixelframe");
+  WiFi.hostname(mdnsName);
   WiFi.begin(ssid, password);
 
   matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
