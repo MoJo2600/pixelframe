@@ -11,7 +11,7 @@ export abstract class Service {
       );
     }
 
-    this.baseUrl = process.env.VUE_APP_API_BASE_URL;
+    this.baseUrl = process.env.VUE_APP_API_BASE_URL || window.location.origin;
 
     this.httpClient = Axios.create({
       baseURL: `${this.baseUrl}/api`,
