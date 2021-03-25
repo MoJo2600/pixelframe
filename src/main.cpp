@@ -67,7 +67,10 @@ void setup() {
   // ### END: READ CONFIG
 
   // Setup matrix
-  // matrix_brightness = configuration["brightness"];
+  if (configuration["brightness"] != nullptr) {
+    matrix_brightness = configuration["brightness"];
+  }
+
   matrix_setup();
 
   matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
