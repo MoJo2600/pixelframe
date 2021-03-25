@@ -17,6 +17,7 @@ class SingleGifFrameEvent : public FrameEvent {
     Frame* getFrame(void);
     std::string getEventId(void);
     std::string filename;
+    SingleGifFrameEvent(int duration);
 };
 
 class GifFrame : public Frame {
@@ -38,6 +39,8 @@ class GifFrame : public Frame {
     static void updateScreenCallback(void);
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue);
     static bool fileSeekCallback(unsigned long position);
+
+    FrameEvent* currentEvent;
 };
 
 #endif // GIFFRAME_HPP_INCLUDED

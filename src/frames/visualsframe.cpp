@@ -28,6 +28,7 @@ void VisualsFrame::nextPattern(void)
   delete currentPattern;
   // add one to the current pattern number, and wrap around at the end
   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % NUM_PATTERNS;
+  std::cout << "[FRAME::VISUALS] next pattern: " << gCurrentPatternNumber << std::endl;
   switch(gCurrentPatternNumber) {
     case 0:
       cout << "[Visualsframe] Pacifica" << endl;
@@ -47,10 +48,6 @@ void VisualsFrame::nextPattern(void)
       break;
     case 4:
       cout << "[Visualsframe] Twinkle" << endl;
-      currentPattern = new Twinkle();
-      break;
-    default:
-      cout << "[Visualsframe] Default" << endl;
       currentPattern = new Twinkle();
       break;
   }

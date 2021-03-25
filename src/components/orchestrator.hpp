@@ -27,6 +27,7 @@ class Orchestrator
 
     void switchFrame(FrameEvent* e);
 
+    unsigned long frameActiveSince;
     FrameEvent* lastEvent;
     FrameEvent* currentEvent;
     FrameEvent* nextEvent;
