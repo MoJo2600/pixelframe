@@ -76,6 +76,10 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
     {
       name: "Visuals",
       apiPath: "visuals"
+    },
+    {
+      name: "Off",
+      apiPath: "off"
     }
   ];
 

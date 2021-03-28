@@ -5,6 +5,7 @@
 #include "config.hpp"
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
+#include "frames/off.hpp"
 
 #define FADE_LENGTH 500
 
@@ -18,9 +19,11 @@ void Orchestrator::setup() {
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  //auto ev = new VisualsFrameEvent();
+  // auto ev = new VisualsFrameEvent();
   auto ev = new ClockFrameEvent();
   // auto ev = new RandomGifFrameEvent();
+  // auto ev = new OffEvent();
+
   this->react(ev);
 }
 
