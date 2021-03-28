@@ -199,8 +199,13 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
       Serial.print("[WEBSERVER] Receive command - switch to ");
       Serial.println(filename);
 
-      // Play Gif for 10 seconds
-      auto ev = new SingleGifFrameEvent(10);
+      uint8_t duration = 10; // TODO: Put default gif duration somewhere more central?
+
+      if (server.hasArg("duration")) {
+        duration = server.arg("duration").toInt();
+      }
+
+      auto ev = new SingleGifFrameEvent(duration);
 
       ev->filename = std::string(filename.c_str());
       Orchestrator::Instance()->react(ev);
