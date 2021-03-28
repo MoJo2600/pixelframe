@@ -14,6 +14,7 @@
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
+#include "frames/off.hpp"
 
 const char* fsName = "LittleFS";
 FS* fileSystem = &LittleFS;
@@ -193,6 +194,17 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     replyOKWithMsg(F("Switching to clock"));
   });
 
+
+  server.on(UriBraces("/api/show/off"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] Receive command - switch to off");
+
+    auto ev = new OffEvent();
+    Orchestrator::Instance()->react(ev);
+
+    replyOKWithMsg(F("Switching to off"));
+  });
+
+
   server.on(UriBraces("/api/show/gif"), HTTP_GET, []() {
     if (server.hasArg("image")) {
       String filename = server.arg("image");
@@ -218,13 +230,13 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
 
     replyOKWithMsg(F("Switching to gif"));
   });
-  
+
   server.on(UriBraces("/api/show/visuals"), HTTP_GET, []() {
     Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
 
     auto ev = new VisualsFrameEvent();
     Orchestrator::Instance()->react(ev);
-    
+
     replyOKWithMsg(F("Switching to visual frame"));
   });
 
@@ -245,7 +257,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
 
     replyOKWithJson(String(json_string));
   });
-  
+
   server.on(UriBraces("/api/configuration/basic"), HTTP_PATCH, []() {
     Serial.println("[WEBSERVER] PATCH /configuration/basic");
 
