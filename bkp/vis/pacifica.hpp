@@ -47,6 +47,5 @@ class Pacifica
     void pacifica_add_whitecaps();
     void pacifica_deepen_colors();
     void pacifica_loop();
-    static RegisterVisual<Pacifica> reg;
 };
 #endif // PACIFICA_HPP_INCLUDED

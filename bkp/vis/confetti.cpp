@@ -49,5 +49,3 @@ void Confetti::loop()
     confetti();
   }
 }
-
-RegisterVisual<Confetti> Confetti::reg("confetti");

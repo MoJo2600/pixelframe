@@ -356,5 +356,3 @@ void Twinkle::loop()
 
   drawTwinkles();
 }
-
-RegisterVisual<Twinkle> Twinkle::reg("twinkle");

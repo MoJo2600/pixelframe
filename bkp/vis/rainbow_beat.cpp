@@ -32,5 +32,3 @@ void RainbowBeat::loop()
     hsv.hue += 8;
   }
 }
-
-RegisterVisual<RainbowBeat> RainbowBeat::reg("rainbowbeat");

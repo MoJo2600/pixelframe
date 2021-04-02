@@ -8,7 +8,5 @@ class RainbowBeat
   public:
     void loop(void);
     void enter(void);
-  private:
-    static RegisterVisual<RainbowBeat> reg;
 };
 #endif // RAINBOW_BEAT_HPP_INCLUDED

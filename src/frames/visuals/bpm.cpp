@@ -23,3 +23,5 @@ void Bpm::loop()
   }
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
 }
+
+RegisterVisual<Bpm> Bpm::reg("bpm");

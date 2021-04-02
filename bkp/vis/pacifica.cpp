@@ -120,8 +120,6 @@ void Pacifica::loop() {
   this->pacifica_loop();
 }
 
-RegisterVisual<Pacifica> Pacifica::reg("pacifica");
-
 const TProgmemPalette16 pacifica_palette_1 PROGMEM =
     { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117,
       0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x14554B, 0x28AA50 };
