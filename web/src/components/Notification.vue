@@ -23,7 +23,7 @@ export default class Notification extends Vue {
   private readonly notificationVisibleDuration = process.env
     .VUE_APP_NOTIFICATION_DURATION
     ? Number(process.env.VUE_APP_NOTIFICATION_DURATION)
-    : 8000;
+    : 2000;
 
   @Prop({
     required: true

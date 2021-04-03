@@ -40,14 +40,12 @@ public:
   void loop(void);
   void enter(void);
   void react(FrameEvent *event);
-  // void signalExit(void);
   void exit(void);
   VisualsFrame(string const& visual);
-  // ~VisualsFrame();
-
 private:
   Visual *currentPattern;
   void nextPattern(void);
+  bool random;
 };
 
 #endif // VISUALSFRAME_HPP_INCLUDED

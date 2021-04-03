@@ -12,7 +12,7 @@
 
     <v-row>
       <v-col :cols="cardSize" v-for="frame in frames" :key="frame.name">
-        <v-card elevation="0" outlined>
+        <v-card elevation="0" outlined @click="showFrame(frame)">
           <v-img
             :src="`https://picsum.photos/seed/${frame.apiPath}/600/300`"
             height="200px"
@@ -21,6 +21,10 @@
           <v-card-title>
             {{ frame.name }}
           </v-card-title>
+
+          <v-card-subtitle>
+            {{ frame.description }}
+          </v-card-subtitle>
 
           <v-card-actions>
             <v-btn
@@ -50,6 +54,7 @@ import { Service, FramesService } from "@/services";
 
 interface Frame {
   name: string;
+  description: string;
   apiPath: string;
 }
 
@@ -67,18 +72,22 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
   private readonly frames: Frame[] = [
     {
       name: "Pong Clock",
+      description: "A fancy pong clock",
       apiPath: "clock"
     },
     {
       name: "Gif",
+      description: "Plays random GIF animations.",
       apiPath: "gif"
     },
     {
       name: "Visuals",
+      description: "Plays random visuals.",
       apiPath: "visuals"
     },
     {
       name: "Off",
+      description: "Turn off the LEDs.",
       apiPath: "off"
     }
   ];

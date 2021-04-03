@@ -28,7 +28,6 @@ void Orchestrator::setup() {
 }
 
 void Orchestrator::loop(void) {
-
   // If the event has a duration, switch back to the last event after the time has passed
   if (this->currentEvent != nullptr &&
       this->currentEvent->duration > 0 && 

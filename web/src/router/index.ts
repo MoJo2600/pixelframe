@@ -34,6 +34,14 @@ const routes: Array<RouteConfig> = [
     }
   },
   {
+    path: "/images",
+    name: "Images",
+    component: ImagesView,
+    meta: {
+      icon: "mdi-image"
+    }
+  },
+  {
     path: "/configuration",
     name: "Configuration",
     component: NestedViewWrapper,
@@ -57,14 +65,6 @@ const routes: Array<RouteConfig> = [
         component: ConfigurationMqttView
       }
     ]
-  },
-  {
-    path: "/images",
-    name: "Images",
-    component: ImagesView,
-    meta: {
-      icon: "mdi-image"
-    }
   }
 ];
 

@@ -12,9 +12,9 @@
 
     <v-row>
       <v-col :cols="cardSize" v-for="visual in visuals" :key="visual.name">
-        <v-card elevation="0" outlined>
+        <v-card elevation="0" outlined @click="showVisual(visual)">
           <v-img
-            :src="`https://picsum.photos/seed/${visual.apiPath}/600/300`"
+            :src="`https://picsum.photos/seed/${visual.name}/600/300`"
             height="200px"
           ></v-img>
 
@@ -85,6 +85,10 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
     {
       title: "Confetti",
       name: "confetti"
+    },
+    {
+      title: "Random",
+      name: "random"
     }
   ];
 

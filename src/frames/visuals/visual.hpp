@@ -2,6 +2,7 @@
 #define VISUAL_HPP_INCLUDED
 
 #include <map>
+#include "lib/utils.h"
 
 class Visual {
   public:
@@ -15,6 +16,12 @@ template<typename T> Visual * createT() { return new T; }
 struct VisualFactory {
   public:
     typedef std::map<std::string, Visual*(*)()> map_type;
+
+    static Visual * getRandomVisual() {
+      map_type::iterator it = getMap()->begin();
+      std::advance(it, random_0_to_n(getMap()->size()));
+      return it->second();
+    }
 
     static Visual * createInstance(std::string const& s) {
         map_type::iterator it = getMap()->find(s);

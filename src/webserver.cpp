@@ -288,9 +288,10 @@ void startServer()
       Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
 
       auto ev = new VisualsFrameEvent();
+      ev->visual = "random";
       Orchestrator::Instance()->react(ev);
 
-      replyOKWithMsg(F("Switching to visual frame"));
+      replyOKWithMsg(F("Switching to random visual frame"));
     }
   });
 
