@@ -77,8 +77,15 @@ void setup() {
   matrix->show();
 
   // ### CONNECT WIFI
-  const char* ssid = configuration["wifi"]["ssid"];
-  const char* password = configuration["wifi"]["password"];
+  if (configuration["wifi"]["ssid"] != nullptr) {
+    wifi_ssid = strdup(configuration["wifi"]["ssid"]);
+  }
+  if (configuration["wifi"]["password"] != nullptr) {
+    wifi_password = strdup(configuration["wifi"]["password"]);
+  }
+  // const char* wifi_ssid = configuration["wifi"]["ssid"];
+  // const char* wifi_password = configuration["wifi"]["password"];
+
 
   mdnsName = strdup("pixelframe");
   if (configuration["framename"] != nullptr) {
@@ -87,7 +94,7 @@ void setup() {
 
   Serial.print(F("[WIFI] Connecting wifi"));
   WiFi.hostname(mdnsName);
-  WiFi.begin(ssid, password);
+  WiFi.begin(wifi_ssid, wifi_password);
 
   matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
