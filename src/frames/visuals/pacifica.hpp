@@ -40,7 +40,6 @@ class Pacifica
   public:
     void loop(void);
     void enter(void);
-    Pacifica();
 
   private:
     void pacifica_one_layer(CRGBPalette16 p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff);

@@ -9,10 +9,6 @@ extern const TProgmemPalette16 pacifica_palette_1;
 extern const TProgmemPalette16 pacifica_palette_2;
 extern const TProgmemPalette16 pacifica_palette_3;
 
-Pacifica::Pacifica() {
-  cout << "constructor" << endl;
-}
-
 void Pacifica::enter() {}
 
 // Add one layer of waves into the led array
@@ -34,7 +30,6 @@ void Pacifica::pacifica_one_layer(CRGBPalette16 p, uint16_t cistart, uint16_t wa
       matrixleds[XY(x,y)] += c;
     }
   }
-
 }
 
 // Add extra 'white' to areas where the four layers of light have lined up brightly

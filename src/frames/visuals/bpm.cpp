@@ -4,8 +4,6 @@
 
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
-Bpm::~Bpm() {}
-
 void Bpm::enter() {}
 
 void Bpm::loop()

@@ -53,5 +53,5 @@ void VisualsFrame::loop()
 void VisualsFrame::react(FrameEvent* event) {}
 
 void VisualsFrame::exit() {
-  delete currentPattern;
+  delete this->currentPattern;
 }

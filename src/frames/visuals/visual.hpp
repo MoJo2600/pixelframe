@@ -2,6 +2,7 @@
 #define VISUAL_HPP_INCLUDED
 
 #include <map>
+#include <iostream>
 #include "lib/utils.h"
 
 class Visual {
@@ -11,7 +12,10 @@ class Visual {
     virtual ~Visual() = 0;
 };
 
-template<typename T> Visual * createT() { return new T; }
+template<typename T> Visual * createT() { 
+  std::cout << "Creating visual instance" << std::endl;
+  return new T; 
+}
 
 struct VisualFactory {
   public:

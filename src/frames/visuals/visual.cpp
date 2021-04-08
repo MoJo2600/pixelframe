@@ -1,5 +1,4 @@
 #include "frames/visuals/visual.hpp"
-#include <iostream>
 
 Visual::~Visual() {}
 
