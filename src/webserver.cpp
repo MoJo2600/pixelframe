@@ -289,6 +289,28 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
     replyOKWithJson(String(json_string));
   });
 
+  server.on(UriBraces("/api/configuration/wifi"), HTTP_PUT, []() {
+    Serial.println("[WEBSERVER] PUT /configuration/wifi");
+
+    StaticJsonDocument<200> config;
+
+    DeserializationError error = deserializeJson(config, server.arg("plain"));
+
+    if (error) {
+      replyBadRequest(F("Unable to parse body"));
+      return;
+    }
+
+    if (config["ssid"] == nullptr || config["password"] == nullptr) {
+      replyBadRequest("Body must contain SSID and password");
+      return;
+    }
+
+    set_wifi(strdup(config["ssid"]), strdup(config["password"]));
+
+    replyOKWithMsg(F("Updating wifi configuration"));
+  });
+
   server.on(UriBraces("/api/environment/wifis"), HTTP_GET, []() {
     Serial.println("[WEBSERVER] GET api/environment/wifis");
 

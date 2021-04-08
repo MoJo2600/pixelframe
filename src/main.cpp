@@ -83,30 +83,20 @@ void setup() {
   if (configuration["wifi"]["password"] != nullptr) {
     wifi_password = strdup(configuration["wifi"]["password"]);
   }
-  // const char* wifi_ssid = configuration["wifi"]["ssid"];
-  // const char* wifi_password = configuration["wifi"]["password"];
-
 
   mdnsName = strdup("pixelframe");
   if (configuration["framename"] != nullptr) {
     mdnsName = strdup(configuration["framename"]);
   }
 
-  Serial.print(F("[WIFI] Connecting wifi"));
   WiFi.hostname(mdnsName);
-  WiFi.begin(wifi_ssid, wifi_password);
 
-  matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
-
-  // Wait for the Wi-Fi to connect
-  while (WiFi.status() != WL_CONNECTED) { 
-    delay(500);
-    Serial.print('.');
+  if (wifi_ssid == nullptr || wifi_password == nullptr) {
+    // TODO: access point
+    // configure wifi via webpage
+  } else {
+    set_wifi(wifi_ssid, wifi_password);
   }
-  Serial.println("");
-  Serial.print("[WIFI] IP: ");
-  Serial.println(WiFi.localIP());
 
   matrix->drawRect(5,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();

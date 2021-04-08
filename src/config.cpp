@@ -197,14 +197,23 @@ void set_brightness(uint8_t brightness) {
 
 
 void set_wifi(char* ssid, char* password) {
-  Serial.print("Setting Wifi: ");
-  Serial.println(ssid);
+  Serial.print(F("[WIFI] Connecting to wifi "));
+  Serial.print(ssid);
 
   // TODO: write in config json
 
   wifi_ssid = ssid;
   wifi_password = password;
 
-  // TODO: wifi begin connect with given credentials
+  WiFi.begin(wifi_ssid, wifi_password);
+
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println("");
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
+
   // TODO: optional: fallback if connect failed?
 }
