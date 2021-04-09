@@ -2,6 +2,9 @@
 
 bool init_done = 0;
 
+char* wifi_ssid = nullptr;
+char* wifi_password = nullptr;
+
 uint8_t matrix_brightness = 64;
 float matrix_gamma = 1; // higher number is darker, needed for Neomatrix more than SmartMatrix
 
@@ -190,4 +193,27 @@ void set_brightness(uint8_t brightness) {
 
     matrix_brightness = brightness;
     FastLED.setBrightness(matrix_brightness);
+}
+
+
+void set_wifi(char* ssid, char* password) {
+  Serial.print(F("[WIFI] Connecting to wifi "));
+  Serial.print(ssid);
+
+  // TODO: write in config json
+
+  wifi_ssid = ssid;
+  wifi_password = password;
+
+  WiFi.begin(wifi_ssid, wifi_password);
+
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println("");
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
+
+  // TODO: optional: fallback if connect failed?
 }

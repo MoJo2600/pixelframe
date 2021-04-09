@@ -270,12 +270,64 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
       return;
     }
 
-    // TODO: check if brightness exists
-    set_brightness(config["brightness"]);
+    if (config["brightness"] != nullptr) {
+      set_brightness(config["brightness"]);
+    }
 
     replyOKWithMsg(F("Updating basic configuration"));
   });
 
+  server.on(UriBraces("/api/configuration/wifi"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] GET api/configuration/wifi");
+
+    StaticJsonDocument<200> config;
+    config["ssid"] = wifi_ssid;
+
+    char json_string[200];
+    serializeJson(config, json_string);
+
+    replyOKWithJson(String(json_string));
+  });
+
+  server.on(UriBraces("/api/configuration/wifi"), HTTP_PUT, []() {
+    Serial.println("[WEBSERVER] PUT /configuration/wifi");
+
+    StaticJsonDocument<200> config;
+
+    DeserializationError error = deserializeJson(config, server.arg("plain"));
+
+    if (error) {
+      replyBadRequest(F("Unable to parse body"));
+      return;
+    }
+
+    if (config["ssid"] == nullptr || config["password"] == nullptr) {
+      replyBadRequest("Body must contain SSID and password");
+      return;
+    }
+
+    set_wifi(strdup(config["ssid"]), strdup(config["password"]));
+
+    replyOKWithMsg(F("Updating wifi configuration"));
+  });
+
+  server.on(UriBraces("/api/environment/wifis"), HTTP_GET, []() {
+    Serial.println("[WEBSERVER] GET api/environment/wifis");
+
+    int numberOfNetworks = WiFi.scanNetworks();
+
+    StaticJsonDocument<512> config;
+
+    for(int i = 0; i < numberOfNetworks; i++) {
+      config[i]["ssid"] = WiFi.SSID(i);
+      config[i]["signalStrength"] = WiFi.RSSI(i);
+    }
+
+    char json_string[512];
+    serializeJson(config, json_string);
+
+    replyOKWithJson(String(json_string));
+  });
 
   server.on("/api/images", HTTP_GET, []() {
     handleGetFiles("/gifs");
