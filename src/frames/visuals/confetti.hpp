@@ -8,7 +8,6 @@ class Confetti
   public:
     void loop(void);
     void enter(void);
-    ~Confetti(void);
   private:
     void confetti(void);
     void changeMe(void);

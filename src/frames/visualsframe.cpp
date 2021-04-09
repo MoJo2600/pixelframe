@@ -3,11 +3,15 @@
 #include "config.hpp"
 #include "frames/frame.hpp"
 #include "frames/visualsframe.hpp"
+#include <cstring>
+#include <string>
 
 #define NUM_PATTERNS 5
 #define PATTERN_DURATION 3 // TODO: make configurable
 
 using namespace std;
+
+bool randomVisual = false;
 
 Frame* VisualsFrameEvent::getFrame() {
   return new VisualsFrame(this->visual);
@@ -18,10 +22,12 @@ std::string VisualsFrameEvent::getEventId(void) {
 }
 
 VisualsFrame::VisualsFrame(string const& visual) {
-  if (visual == "random") {
-    this->random = true;
+  if (std::strcmp(visual.c_str(), "random") == 0) {
+    cout << "Random visuals" << endl;
+    randomVisual = true;
     this->currentPattern = VisualFactory::getRandomVisual();
   } else {
+    cout << "Selecting visual " << visual << endl;
     this->currentPattern = VisualFactory::createInstance(visual);
   }
 }
@@ -45,7 +51,7 @@ void VisualsFrame::loop()
   if (currentPattern != nullptr) {
     currentPattern->loop();
   }
-  if (this->random) {
+  if (randomVisual) {
     EVERY_N_MINUTES( PATTERN_DURATION ) { nextPattern(); } // change patterns periodically
   }
 }

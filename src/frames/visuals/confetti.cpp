@@ -17,8 +17,6 @@ uint8_t   thisbri = 255;                                      // Brightness of a
 int       huediff = 256;                                      // Range of random #'s to use for hue
 uint8_t thisdelay = 5;                                        // We don't need much delay (if any)
 
-Confetti::~Confetti() {}
-
 void Confetti::enter() {}
 
 void Confetti::confetti() {

@@ -23,12 +23,7 @@
           </v-card-title>
 
           <v-card-actions>
-            <v-btn
-              color="primary"
-              @click="showVisual(visual)"
-              :disabled="loading || !!writing"
-              text
-            >
+            <v-btn color="primary" :disabled="loading || !!writing" text>
               Show
             </v-btn>
           </v-card-actions>
@@ -87,6 +82,10 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
       name: "confetti"
     },
     {
+      title: "Noise",
+      name: "noise"
+    },
+    {
       title: "Random",
       name: "random"
     }
@@ -96,12 +95,12 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
     return this.$vuetify.breakpoint.xs
       ? 12
       : this.$vuetify.breakpoint.sm
-      ? 6
-      : this.$vuetify.breakpoint.md
-      ? 3
-      : this.$vuetify.breakpoint.lg
-      ? 3
-      : 3;
+        ? 6
+        : this.$vuetify.breakpoint.md
+          ? 3
+          : this.$vuetify.breakpoint.lg
+            ? 3
+            : 3;
   }
 
   private async showVisual(visual: Visual): Promise<void> {
