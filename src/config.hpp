@@ -32,6 +32,10 @@
 // LED setup
 extern uint8_t matrix_brightness;
 
+// Wifi setup
+extern char* wifi_ssid;
+extern char* wifi_password;
+
 // Choose one of:
 #define LED_CHIP WS2812B
 #define LED_ORDER GRB
@@ -92,6 +96,8 @@ void *mallocordie(const char *varname, uint32_t req, bool psram=true);
 void matrix_setup(bool initserial=true, int reservemem = 40000);
 
 void set_brightness(uint8_t brightness);
+
+void set_wifi(char* ssid, char* password);
 
 //
 // TIMEZONE
