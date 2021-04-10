@@ -91,6 +91,9 @@ void setup() {
 
   WiFi.hostname(mdnsName);
 
+  matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
+  matrix->show();
+
   if (wifi_ssid == nullptr || wifi_password == nullptr) {
     // TODO: access point
     // configure wifi via webpage
