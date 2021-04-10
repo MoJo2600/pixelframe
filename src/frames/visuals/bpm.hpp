@@ -8,6 +8,7 @@ class Bpm
   public:
     void loop(void);
     void enter(void);
-    ~Bpm();
+  private:
+    static RegisterVisual<Bpm> reg;
 };
 #endif // BPM_HPP_INCLUDED

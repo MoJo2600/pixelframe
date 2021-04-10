@@ -3,58 +3,47 @@
 #include "config.hpp"
 #include "frames/frame.hpp"
 #include "frames/visualsframe.hpp"
-#include "frames/visuals/twinkle.hpp"
-#include "frames/visuals/bpm.hpp"
-#include "frames/visuals/confetti.hpp"
-#include "frames/visuals/rainbow_beat.hpp"
-#include "frames/visuals/pacifica.hpp"
+#include <cstring>
+#include <string>
 
 #define NUM_PATTERNS 5
-#define PATTERN_DURATION 45 // TODO: make configurable
-uint8_t gCurrentPatternNumber = 1; // Index number of which pattern is current
+#define PATTERN_DURATION 3 // TODO: make configurable
 
 using namespace std;
 
+bool randomVisual = false;
+
 Frame* VisualsFrameEvent::getFrame() {
-  return new VisualsFrame();
+  return new VisualsFrame(this->visual);
 }
 
 std::string VisualsFrameEvent::getEventId(void) {
   return "frame.event.visuals.default";
 }
 
-void VisualsFrame::nextPattern(void)
-{
-  delete currentPattern;
-  // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % NUM_PATTERNS;
-  std::cout << "[FRAME::VISUALS] next pattern: " << gCurrentPatternNumber << std::endl;
-  switch(gCurrentPatternNumber) {
-    case 0:
-      cout << "[Visualsframe] Pacifica" << endl;
-      currentPattern = new Pacifica();
-      break;
-    case 1:
-      cout << "[Visualsframe] Bpm" << endl;
-      currentPattern = new Bpm();
-      break;
-    case 2:
-      cout << "[Visualsframe] Confetti" << endl;
-      currentPattern = new Confetti();
-      break;
-    case 3:
-      cout << "[Visualsframe] Rainbow" << endl;
-      currentPattern = new RainbowBeat();
-      break;
-    case 4:
-      cout << "[Visualsframe] Twinkle" << endl;
-      currentPattern = new Twinkle();
-      break;
+VisualsFrame::VisualsFrame(string const& visual) {
+  if (std::strcmp(visual.c_str(), "random") == 0) {
+    cout << "Random visuals" << endl;
+    randomVisual = true;
+    this->currentPattern = VisualFactory::getRandomVisual();
+  } else {
+    cout << "Selecting visual " << visual << endl;
+    this->currentPattern = VisualFactory::createInstance(visual);
   }
 }
 
+void VisualsFrame::nextPattern(void)
+{
+  if (this->currentPattern != nullptr) {
+    delete this->currentPattern;
+  }
+  this->currentPattern = VisualFactory::getRandomVisual();
+}
+
 void VisualsFrame::enter() {
-  nextPattern();
+  if (currentPattern != nullptr) {
+    currentPattern->enter();
+  }
 }
 
 void VisualsFrame::loop()
@@ -62,10 +51,13 @@ void VisualsFrame::loop()
   if (currentPattern != nullptr) {
     currentPattern->loop();
   }
-  EVERY_N_SECONDS( PATTERN_DURATION ) { nextPattern(); } // change patterns periodically
+  if (randomVisual) {
+    EVERY_N_MINUTES( PATTERN_DURATION ) { nextPattern(); } // change patterns periodically
+  }
 }
 
-void VisualsFrame::react(FrameEvent* event) {
-}
+void VisualsFrame::react(FrameEvent* event) {}
 
-void VisualsFrame::exit() {}
+void VisualsFrame::exit() {
+  delete this->currentPattern;
+}

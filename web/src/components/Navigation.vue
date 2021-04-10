@@ -38,17 +38,33 @@
           </v-list-item>
         </v-list-group>
       </template>
+      <v-list-item @click="shutdown">
+        <v-list-item-icon>
+          <v-icon>mdi-power</v-icon>
+        </v-list-item-icon>
+
+        <v-list-item-content>
+          <v-list-item-title>Off</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
 
 <script lang="ts">
+import { FramesService, Service } from "@/services";
 import { Vue, Component, VModel } from "vue-property-decorator";
 
 @Component
 export default class Navigation extends Vue {
+  private readonly framesService = Service.get(FramesService);
+
   @VModel()
   public readonly drawerVisible!: boolean;
+
+  private async shutdown(): Promise<void> {
+    await this.framesService.showFrame("off");
+  }
 }
 </script>
 

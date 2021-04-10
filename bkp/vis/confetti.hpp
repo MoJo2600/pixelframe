@@ -8,6 +8,7 @@ class Confetti
   public:
     void loop(void);
     void enter(void);
+    ~Confetti(void);
   private:
     void confetti(void);
     void changeMe(void);
@@ -20,6 +21,5 @@ class Confetti
             thissat = 100,                                  // The saturation, where 255 = brilliant colours.
             thisbri = 255,                                  // Brightness of a sequence. Remember, max_bright is the overall limiter.
             thisdelay = 5;                                  // We don't need much delay (if any)
-    static RegisterVisual<Confetti> reg;
 };
 #endif // CONFETTI_HPP_INCLUDED

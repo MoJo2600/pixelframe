@@ -14,6 +14,5 @@ class Twinkle
     uint8_t attackDecayWave8( uint8_t i);
     CRGB computeOneTwinkle( uint32_t ms, uint8_t salt);
     void chooseNextColorPalette( CRGBPalette16& pal);
-    static RegisterVisual<Twinkle> reg;
 };
 #endif // TWINKLE_HPP_INCLUDED

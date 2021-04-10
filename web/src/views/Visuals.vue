@@ -3,7 +3,7 @@
     <v-row>
       <v-col cols="12">
         <h4 class="text-h4">
-          Frames
+          Visuals
           <spinner-text text="loading" v-if="loading" />
           <spinner-text text="sending" v-if="writing" />
         </h4>
@@ -11,28 +11,19 @@
     </v-row>
 
     <v-row>
-      <v-col :cols="cardSize" v-for="frame in frames" :key="frame.name">
-        <v-card elevation="0" outlined @click="showFrame(frame)">
+      <v-col :cols="cardSize" v-for="visual in visuals" :key="visual.name">
+        <v-card elevation="0" outlined @click="showVisual(visual)">
           <v-img
-            :src="`https://picsum.photos/seed/${frame.apiPath}/600/300`"
+            :src="`https://picsum.photos/seed/${visual.name}/600/300`"
             height="200px"
           ></v-img>
 
           <v-card-title>
-            {{ frame.name }}
+            {{ visual.title }}
           </v-card-title>
 
-          <v-card-subtitle>
-            {{ frame.description }}
-          </v-card-subtitle>
-
           <v-card-actions>
-            <v-btn
-              color="primary"
-              @click="showFrame(frame)"
-              :disabled="loading || !!writing"
-              text
-            >
+            <v-btn color="primary" :disabled="loading || !!writing" text>
               Show
             </v-btn>
           </v-card-actions>
@@ -50,12 +41,11 @@ import DataLoaderError from "@/components/DataLoaderError.vue";
 import ConfigurationSection from "@/components/ConfigurationSection.vue";
 import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
 import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { Service, FramesService } from "@/services";
+import { Service, VisualsService } from "@/services";
 
-interface Frame {
+interface Visual {
+  title: string;
   name: string;
-  description: string;
-  apiPath: string;
 }
 
 @Component({
@@ -67,28 +57,37 @@ interface Frame {
   }
 })
 export default class FramesView extends Mixins(DataHandlerMixin) {
-  private readonly framesService = Service.get(FramesService);
+  private readonly visualsService = Service.get(VisualsService);
 
-  private readonly frames: Frame[] = [
+  // TODO: Load this from the backend
+  private readonly visuals: Visual[] = [
     {
-      name: "Pong Clock",
-      description: "A fancy pong clock",
-      apiPath: "clock"
+      title: "Bpm",
+      name: "bpm"
     },
     {
-      name: "Gif",
-      description: "Plays random GIF animations.",
-      apiPath: "gif"
+      title: "Twinkle",
+      name: "twinkle"
     },
     {
-      name: "Visuals",
-      description: "Plays random visuals.",
-      apiPath: "visuals"
+      title: "Pacifica",
+      name: "pacifica"
     },
     {
-      name: "Off",
-      description: "Turn off the LEDs.",
-      apiPath: "off"
+      title: "Rainbow Beat",
+      name: "rainbowbeat"
+    },
+    {
+      title: "Confetti",
+      name: "confetti"
+    },
+    {
+      title: "Noise",
+      name: "noise"
+    },
+    {
+      title: "Random",
+      name: "random"
     }
   ];
 
@@ -96,21 +95,21 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
     return this.$vuetify.breakpoint.xs
       ? 12
       : this.$vuetify.breakpoint.sm
-      ? 6
-      : this.$vuetify.breakpoint.md
-      ? 3
-      : this.$vuetify.breakpoint.lg
-      ? 3
-      : 3;
+        ? 6
+        : this.$vuetify.breakpoint.md
+          ? 3
+          : this.$vuetify.breakpoint.lg
+            ? 3
+            : 3;
   }
 
-  private async showFrame(frame: Frame): Promise<void> {
+  private async showVisual(visual: Visual): Promise<void> {
     await this.wrapDataWrite(
       async () => {
-        await this.framesService.showFrame(frame.apiPath);
+        await this.visualsService.showVisual(visual.name);
       },
       WriteAction.Command,
-      `show frame ${frame.name}`
+      `show visual ${visual.name}`
     );
   }
 

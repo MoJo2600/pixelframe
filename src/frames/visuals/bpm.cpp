@@ -4,8 +4,6 @@
 
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
-Bpm::~Bpm() {}
-
 void Bpm::enter() {}
 
 void Bpm::loop()
@@ -23,3 +21,5 @@ void Bpm::loop()
   }
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
 }
+
+RegisterVisual<Bpm> Bpm::reg("bpm");
