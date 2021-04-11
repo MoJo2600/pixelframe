@@ -28,6 +28,7 @@ VisualsFrame::VisualsFrame(string const& visual) {
     this->currentPattern = VisualFactory::getRandomVisual();
   } else {
     cout << "Selecting visual " << visual << endl;
+    randomVisual = false;
     this->currentPattern = VisualFactory::createInstance(visual);
   }
 }
