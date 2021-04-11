@@ -71,6 +71,12 @@ void setup() {
     matrix_brightness = configuration["brightness"];
   }
 
+  if (configuration["defaultmode"] != nullptr) {
+    default_mode = strdup(configuration["defaultmode"]);
+    Serial.print(F("[CONFIG] Default mode: "));
+    Serial.println(default_mode);
+  }
+
   matrix_setup();
 
   matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
@@ -122,7 +128,7 @@ void setup() {
   matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  Orchestrator::Instance()->setup();
+  Orchestrator::Instance()->setup(default_mode);
 
   matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();

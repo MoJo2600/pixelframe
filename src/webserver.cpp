@@ -306,6 +306,7 @@ void startServer()
     StaticJsonDocument<200> config;
     config["brightness"] = matrix_brightness;
     config["timezone"] = "Europe/Berlin";
+    config["defaultmode"] = "default_mode";
 
     char json_string[200];
     serializeJson(config, json_string);

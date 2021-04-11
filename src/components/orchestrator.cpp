@@ -6,6 +6,8 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
+#include <cstring>
+
 
 #define FADE_LENGTH 500
 
@@ -13,15 +15,26 @@ Orchestrator* Orchestrator::instance = nullptr;
 
 unsigned long fadeStartTime = 0;
 
-void Orchestrator::setup() {
+char* default_mode = strdup("");
+
+void Orchestrator::setup(char* mode) {
   this->currentFrame = nullptr;
   this->lastEvent = nullptr;
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  auto ev = new ClockFrameEvent();
+  default_mode = mode;
 
-  this->react(ev);
+  if (std::strcmp(default_mode, "off") == 0) {
+    auto ev = new OffEvent();
+    this->react(ev);
+  } else {
+    auto ev = new ClockFrameEvent();
+    this->react(ev);
+  }
+
+  // TODO: find out why VisualsFrameEvent() does not work here
+
 }
 
 void Orchestrator::loop(void) {
