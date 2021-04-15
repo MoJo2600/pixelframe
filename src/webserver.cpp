@@ -341,7 +341,7 @@ void startServer()
     }
     
     if (config["defaultMode"] != nullptr) {
-      set_default_mode(config["defaultMode"]);
+      set_default_mode(strdup(config["defaultMode"]));
     }
 
     replyOKWithMsg(F("Updating basic configuration"));
