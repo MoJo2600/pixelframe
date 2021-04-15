@@ -130,6 +130,8 @@ void handleGetFiles(AsyncWebServerRequest * request, String path)
   Dir dir = fileSystem->openDir(path);
   path.clear();
 
+  // https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
+
   AsyncWebServerResponse *response = request->beginChunkedResponse("application/json", [&](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
     // use the same string for every line
     String output;
