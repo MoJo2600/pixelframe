@@ -15,26 +15,28 @@ Orchestrator* Orchestrator::instance = nullptr;
 
 unsigned long fadeStartTime = 0;
 
-char* default_mode = strdup("");
-
-void Orchestrator::setup(char* mode) {
+void Orchestrator::setup() {
   this->currentFrame = nullptr;
   this->lastEvent = nullptr;
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  default_mode = mode;
+  FrameEvent* ev;
 
-  if (std::strcmp(default_mode, "off") == 0) {
-    auto ev = new OffEvent();
-    this->react(ev);
+  if (std::strcmp(default_mode, MODE_OFF.c_str()) == 0) {
+    ev = new OffEvent();
+  } else if (std::strcmp(default_mode, MODE_VISUAL.c_str()) == 0) {
+    ev = new VisualsFrameEvent();
+  } else if (std::strcmp(default_mode, MODE_CLOCK.c_str()) == 0) {
+    ev = new ClockFrameEvent();
+  } else if (std::strcmp(default_mode, MODE_GIF.c_str()) == 0) {
+    ev = new RandomGifFrameEvent();
   } else {
-    auto ev = new ClockFrameEvent();
-    this->react(ev);
+    std::cout << "[COMPONENT::ORCHESTRATOR] WARNING: default mode unknown" << std::endl;
+    ev = new OffEvent();
   }
 
-  // TODO: find out why VisualsFrameEvent() does not work here
-
+  this->react(ev);
 }
 
 void Orchestrator::loop(void) {

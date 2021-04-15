@@ -3,12 +3,10 @@
 
 #include "frames/frame.hpp"
 
-extern char* default_mode;
-
 class Orchestrator
 {
   public:
-    void setup(char* mode);
+    void setup();
     void loop(void);
     void react(FrameEvent* e);
 

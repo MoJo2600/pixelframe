@@ -22,7 +22,7 @@ std::string VisualsFrameEvent::getEventId(void) {
 }
 
 VisualsFrame::VisualsFrame(string const& visual) {
-  if (std::strcmp(visual.c_str(), "random") == 0) {
+  if (visual.c_str() == nullptr || std::strcmp(visual.c_str(), "random") == 0) {
     cout << "Random visuals" << endl;
     randomVisual = true;
     this->currentPattern = VisualFactory::getRandomVisual();

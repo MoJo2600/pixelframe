@@ -128,7 +128,7 @@ void setup() {
   matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  Orchestrator::Instance()->setup(default_mode);
+  Orchestrator::Instance()->setup();
 
   matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
