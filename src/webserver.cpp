@@ -306,7 +306,7 @@ void startServer()
     StaticJsonDocument<200> config;
     config["brightness"] = matrix_brightness;
     config["timezone"] = "Europe/Berlin";
-    config["defaultmode"] = default_mode;
+    config["defaultMode"] = default_mode;
 
     config["availableDefaultModes"][0] = MODE_CLOCK.c_str();
     config["availableDefaultModes"][1] = MODE_GIF.c_str();
@@ -334,6 +334,14 @@ void startServer()
 
     if (config["brightness"] != nullptr) {
       set_brightness(config["brightness"]);
+    }
+    
+    if (config["timezone"] != nullptr) {
+      // TODO: implement
+    }
+    
+    if (config["defaultMode"] != nullptr) {
+      set_default_mode(config["defaultMode"]);
     }
 
     replyOKWithMsg(F("Updating basic configuration"));
