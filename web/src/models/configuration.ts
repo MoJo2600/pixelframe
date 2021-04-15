@@ -1,6 +1,8 @@
 export interface BasicConfiguration {
   brightness: number;
   timezone: string;
+  defaultMode: string;
+  availableDefaultModes: string[];
 }
 
 export interface WifiConfiguration {

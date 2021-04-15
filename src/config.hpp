@@ -107,5 +107,19 @@ void set_wifi(char* ssid, char* password);
 
 extern Timezone* timezone;
 
+//
+// ORCHESTRATOR
+//
+#include <string>
+
+const std::string MODE_CLOCK = "clock";
+const std::string MODE_GIF = "randomGif";
+const std::string MODE_VISUAL = "randomVisual";
+const std::string MODE_OFF = "off";
+
+extern char* default_mode;
+
+void set_default_mode(char* mode);
+
 #endif // CONFIG_H_INCLUDED
 // vim:sts=4:sw=4:et

@@ -10,6 +10,8 @@ float matrix_gamma = 1; // higher number is darker, needed for Neomatrix more th
 
 CRGB* matrixleds = nullptr;
 
+char* default_mode = strdup(MODE_CLOCK.c_str());
+
 
 // MATRIX DECLARATION:
 // Parameter 1 = width of EACH NEOPIXEL MATRIX (not total display)
@@ -216,4 +218,14 @@ void set_wifi(char* ssid, char* password) {
   Serial.println(WiFi.localIP());
 
   // TODO: optional: fallback if connect failed?
+}
+
+
+void set_default_mode(char* mode) {
+    Serial.print("Setting default mode: ");
+    Serial.println(mode);
+
+    // TODO: write in config json
+
+    default_mode = mode;
 }

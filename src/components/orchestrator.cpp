@@ -6,6 +6,8 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
+#include <cstring>
+
 
 #define FADE_LENGTH 500
 
@@ -19,7 +21,20 @@ void Orchestrator::setup() {
   this->currentEvent = nullptr;
   this->nextEvent = nullptr;
 
-  auto ev = new ClockFrameEvent();
+  FrameEvent* ev;
+
+  if (std::strcmp(default_mode, MODE_OFF.c_str()) == 0) {
+    ev = new OffEvent();
+  } else if (std::strcmp(default_mode, MODE_VISUAL.c_str()) == 0) {
+    ev = new VisualsFrameEvent();
+  } else if (std::strcmp(default_mode, MODE_CLOCK.c_str()) == 0) {
+    ev = new ClockFrameEvent();
+  } else if (std::strcmp(default_mode, MODE_GIF.c_str()) == 0) {
+    ev = new RandomGifFrameEvent();
+  } else {
+    std::cout << "[COMPONENT::ORCHESTRATOR] WARNING: default mode unknown" << std::endl;
+    ev = new OffEvent();
+  }
 
   this->react(ev);
 }

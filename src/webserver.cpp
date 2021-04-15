@@ -306,6 +306,12 @@ void startServer()
     StaticJsonDocument<200> config;
     config["brightness"] = matrix_brightness;
     config["timezone"] = "Europe/Berlin";
+    config["defaultMode"] = default_mode;
+
+    config["availableDefaultModes"][0] = MODE_CLOCK.c_str();
+    config["availableDefaultModes"][1] = MODE_GIF.c_str();
+    config["availableDefaultModes"][2] = MODE_VISUAL.c_str();
+    config["availableDefaultModes"][3] = MODE_OFF.c_str();
 
     char json_string[200];
     serializeJson(config, json_string);
@@ -328,6 +334,14 @@ void startServer()
 
     if (config["brightness"] != nullptr) {
       set_brightness(config["brightness"]);
+    }
+    
+    if (config["timezone"] != nullptr) {
+      // TODO: implement
+    }
+    
+    if (config["defaultMode"] != nullptr) {
+      set_default_mode(strdup(config["defaultMode"]));
     }
 
     replyOKWithMsg(F("Updating basic configuration"));

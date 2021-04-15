@@ -82,6 +82,25 @@
         ></v-autocomplete>
       </configuration-input-wrapper>
     </configuration-section>
+
+    <configuration-section title="Frames" :error="error">
+      <configuration-input-wrapper
+        title="Default mode"
+        skeletonType="input"
+        :error="error"
+        :loading="loading"
+      >
+        <v-autocomplete
+          v-if="!loading && !error"
+          v-model="basicConfiguration.defaultMode"
+          :items="basicConfiguration.availableDefaultModes"
+          outlined
+          dense
+          hide-details
+          @change="updateDefaultMode"
+        ></v-autocomplete>
+      </configuration-input-wrapper>
+    </configuration-section>
   </v-container>
 </template>
 
@@ -144,6 +163,22 @@ export default class BasicConfigurationView extends Mixins(DataHandlerMixin) {
       },
       WriteAction.Update,
       "timezone"
+    );
+  }
+
+  private async updateDefaultMode(): Promise<void> {
+    await this.wrapDataWrite(
+      async () => {
+        if (!this.basicConfiguration) {
+          return;
+        }
+
+        await this.configService.updateBasicConfiguratin({
+          defaultMode: this.basicConfiguration.defaultMode
+        });
+      },
+      WriteAction.Update,
+      "default mode"
     );
   }
 
