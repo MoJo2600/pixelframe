@@ -116,70 +116,109 @@ bool handleFileRead(AsyncWebServerRequest *request)
   return false;
 }
 
-void handleGetFiles(AsyncWebServerRequest * request, String path)
+void handleGetFiles(AsyncWebServerRequest * request, String directory)
 {
-  if (path != "/" && !fileSystem->exists(path))
-  {
-    return replyBadRequest("BAD PATH");
-  }
+  // if (path != "/" && !fileSystem->exists(path))
+  // {
+  //   return replyBadRequest("BAD PATH");
+  // }
 
-  Serial.println(String("[WEBSERVER] handleFileList: ") + path);
+  Serial.println(String("[WEBSERVER] handleFileList: ") + directory);
 
   // request->addHeader("Access-Control-Allow-Origin", "*");
 
+  String path = "/gifs";
   Dir dir = fileSystem->openDir(path);
-  path.clear();
 
-  // https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
 
-  AsyncWebServerResponse *response = request->beginChunkedResponse("application/json", [&](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-    // use the same string for every line
-    String output;
-    output.reserve(64);
-    while (dir.next())
+  response->print('[');
+
+  while (dir.next())
+  {
+    response->print("{\"type\":\"");
+    if (dir.isDirectory())
     {
-
-      if (output.length())
-      {
-        // send string from previous iteration
-        // as an HTTP chunk
-        // sendContent(output);
-        output = ',';
-      }
-      else
-      {
-        output = '[';
-      }
-
-      output += "{\"type\":\"";
-      if (dir.isDirectory())
-      {
-        output += "dir";
-      }
-      else
-      {
-        output += F("file\",\"size\":\"");
-        output += dir.fileSize();
-      }
-
-      output += F("\",\"name\":\"");
-      // Always return names without leading "/"
-      if (dir.fileName()[0] == '/')
-      {
-        output += &(dir.fileName()[1]);
-      }
-      else
-      {
-        output += dir.fileName();
-      }
-
-      output += "\"}";
+      response->print("dir");
     }
-
-    // send last string
-    output += "]";
-  });
+    else
+    {
+      response->print(F("file\",\"size\":\""));
+      response->print(dir.fileSize());
+    }
+    response->print(F("\",\"name\":\""));
+    // Always return names without leading "/"
+    if (dir.fileName()[0] == '/')
+    {
+      response->print(&(dir.fileName()[1]));
+    }
+    else
+    {
+      response->print(dir.fileName());
+    }
+    response->print("\"},");
+  }
+  // send last string
+  response->print("]");
   request->send(response);
+
+  // // https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
+  // AsyncWebServerResponse *response = request->beginChunkedResponse("application/json", [&](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+  //   // path.clear();
+
+  //   maxLen = maxLen >> 1;
+  //   size_t len = 0;
+
+  // // use the same string for every line
+  //   String output;
+  //   output.reserve(maxLen);
+  //   while (dir.next())
+  //   {
+  //     if (output.length())
+  //     {
+  //       // send string from previous iteration
+  //       // as an HTTP chunk
+  //       memcpy((char*)buffer, output.c_str(), maxLen);
+  //       return maxLen;
+  //       // server.sendContent(output);
+  //       output = ',';
+  //     }
+  //     else
+  //     {
+  //       output = '[';
+  //     }
+
+  //     output += "{\"type\":\"";
+  //     if (dir.isDirectory())
+  //     {
+  //       output += "dir";
+  //     }
+  //     else
+  //     {
+  //       output += F("file\",\"size\":\"");
+  //       output += dir.fileSize();
+  //     }
+
+  //     output += F("\",\"name\":\"");
+  //     // Always return names without leading "/"
+  //     if (dir.fileName()[0] == '/')
+  //     {
+  //       output += &(dir.fileName()[1]);
+  //     }
+  //     else
+  //     {
+  //       output += dir.fileName();
+  //     }
+
+  //     output += "\"}";
+  //   }
+
+  //   // send last string
+  //   output += "]";
+  //   memcpy((char*)buffer, output.c_str(), strlen(output.c_str()));
+  //   return strlen(output.c_str());
+  // });
+  // request->send(response);
 
 
   // // use HTTP/1.1 Chunked response to avoid building a huge temporary string
