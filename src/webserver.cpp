@@ -2,8 +2,6 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
-#include <uri/UriBraces.h>
-#include <uri/UriRegex.h>
 #include <ESP8266mDNS.h>
 #include <Wire.h>
 #define FS_NO_GLOBALS
@@ -93,9 +91,9 @@ String getContentType(String filename)
   return "text/plain";
 }
 
-bool handleFileRead(AsyncWebServerRequest *request)
+bool handleFileRead(AsyncWebServerRequest *request, String path)
 { // send the right file to the client (if it exists)
-  String path = String(request->url());
+  // String path = String(request->url());
   Serial.println("[WEBSERVER] handleFileRead: " + path);
   if (path.endsWith("/"))
     path += "index.html";                    // If a folder is requested, send the index file
@@ -130,12 +128,16 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
   String path = "/gifs";
   Dir dir = fileSystem->openDir(path);
 
+  // Another approach with lambda... i did not get this working: https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
   AsyncResponseStream *response = request->beginResponseStream("application/json");
-
   response->print('[');
+  bool firstFile = true;
 
   while (dir.next())
   {
+    if (!firstFile) {
+      response->print(",");
+    }
     response->print("{\"type\":\"");
     if (dir.isDirectory())
     {
@@ -156,19 +158,18 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
     {
       response->print(dir.fileName());
     }
-    response->print("\"},");
+    response->print("\"}");
+    firstFile = false;
   }
   // send last string
   response->print("]");
   request->send(response);
 
-  // // https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
+  // This creates an error with dir.next() after the first file. I don't think you can use the dir object inside a lambda method
   // AsyncWebServerResponse *response = request->beginChunkedResponse("application/json", [&](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
   //   // path.clear();
-
   //   maxLen = maxLen >> 1;
   //   size_t len = 0;
-
   // // use the same string for every line
   //   String output;
   //   output.reserve(maxLen);
@@ -187,7 +188,6 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
   //     {
   //       output = '[';
   //     }
-
   //     output += "{\"type\":\"";
   //     if (dir.isDirectory())
   //     {
@@ -219,39 +219,27 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
   //   return strlen(output.c_str());
   // });
   // request->send(response);
-
-
-  // // use HTTP/1.1 Chunked response to avoid building a huge temporary string
-  // if (!server.chunkedResponseModeStart(200, "application/json"))
-  // {
-  //   server.send(505, F("text/html"), F("HTTP1.1 required"));
-  //   return;
-  // }
-
-
-  // server.sendContent(output);
-  // server.chunkedResponseFinalize();
 }
 
-// /*
-//    Return the list of files in the directory specified by the "dir" query string parameter.
-//    Also demonstrates the use of chuncked responses.
-// */
-// void handleFileList()
-// {
-//   if (!server.hasArg("dir"))
-//   {
-//     return replyBadRequest(F("DIR ARG MISSING"));
-//   }
+/*
+   Return the list of files in the directory specified by the "dir" query string parameter.
+   Also demonstrates the use of chuncked responses.
+*/
+void handleFileList(AsyncWebServerRequest *request)
+{
+  if (!request->hasParam("dir"))
+  {
+    replyBadRequest(request, F("DIR ARG MISSING"));
+  }
 
-//   String path = server.arg("dir");
+  String path = request->getParam("dir")->value();
 
-//   handleGetFiles(path);
-// }
+  handleGetFiles(request, path);
+}
 
 void handleNotFound(AsyncWebServerRequest *request)
 { // if the requested file or page doesn't exist, return a 404 not found error
-  if (!handleFileRead(request))
+  if (!handleFileRead(request, request->url()))
   { // check if the file exists in the flash memory (LittleFS), if so, send it
     request->send(404, "text/plain", "Not found");
   }
@@ -275,100 +263,103 @@ void startMDNS()
 void startServer()
 { // Start a HTTP server with a file read handler and an upload handler
 
-//   // List directory
-//   server.on("/api/files", HTTP_GET, handleFileList);
+  // List directory
+  server.on("/api/files", HTTP_GET, handleFileList);
 
-//   server.on(UriBraces("/api/show/clock"), HTTP_GET, []() {
-//     Serial.println("[WEBSERVER] Receive command - switch to clock");
+  server.on("/api/show/clock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] Receive command - switch to clock");
 
-//     auto ev = new ClockFrameEvent();
-//     Orchestrator::Instance()->react(ev);
+    auto ev = new ClockFrameEvent();
+    Orchestrator::Instance()->react(ev);
 
-//     replyOKWithMsg(F("Switching to clock"));
-//   });
+    replyOKWithMsg(request, F("Switching to clock"));
+  });
 
-//   server.on(UriBraces("/api/show/off"), HTTP_GET, []() {
-//     Serial.println("[WEBSERVER] Receive command - switch to off");
+  server.on("/api/show/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] Receive command - switch to off");
 
-//     auto ev = new OffEvent();
-//     Orchestrator::Instance()->react(ev);
+    auto ev = new OffEvent();
+    Orchestrator::Instance()->react(ev);
 
-//     replyOKWithMsg(F("Switching to off"));
-//   });
+    replyOKWithMsg(request, F("Switching to off"));
+  });
 
-//   server.on(UriBraces("/api/show/gif"), HTTP_GET, []() {
-//     if (server.hasArg("image"))
-//     {
-//       String filename = server.arg("image");
-//       Serial.print("[WEBSERVER] Receive command - switch to ");
-//       Serial.println(filename);
+  server.on("/api/show/gif", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("image"))
+    {
+      String filename = request->getParam("image")->value();
+      Serial.print("[WEBSERVER] Receive command - switch to ");
+      Serial.println(filename);
 
-//       uint8_t duration = 10; // TODO: Put default gif duration somewhere more central?
+      uint8_t duration = 10; // TODO: Put default gif duration somewhere more central?
 
-//       if (server.hasArg("duration"))
-//       {
-//         duration = server.arg("duration").toInt();
-//       }
+      if (request->hasParam("duration"))
+      {
+        duration = request->getParam("duration")->value().toInt();
+      }
 
-//       auto ev = new SingleGifFrameEvent(duration);
+      auto ev = new SingleGifFrameEvent(duration);
 
-//       ev->filename = std::string(filename.c_str());
-//       Orchestrator::Instance()->react(ev);
-//     }
-//     else
-//     {
-//       Serial.println("[WEBSERVER] Receive command - switch to random gif");
+      ev->filename = std::string(filename.c_str());
+      Orchestrator::Instance()->react(ev);
+    }
+    else
+    {
+      Serial.println("[WEBSERVER] Receive command - switch to random gif");
 
-//       auto ev = new RandomGifFrameEvent();
-//       Orchestrator::Instance()->react(ev);
-//     }
+      auto ev = new RandomGifFrameEvent();
+      Orchestrator::Instance()->react(ev);
+    }
 
-//     replyOKWithMsg(F("Switching to gif"));
-//   });
+    replyOKWithMsg(request, F("Switching to gif"));
+  });
 
-//   server.on(UriBraces("/api/show/visuals"), HTTP_GET, []() {
-//     if (server.hasArg("v"))
-//     {
-//       String visualArg = server.arg("v");
-//       Serial.print("[WEBSERVER] Receive command - switch to visual ");
-//       Serial.println(visualArg);
+  server.on("/api/show/visuals", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("v"))
+    {
+      String visualArg = request->getParam("v")->value();
+      Serial.print("[WEBSERVER] Receive command - switch to visual ");
+      Serial.println(visualArg);
 
-//       auto ev = new VisualsFrameEvent();
-//       auto visual = std::string(visualArg.c_str());
-//       ev->visual = visual;
-//       Orchestrator::Instance()->react(ev);
+      auto ev = new VisualsFrameEvent();
+      auto visual = std::string(visualArg.c_str());
+      ev->visual = visual;
+      Orchestrator::Instance()->react(ev);
 
-//       replyOKWithMsg(F("Switching to visual frame"));
-//     }
-//     else
-//     {
-//       Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
+      replyOKWithMsg(request, F("Switching to visual frame"));
+    }
+    else
+    {
+      Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
 
-//       auto ev = new VisualsFrameEvent();
-//       ev->visual = "random";
-//       Orchestrator::Instance()->react(ev);
+      auto ev = new VisualsFrameEvent();
+      ev->visual = "random";
+      Orchestrator::Instance()->react(ev);
 
-//       replyOKWithMsg(F("Switching to random visual frame"));
-//     }
-//   });
+      replyOKWithMsg(request, F("Switching to random visual frame"));
+    }
+  });
 
-//   server.on(UriBraces("/api/images/{}"), []() {
-//     String name = server.pathArg(0);
-//     handleFileRead("gifs/" + name);
-//   });
+  server.on("/api/images/", [](AsyncWebServerRequest *request) {
+    if (request->hasParam("f")) {
+      String name = request->getParam('f')->value();
+      handleFileRead(request, "gifs/" + name);
+    }
+  });
 
-//   server.on(UriBraces("/api/configuration/basic"), HTTP_GET, []() {
-//     Serial.println("[WEBSERVER] GET /configuration/basic");
+  server.on("/api/configuration/basic", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET /configuration/basic");
 
-//     StaticJsonDocument<200> config;
-//     config["brightness"] = matrix_brightness;
-//     config["timezone"] = "Europe/Berlin";
+    // TODO: EspAsyncWebserver has a native implementation for JSON, so maybe we should this?
+    StaticJsonDocument<200> config;
+    config["brightness"] = matrix_brightness;
+    config["timezone"] = "Europe/Berlin";
 
-//     char json_string[200];
-//     serializeJson(config, json_string);
+    char json_string[200];
+    serializeJson(config, json_string);
 
-//     replyOKWithJson(String(json_string));
-//   });
+    replyOKWithJson(request, String(json_string));
+  });
 
 //   server.on(UriBraces("/api/configuration/basic"), HTTP_PATCH, []() {
 //     Serial.println("[WEBSERVER] PATCH /configuration/basic");
