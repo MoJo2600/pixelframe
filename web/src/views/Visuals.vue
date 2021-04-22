@@ -95,12 +95,12 @@ export default class FramesView extends Mixins(DataHandlerMixin) {
     return this.$vuetify.breakpoint.xs
       ? 12
       : this.$vuetify.breakpoint.sm
-        ? 6
-        : this.$vuetify.breakpoint.md
-          ? 3
-          : this.$vuetify.breakpoint.lg
-            ? 3
-            : 3;
+      ? 6
+      : this.$vuetify.breakpoint.md
+      ? 3
+      : this.$vuetify.breakpoint.lg
+      ? 3
+      : 3;
   }
 
   private async showVisual(visual: Visual): Promise<void> {
