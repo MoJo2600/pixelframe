@@ -15,6 +15,7 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
+#include "AsyncJson.h"
 
 const char *fsName = "LittleFS";
 FS *fileSystem = &LittleFS;
@@ -35,42 +36,36 @@ static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
 void replyOK(AsyncWebServerRequest *request)
 {
   AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(TEXT_PLAIN), "");
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
 void replyOKWithMsg(AsyncWebServerRequest *request, String msg)
 {
   AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(TEXT_PLAIN), msg);
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
 void replyOKWithJson(AsyncWebServerRequest *request, String serializedJson)
 {
   AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(APPLICATION_JSON), serializedJson);
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
 void replyNotFound(AsyncWebServerRequest *request, String msg)
 {
   AsyncWebServerResponse *response = request->beginResponse(404, FPSTR(TEXT_PLAIN), msg);
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
 void replyBadRequest(AsyncWebServerRequest *request, String msg)
 {
   AsyncWebServerResponse *response = request->beginResponse(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
 void replyServerError(AsyncWebServerRequest *request, String msg)
 {
   AsyncWebServerResponse *response = request->beginResponse(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
-  response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
 }
 
@@ -80,6 +75,8 @@ String getContentType(String filename)
     return "text/html";
   else if (filename.endsWith(".css"))
     return "text/css";
+  else if (filename.endsWith(".gif"))
+    return "image/gif";
   else if (filename.endsWith(".js"))
     return "application/javascript";
   else if (filename.endsWith(".json"))
@@ -104,8 +101,9 @@ bool handleFileRead(AsyncWebServerRequest *request, String path)
     if (LittleFS.exists(pathWithGz))      // If there's a compressed version available
       path += ".gz";                      // Use the compressed verion
 
-    // TODO: Not sure how to set content-type
-    request->send(LittleFS, path);
+    Serial.println("Get File");
+    Serial.println(contentType);
+    request->send(LittleFS, path, contentType);
 
     Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
     return true;
@@ -122,8 +120,6 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
   // }
 
   Serial.println(String("[WEBSERVER] handleFileList: ") + directory);
-
-  // request->addHeader("Access-Control-Allow-Origin", "*");
 
   String path = "/gifs";
   Dir dir = fileSystem->openDir(path);
@@ -238,10 +234,14 @@ void handleFileList(AsyncWebServerRequest *request)
 }
 
 void handleNotFound(AsyncWebServerRequest *request)
-{ // if the requested file or page doesn't exist, return a 404 not found error
-  if (!handleFileRead(request, request->url()))
-  { // check if the file exists in the flash memory (LittleFS), if so, send it
+{
+  if (request->method() == HTTP_OPTIONS) {
+    request->send(200);
+  } else if (!handleFileRead(request, request->url())) {      // check if the file exists in the flash memory (LittleFS), if so, send it
+    // if the requested file or page doesn't exist, return a 404 not found error
     request->send(404, "text/plain", "Not found");
+  } else {
+    request->send(404);
   }
 }
 
@@ -261,7 +261,8 @@ void startMDNS()
 }
 
 void startServer()
-{ // Start a HTTP server with a file read handler and an upload handler
+{
+  // Start a HTTP server with a file read handler and an upload handler
 
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
@@ -340,10 +341,26 @@ void startServer()
     }
   });
 
-  server.on("/api/images/", [](AsyncWebServerRequest *request) {
+  server.on("/api/images", [](AsyncWebServerRequest *request) {
+    // TODO: Add to a IFDEF DEBUG for webserver debugging
+    // int params = request->params();
+    // for(int i=0;i<params;i++){
+    //   AsyncWebParameter* p = request->getParam(i);
+    //   if(p->isFile()){ //p->isPost() is also true
+    //     Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+    //   } else if(p->isPost()){
+    //     Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    //   } else {
+    //     Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    //   }
+    // }
     if (request->hasParam("f")) {
-      String name = request->getParam('f')->value();
-      handleFileRead(request, "gifs/" + name);
+      AsyncWebParameter* p = request->getParam("f");
+      String name = p->value();
+      String fullPath = "/gifs/" + name;
+      handleFileRead(request, fullPath);
+    } else {
+      handleGetFiles(request, "/gifs");
     }
   });
 
@@ -361,25 +378,36 @@ void startServer()
     replyOKWithJson(request, String(json_string));
   });
 
-//   server.on(UriBraces("/api/configuration/basic"), HTTP_PATCH, []() {
-//     Serial.println("[WEBSERVER] PATCH /configuration/basic");
+  AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-//     StaticJsonDocument<200> config;
+    if (config["brightness"] != nullptr) {
+      set_brightness(config["brightness"]);
+    }
 
-//     DeserializationError error = deserializeJson(config, server.arg("plain"));
+    replyOKWithMsg(request, F("Updating basic configuration"));
+  });
+  server.addHandler(configHandler);
 
-//     if (error)
-//     {
-//       replyBadRequest(F("Unable to parse body"));
-//       return;
-//     }
+  // // server.on("/api/configuration/basic", HTTP_PATCH, [](AsyncWebServerRequest *request) {
+  // //   Serial.println("[WEBSERVER] PATCH /configuration/basic");
 
-//     if (config["brightness"] != nullptr) {
-//       set_brightness(config["brightness"]);
-//     }
+  // //   StaticJsonDocument<200> config;
 
-//     replyOKWithMsg(F("Updating basic configuration"));
-//   });
+  // //   DeserializationError error = deserializeJson(config, server.arg("plain"));
+
+  // //   if (error)
+  // //   {
+  // //     replyBadRequest(F("Unable to parse body"));
+  // //     return;
+  // //   }
+
+  // //   if (config["brightness"] != nullptr) {
+  // //     set_brightness(config["brightness"]);
+  // //   }
+
+  // //   replyOKWithMsg(F("Updating basic configuration"));
+  // // });
 
 //   server.on(UriBraces("/api/configuration/wifi"), HTTP_GET, []() {
 //     Serial.println("[WEBSERVER] GET api/configuration/wifi");
@@ -433,12 +461,10 @@ void startServer()
 //     replyOKWithJson(String(json_string));
 //   });
 
-  server.on("/api/images", HTTP_GET, [](AsyncWebServerRequest * request) {
-    handleGetFiles(request, "/gifs");
-  });
-
   server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
                                      // and check if the file exists
+
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
   server.begin(); // start the HTTP server
   Serial.println("[WEBSERVER] HTTP server started.");

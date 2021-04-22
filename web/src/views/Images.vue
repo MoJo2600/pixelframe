@@ -45,7 +45,7 @@
                 <v-img
                   class="pixelated"
                   :class="{ 'image-hover': hover }"
-                  :src="imageHost + '/' + image.name"
+                  :src="imageHost + '?f=' + image.name"
                 ></v-img>
 
                 <v-fade-transition>
