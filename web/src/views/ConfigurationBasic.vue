@@ -122,7 +122,7 @@ export default class BasicConfigurationView extends Mixins(DataHandlerMixin) {
           return;
         }
 
-        await this.configService.updateBasicConfiguratin({
+        await this.configService.updateBasicConfiguration({
           brightness: this.basicConfiguration.brightness
         });
       },
@@ -138,7 +138,7 @@ export default class BasicConfigurationView extends Mixins(DataHandlerMixin) {
           return;
         }
 
-        await this.configService.updateBasicConfiguratin({
+        await this.configService.updateBasicConfiguration({
           timezone: this.basicConfiguration.timezone
         });
       },

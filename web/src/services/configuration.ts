@@ -16,10 +16,11 @@ export class ConfigurationService extends Service {
     return (await this.httpClient.get(this.pathBasic)).data;
   }
 
-  public async updateBasicConfiguratin(
+  public async updateBasicConfiguration(
     basicConfig: Partial<BasicConfiguration>
   ): Promise<void> {
-    await this.httpClient.patch(this.pathBasic, basicConfig);
+    // We have to set the content type because the remote api can't parse the charset after the content-type
+    await this.httpClient.patch(this.pathBasic, basicConfig, { headers: { "Content-Type": "application/json" } });
   }
 
   public async getWifiConfiguration(): Promise<WifiConfiguration> {
@@ -29,7 +30,8 @@ export class ConfigurationService extends Service {
   public async updateWifiConfiguration(
     wifiConfig: UpdateWifiConfiguration
   ): Promise<void> {
-    await this.httpClient.put(this.pathWifi, wifiConfig);
+    // We have to set the content type because the remote api can't parse the charset after the content-type
+    await this.httpClient.put(this.pathWifi, wifiConfig, { headers: { "Content-Type": "application/json" } });
   }
 
   public async getMqttConfiguration(): Promise<MqttConfiguration> {

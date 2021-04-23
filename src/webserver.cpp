@@ -262,7 +262,10 @@ void startMDNS()
 
 void startServer()
 {
-  // Start a HTTP server with a file read handler and an upload handler
+  // Start a HTTP server
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, PUT");
 
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
@@ -342,18 +345,6 @@ void startServer()
   });
 
   server.on("/api/images", [](AsyncWebServerRequest *request) {
-    // TODO: Add to a IFDEF DEBUG for webserver debugging
-    // int params = request->params();
-    // for(int i=0;i<params;i++){
-    //   AsyncWebParameter* p = request->getParam(i);
-    //   if(p->isFile()){ //p->isPost() is also true
-    //     Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
-    //   } else if(p->isPost()){
-    //     Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-    //   } else {
-    //     Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
-    //   }
-    // }
     if (request->hasParam("f")) {
       AsyncWebParameter* p = request->getParam("f");
       String name = p->value();
@@ -381,90 +372,60 @@ void startServer()
   AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
     JsonObject jsonObj = config.as<JsonObject>();
 
-    if (config["brightness"] != nullptr) {
-      set_brightness(config["brightness"]);
+    if (jsonObj["brightness"] != nullptr) {
+      set_brightness(jsonObj["brightness"]);
     }
 
     replyOKWithMsg(request, F("Updating basic configuration"));
   });
   server.addHandler(configHandler);
 
-  // // server.on("/api/configuration/basic", HTTP_PATCH, [](AsyncWebServerRequest *request) {
-  // //   Serial.println("[WEBSERVER] PATCH /configuration/basic");
+  server.on("/api/configuration/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET api/configuration/wifi");
 
-  // //   StaticJsonDocument<200> config;
+    StaticJsonDocument<200> config;
+    config["ssid"] = wifi_ssid;
 
-  // //   DeserializationError error = deserializeJson(config, server.arg("plain"));
+    char json_string[200];
+    serializeJson(config, json_string);
 
-  // //   if (error)
-  // //   {
-  // //     replyBadRequest(F("Unable to parse body"));
-  // //     return;
-  // //   }
+    replyOKWithJson(request, String(json_string));
+  });
 
-  // //   if (config["brightness"] != nullptr) {
-  // //     set_brightness(config["brightness"]);
-  // //   }
+  AsyncCallbackJsonWebHandler* wifiConfigHandler = new AsyncCallbackJsonWebHandler("/api/configuration/wifi", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-  // //   replyOKWithMsg(F("Updating basic configuration"));
-  // // });
+    if (jsonObj["ssid"] == nullptr || jsonObj["password"] == nullptr) {
+      replyBadRequest(request, "Body must contain SSID and password");
+      return;
+    }
 
-//   server.on(UriBraces("/api/configuration/wifi"), HTTP_GET, []() {
-//     Serial.println("[WEBSERVER] GET api/configuration/wifi");
+    replyOKWithMsg(request, F("Updating wifi configuration"));
 
-//     StaticJsonDocument<200> config;
-//     config["ssid"] = wifi_ssid;
+    set_wifi(strdup(config["ssid"]), strdup(config["password"]));
+  });
+  server.addHandler(wifiConfigHandler);
 
-//     char json_string[200];
-//     serializeJson(config, json_string);
+  server.on("/api/environment/wifis", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET api/environment/wifis");
 
-//     replyOKWithJson(String(json_string));
-//   });
+    int numberOfNetworks = WiFi.scanNetworks();
 
-//   server.on(UriBraces("/api/configuration/wifi"), HTTP_PUT, []() {
-//     Serial.println("[WEBSERVER] PUT /configuration/wifi");
+    StaticJsonDocument<512> config;
 
-//     StaticJsonDocument<200> config;
+    for(int i = 0; i < numberOfNetworks; i++) {
+      config[i]["ssid"] = WiFi.SSID(i);
+      config[i]["signalStrength"] = WiFi.RSSI(i);
+    }
 
-//     DeserializationError error = deserializeJson(config, server.arg("plain"));
+    char json_string[512];
+    serializeJson(config, json_string);
 
-//     if (error) {
-//       replyBadRequest(F("Unable to parse body"));
-//       return;
-//     }
-
-//     if (config["ssid"] == nullptr || config["password"] == nullptr) {
-//       replyBadRequest("Body must contain SSID and password");
-//       return;
-//     }
-
-//     set_wifi(strdup(config["ssid"]), strdup(config["password"]));
-
-//     replyOKWithMsg(F("Updating wifi configuration"));
-//   });
-
-//   server.on(UriBraces("/api/environment/wifis"), HTTP_GET, []() {
-//     Serial.println("[WEBSERVER] GET api/environment/wifis");
-
-//     int numberOfNetworks = WiFi.scanNetworks();
-
-//     StaticJsonDocument<512> config;
-
-//     for(int i = 0; i < numberOfNetworks; i++) {
-//       config[i]["ssid"] = WiFi.SSID(i);
-//       config[i]["signalStrength"] = WiFi.RSSI(i);
-//     }
-
-//     char json_string[512];
-//     serializeJson(config, json_string);
-
-//     replyOKWithJson(String(json_string));
-//   });
+    replyOKWithJson(request, String(json_string));
+  });
 
   server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
                                      // and check if the file exists
-
-  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
   server.begin(); // start the HTTP server
   Serial.println("[WEBSERVER] HTTP server started.");
@@ -472,6 +433,20 @@ void startServer()
 
 void setup_webserver()
 {
+
+  // TODO: Add to a IFDEF DEBUG somewhere for webserver debugging
+  // int params = request->params();
+  // for(int i=0;i<params;i++){
+  //   AsyncWebParameter* p = request->getParam(i);
+  //   if(p->isFile()){ //p->isPost() is also true
+  //     Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+  //   } else if(p->isPost()){
+  //     Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+  //   } else {
+  //     Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+  //   }
+  // }
+
   startMDNS();   // Start the mDNS responder
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   startServer(); // Start a HTTP server with a file read handler and an upload handler
