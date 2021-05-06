@@ -96,20 +96,8 @@ bool handleFileRead(AsyncWebServerRequest *request, String path)
     path += "index.html";                    // If a folder is requested, send the index file
   String contentType = getContentType(path); // Get the MIME type
   String pathWithGz = path + ".gz";
-  if (LittleFS.exists(pathWithGz) || LittleFS.exists(path))
-  {                                       // If the file exists, either as a compressed archive, or normal
-    if (LittleFS.exists(pathWithGz))      // If there's a compressed version available
-      path += ".gz";                      // Use the compressed verion
-
-    Serial.println("Get File");
-    Serial.println(contentType);
-    request->send(LittleFS, path, contentType);
-
-    Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
-    return true;
-  }
-  Serial.println(String("\t[WEBSERVER]  File Not Found: ") + path); // If the file doesn't exist, return false
-  return false;
+  request->send(LittleFS, path, contentType);
+  Serial.println(String("[WEBSERVER] Sent file: ") + path);
 }
 
 void handleGetFiles(AsyncWebServerRequest * request, String directory)
@@ -237,12 +225,9 @@ void handleNotFound(AsyncWebServerRequest *request)
 {
   if (request->method() == HTTP_OPTIONS) {
     request->send(200);
-  } else if (!handleFileRead(request, request->url())) {      // check if the file exists in the flash memory (LittleFS), if so, send it
-    // if the requested file or page doesn't exist, return a 404 not found error
-    request->send(404, "text/plain", "Not found");
-  } else {
-    request->send(404);
+    return;
   }
+  handleFileRead(request, request->url());      // check if the file exists in the flash memory (LittleFS), if so, send it
 }
 
 void startMDNS()

@@ -20,7 +20,9 @@ export class ConfigurationService extends Service {
     basicConfig: Partial<BasicConfiguration>
   ): Promise<void> {
     // We have to set the content type because the remote api can't parse the charset after the content-type
-    await this.httpClient.patch(this.pathBasic, basicConfig, { headers: { "Content-Type": "application/json" } });
+    await this.httpClient.patch(this.pathBasic, basicConfig, {
+      headers: { "Content-Type": "application/json" }
+    });
   }
 
   public async getWifiConfiguration(): Promise<WifiConfiguration> {
@@ -31,7 +33,9 @@ export class ConfigurationService extends Service {
     wifiConfig: UpdateWifiConfiguration
   ): Promise<void> {
     // We have to set the content type because the remote api can't parse the charset after the content-type
-    await this.httpClient.put(this.pathWifi, wifiConfig, { headers: { "Content-Type": "application/json" } });
+    await this.httpClient.put(this.pathWifi, wifiConfig, {
+      headers: { "Content-Type": "application/json" }
+    });
   }
 
   public async getMqttConfiguration(): Promise<MqttConfiguration> {
