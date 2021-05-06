@@ -95,7 +95,6 @@ bool handleFileRead(AsyncWebServerRequest *request, String path)
   if (path.endsWith("/"))
     path += "index.html";                    // If a folder is requested, send the index file
   String contentType = getContentType(path); // Get the MIME type
-  String pathWithGz = path + ".gz";
   request->send(LittleFS, path, contentType);
   Serial.println(String("[WEBSERVER] Sent file: ") + path);
 }
