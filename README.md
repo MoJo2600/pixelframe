@@ -84,3 +84,6 @@ https://github.com/marcmerlin/AnimatedGIFs
 ## Useful links
 
 https://tchapi.github.io/Adafruit-GFX-Font-Customiser/
+
+## Image credits
+gameboy.gif - Digital Nemesis

@@ -59,11 +59,12 @@ const routes: Array<RouteConfig> = [
         name: "WiFi",
         component: ConfigurationWifiView
       },
-      {
-        path: "mqtt",
-        name: "MQTT",
-        component: ConfigurationMqttView
-      }
+      // mojo: Currently not in use
+      // {
+      //   path: "mqtt",
+      //   name: "MQTT",
+      //   component: ConfigurationMqttView
+      // }
     ]
   }
 ];

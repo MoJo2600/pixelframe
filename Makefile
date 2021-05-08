@@ -17,7 +17,7 @@ build-frontend:  ## build and start backend
 generate-filesystem: ## generate filesystem
 	rm -Rf ./data/*
 	cp -Rf ./web/dist/* ./data
-	cp -Rf ./mysdcard/* ./data
+	cp -Rf ./data_tmpl/* ./data
 
 .PHONY: build-firmware
 build-firmware:
