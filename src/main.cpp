@@ -132,5 +132,5 @@ unsigned long _timer = millis();
 
 void loop() {
   webserver_loop();
-  Orchestrator::Instance()->loop();
+  EVERY_N_MILLISECONDS(15) { Orchestrator::Instance()->loop(); }; // Limit to ~70fps
 }

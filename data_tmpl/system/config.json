@@ -1,7 +1,7 @@
 {
     "wifi": {
-        "ssid": "ENTER_YOUR_SSID",
-        "password": "ENTER_YOUR_PASSWORD"
+        "ssid": "TellMyWifiLoveHer",
+        "password": "2040791920407919"
     },
     "mqtt": {
         "host": "ENTER_YOUR_HOST",
@@ -10,5 +10,5 @@
         "password": "ENTER_YOUR_PASSWORD",
         "topic": "ENTER_YOUR_TOPIC"
     },
-    "timezone": "ENTER_YOUR_TIMEZONE"
+    "timezone": "Europe/Berlin"
 }
