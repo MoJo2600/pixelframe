@@ -4,9 +4,6 @@
 #include "frames/frame.hpp"
 #include "frames/off.hpp"
 
-
-using namespace std;
-
 Frame* OffEvent::getFrame() {
   return new Off();
 }

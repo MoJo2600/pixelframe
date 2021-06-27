@@ -6,6 +6,7 @@
 	],
 	"settings": {
 		"files.associations": {
+			"*.json": "json",
 			"*.vue": "vue",
 			"array": "cpp",
 			"initializer_list": "cpp",
@@ -44,7 +45,8 @@
 			"type_traits": "cpp",
 			"utility": "cpp",
 			"typeinfo": "cpp",
-			"cstring": "cpp"
+			"cstring": "cpp",
+			"cstddef": "cpp"
 		}
 	}
 }

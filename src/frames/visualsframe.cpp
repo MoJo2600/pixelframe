@@ -9,8 +9,6 @@
 #define NUM_PATTERNS 5
 #define PATTERN_DURATION 3 // TODO: make configurable
 
-using namespace std;
-
 bool randomVisual = false;
 
 Frame* VisualsFrameEvent::getFrame() {
@@ -23,11 +21,11 @@ std::string VisualsFrameEvent::getEventId(void) {
 
 VisualsFrame::VisualsFrame(string const& visual) {
   if (visual.c_str() == nullptr || std::strcmp(visual.c_str(), "random") == 0) {
-    cout << "Random visuals" << endl;
+    std::cout << "Random visuals" << std::endl;
     randomVisual = true;
     this->currentPattern = VisualFactory::getRandomVisual();
   } else {
-    cout << "Selecting visual " << visual << endl;
+    std::cout << "Selecting visual " << visual << std::endl;
     randomVisual = false;
     this->currentPattern = VisualFactory::createInstance(visual);
   }

@@ -3,8 +3,6 @@
 #include "config.hpp"
 #include "PongClock.hpp"
 
-using namespace std;
-
 Frame* ClockFrameEvent::getFrame() {
   return new ClockFrame();
 }
@@ -20,7 +18,7 @@ void ClockFrame::loop(void) {
 }
 
 void ClockFrame::enter(void) {
-  cout << "[PIXELFRAME] Entering Clock mode" << endl;
+  std::cout << "[PIXELFRAME] Entering Clock mode" << std::endl;
   this->clock = new PongClockClass(timezone);
   this->clock->setup();
 }
@@ -29,7 +27,7 @@ void ClockFrame::react(FrameEvent* event) {
 }
 
 void ClockFrame::exit(void) {
-  cout << "[PIXELFRAME] Exit Clock mode" << endl;
+  std::cout << "[PIXELFRAME] Exit Clock mode" << std::endl;
   delete this->clock;
 }
 

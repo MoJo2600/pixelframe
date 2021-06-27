@@ -6,8 +6,9 @@
 #include <Wire.h>
 #define FS_NO_GLOBALS
 #include <LittleFS.h>
-#include <WebSocketsServer.h>
 #include <ArduinoJson.h>
+#include "flash_hal.h"
+#include "FS.h"
 #include "config.hpp"
 #include "webserver.h"
 #include "components/orchestrator.hpp"
@@ -15,13 +16,13 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
+#include <string.h>
 
 const char *fsName = "LittleFS";
 FS *fileSystem = &LittleFS;
 LittleFSConfig fileSystemConfig = LittleFSConfig();
 
 ESP8266WebServer server(80); // Create a webserver object that listens for HTTP request on port 80
-// WebSocketsServer webSocket(81);    // create a websocket server on port 81
 
 char *mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
@@ -29,6 +30,10 @@ static const char TEXT_PLAIN[] PROGMEM = "text/plain";
 static const char APPLICATION_JSON[] PROGMEM = "application/json";
 static const char FS_INIT_ERROR[] PROGMEM = "FS INIT ERROR";
 static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
+
+File fsUploadFile;              // a File object to temporarily store the received file
+void handleFileUpload();        // upload a new file to the SPIFFS
+bool restartRequired = false;   // flag to trigger reboot after firmware upload
 
 ////////////////////////////////
 // Utils to return HTTP codes, and determine content-type
@@ -403,6 +408,67 @@ void startServer()
     handleGetFiles("/gifs");
   });
 
+  server.on("/ota", HTTP_POST,                       // if the client posts to the upload page
+    [](){ server.send(200); },                          // Send status 200 (OK) to tell the client we are ready to receive
+    handleFileUpload                                    // Receive and save the file
+  );
+
+//   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {
+//     // the request handler is triggered after the upload has finished... 
+//     // create the response, add header, and send response
+//     AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
+//     response->addHeader("Connection", "close");
+//     response->addHeader("Access-Control-Allow-Origin", "*");
+//     request->send(response);
+//     restartRequired = true;
+//   }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+//       //Upload handler chunks in data
+//       if(_authRequired){
+//           if(!request->authenticate(_username.c_str(), _password.c_str())){
+//               return request->requestAuthentication();
+//           }
+//       }
+
+//       if (!index) {
+//           if(!request->hasParam("MD5", true)) {
+//               return request->send(400, "text/plain", "MD5 parameter missing");
+//           }
+
+//           if(!Update.setMD5(request->getParam("MD5", true)->value().c_str())) {
+//               return request->send(400, "text/plain", "MD5 parameter invalid");
+//           }
+
+//           #if defined(ESP8266)
+//               int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
+//               Update.runAsync(true);
+//               size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
+//               uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+//               if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
+//           #endif
+//               Update.printError(Serial);
+//               return request->send(400, "text/plain", "OTA could not begin");
+//           }
+//       }
+
+//       // Write chunked data to the free sketch space
+//       if(len){
+//           if (Update.write(data, len) != len) {
+//               return request->send(400, "text/plain", "OTA could not begin");
+//           }
+//       }
+          
+//       if (final) { // if the final flag is set then this is the last frame of data
+//           if (!Update.end(true)) { //true to set the size to the current progress
+//               Update.printError(Serial);
+//               return request->send(400, "text/plain", "Could not end OTA");
+//           }
+//       }else{
+//           return;
+//       }
+//   });
+// }
+
+
   server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
                                      // and check if the file exists
 
@@ -420,4 +486,71 @@ void webserver_loop()
 {
   server.handleClient(); // run the server
   MDNS.update();
+
+  if(restartRequired){
+    yield();
+    delay(1000);
+    yield();
+    ESP.restart();
+  }
+}
+
+
+void handleFileUpload(){ // upload a new file to the SPIFFS
+  HTTPUpload& upload = server.upload();
+
+  if (!server.hasArg("md5"))
+  {
+    return replyBadRequest(F("MD5 ARG MISSING"));
+  }
+
+  if(!Update.setMD5(server.arg("md5").c_str())) {
+    return replyBadRequest(F("MD5 ARG INVALID"));
+  }
+
+  if(upload.status == UPLOAD_FILE_START){
+    String filename = upload.filename;
+    int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
+    Update.runAsync(true);
+    size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
+    uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+    if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
+      Update.printError(Serial);
+      replyServerError("OTA could not begin");
+    }
+  } else if(upload.status == UPLOAD_FILE_WRITE){
+    // Write chunked data to the free sketch space
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      replyServerError("OTA could not begin");
+    }
+    // fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
+  } else if(upload.status == UPLOAD_FILE_END){
+    if (!Update.end(true)) { //true to set the size to the current progress
+      Update.printError(Serial);
+      replyServerError("Could not end OTA");
+    }
+  }
+
+  replyOKWithMsg(F("Restarting"));
+
+
+  // if(upload.status == UPLOAD_FILE_START){
+  //   String filename = upload.filename;
+  //   if(!filename.startsWith("/")) filename = "/"+filename;
+  //   Serial.print("handleFileUpload Name: "); Serial.println(filename);
+  //   fsUploadFile = SPIFFS.open(filename, "w");            // Open the file for writing in SPIFFS (create if it doesn't exist)
+  //   filename = String();
+  // } else if(upload.status == UPLOAD_FILE_WRITE){
+  //   if(fsUploadFile)
+  //     fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
+  // } else if(upload.status == UPLOAD_FILE_END){
+  //   if(fsUploadFile) {                                    // If the file was successfully created
+  //     fsUploadFile.close();                               // Close the file again
+  //     Serial.print("handleFileUpload Size: "); Serial.println(upload.totalSize);
+  //     server.sendHeader("Location","/success.html");      // Redirect the client to the success page
+  //     server.send(303);
+  //   } else {
+  //     server.send(500, "text/plain", "500: couldn't create file");
+  //   }
+  // }
 }

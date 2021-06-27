@@ -5,8 +5,6 @@
 #include "config.hpp"
 #include "frames/gifframe.hpp"
 
-using namespace std;
-
 #define GIF_DURATION 30 //TODO: make configurable
 
 const std::string EVENT_ID_RANDOM = "frame.event.gif.random";
@@ -42,7 +40,7 @@ void GifFrame::loop(void)
   if (this->currentEvent->getEventId() == EVENT_ID_RANDOM)
   {
     EVERY_N_SECONDS(GIF_DURATION) {
-      cout << "[FRAME::GIF] switching to next random gif" << endl;
+      std::cout << "[FRAME::GIF] switching to next random gif" << std::endl;
       int gif = rand() % gifs_vec.size();
       String gifPath = gifs_vec[gif];
       this->playGif(std::string(gifPath.c_str()));
@@ -71,7 +69,7 @@ void GifFrame::react(FrameEvent *event)
   this->currentEvent = event;
   if (event->getEventId() == EVENT_ID_RANDOM)
   {
-    cout << "[FRAME::GIF] reacting to random gif event" << endl;
+    std::cout << "[FRAME::GIF] reacting to random gif event" << std::endl;
 
     int gif = rand() % gifs_vec.size();
     String gifPath = gifs_vec[gif];
@@ -80,11 +78,11 @@ void GifFrame::react(FrameEvent *event)
   }
   else if (event->getEventId() == EVENT_ID_SINGLE)
   {
-    cout << "[FRAME::GIF] reacting to single gif event" << endl;
+    std::cout << "[FRAME::GIF] reacting to single gif event" << std::endl;
 
     auto e = (SingleGifFrameEvent *)event;
     auto gifPath = "/gifs/" + e->filename;
-    cout << "[FRAME::GIF] path to single gif: " << gifPath << endl;
+    std::cout << "[FRAME::GIF] path to single gif: " << gifPath << std::endl;
 
     this->playGif(gifPath);
   }
@@ -96,20 +94,20 @@ void GifFrame::react(FrameEvent *event)
 
 void GifFrame::exit(void)
 {
-  cout << "[PIXELFRAME] Exit Gif mode" << endl;
+  std::cout << "[PIXELFRAME] Exit Gif mode" << std::endl;
   decoder->stop();
   if (file)
   {
-    cout << "[PIXELFRAME] Close file" << endl;
+    std::cout << "[PIXELFRAME] Close file" << std::endl;
     file.close();
   }
-  cout << "[PIXELFRAME] Delete decoder" << endl;
+  std::cout << "[PIXELFRAME] Delete decoder" << std::endl;
   delete decoder;
 }
 
 void GifFrame::playGif(std::string filename)
 {
-  cout << "Got play gif event with file: " << filename << endl;
+  std::cout << "Got play gif event with file: " << filename << std::endl;
   // image = e.file;
   matrix->clear();
   //TODO: Move to sub states, that will use the gif decoder
@@ -118,9 +116,9 @@ void GifFrame::playGif(std::string filename)
   file = LittleFS.open(filename.c_str(), "r");
   if (!file)
   {
-    cout << "[PIXELFRAME] Error opening GIF file" << endl;
+    std::cout << "[PIXELFRAME] Error opening GIF file" << std::endl;
   }
-  cout << "[PIXELFRAME] Opened GIF file, start decoding" << endl;
+  std::cout << "[PIXELFRAME] Opened GIF file, start decoding" << std::endl;
   decoder->startDecoding();
 }
 

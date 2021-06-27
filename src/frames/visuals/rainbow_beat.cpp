@@ -12,8 +12,6 @@
 #include "config.hpp"
 #include "frames/visuals/rainbow_beat.hpp"
 
-using namespace std;
-
 void RainbowBeat::enter() {}
 
 void RainbowBeat::loop()

@@ -3,8 +3,6 @@
 #include "config.hpp"
 #include "frames/visuals/pacifica.hpp"
 
-using namespace std;
-
 extern const TProgmemPalette16 pacifica_palette_1;
 extern const TProgmemPalette16 pacifica_palette_2;
 extern const TProgmemPalette16 pacifica_palette_3;
