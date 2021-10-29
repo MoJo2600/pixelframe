@@ -2,7 +2,7 @@
 #define GIFFRAME_HPP_INCLUDED
 
 #include <string>
-#include <LittleFS.h>
+// #include <LittleFS.h>
 #include "frames/frame.hpp"
 #include "lib/gif/GifDecoder.h"
 

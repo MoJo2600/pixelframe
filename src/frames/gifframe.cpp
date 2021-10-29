@@ -115,7 +115,7 @@ void GifFrame::playGif(std::string filename)
   //TODO: Move to sub states, that will use the gif decoder
   if (file)
     file.close();
-  file = LittleFS.open(filename.c_str(), "r");
+  // file = LittleFS.open(filename.c_str(), "r");
   if (!file)
   {
     cout << "[PIXELFRAME] Error opening GIF file" << endl;

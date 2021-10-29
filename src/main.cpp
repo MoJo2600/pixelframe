@@ -7,7 +7,12 @@
  */
 #include "SPI.h"
 #include "lib/stdinout.h"
+#if defined(ESP8266)
 #include "ESP8266WiFi.h"
+#endif
+// #if defined(ESP32)
+// #include "ESP32Wi"
+// #endif
 #include "ArduinoJson.h"
 #include "WiFiUdp.h"
 #include "config.hpp"                    // Set up the LED matrix here
@@ -45,7 +50,7 @@ void setup() {
 
   // ### READ CONFIG
   Serial.print(F("[CONFIG] Opening configuration file.. "));
-  file = LittleFS.open("system/config.json", "r");
+  // file = LittleFS.open("system/config.json", "r");
   Serial.println(F("ok"));
   Serial.println(F("[CONFIG] Reading json config.."));
   char jsonData[file.size() + 1];
@@ -95,7 +100,7 @@ void setup() {
     mdnsName = strdup(configuration["framename"]);
   }
 
-  WiFi.hostname(mdnsName);
+  // WiFi.hostname(mdnsName);
 
   matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
