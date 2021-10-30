@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "WiFi.h"
 
 bool init_done = 0;
 
@@ -208,15 +209,16 @@ void set_wifi(char* ssid, char* password) {
   wifi_password = password;
 
   // TODO: ESP32
-//   WiFi.begin(wifi_ssid, wifi_password);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wifi_ssid, wifi_password);
 
-//   while (WiFi.status() != WL_CONNECTED) { 
-//     delay(500);
-//     Serial.print('.');
-//   }
-//   Serial.println("");
-//   Serial.print("[WIFI] IP: ");
-//   Serial.println(WiFi.localIP());
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println("");
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
 
   // TODO: optional: fallback if connect failed?
 }

@@ -1,5 +1,4 @@
 #include "PongClock.hpp"
-#include "ESP8266TrueRandom.h"
 #include "ezTime.h"
 #include "fonts/TomThumbPatched.h"
 #include "config.hpp"
@@ -112,8 +111,8 @@ long PongClockClass::realRandom(int max)
   if (0 == max) {
     return 0;
   }
-  long random = ESP8266TrueRandom.random(0,max);
-  return random;
+  long rand = random(0,max);
+  return rand;
 }
 
 int PongClockClass::realRandom(int min, int max)

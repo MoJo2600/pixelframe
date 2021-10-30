@@ -17,53 +17,75 @@ String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
   return "0B";
 }
 
+void printDirectory(File dir, int numTabs) {
+  while (true) {
+ 
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    for (uint8_t i = 0; i < numTabs; i++) {
+      Serial.print('\t');
+    }
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
+      Serial.println("/");
+      printDirectory(entry, numTabs + 1);
+    } else {
+      // files have sizes, directories do not
+      Serial.print("\t\t");
+      Serial.println(entry.size(), DEC);
+    }
+    entry.close();
+  }
+}
+
 void startLittleFS() { // Start the LittleFS and list all contents
   Serial.println(F("Inizializing FS..."));
-  // fsOK = LittleFS.begin();
-  // if (fsOK){
-  //     Serial.println(F("done."));
-  // }else{
-  //     Serial.println(F("fail."));
-  // }
+  fsOK = LITTLEFS.begin();
+  if (fsOK){
+      Serial.println(F("done."));
+  }else{
+      Serial.println(F("fail."));
+  }
+
+  unsigned int totalBytes = LITTLEFS.totalBytes();
+  unsigned int usedBytes = LITTLEFS.usedBytes();
+
+  Serial.println("File sistem info.");
+
+  Serial.print("Total space:      ");
+  Serial.print(totalBytes);
+  Serial.println("byte");
+
+  Serial.print("Total space used: ");
+  Serial.print(usedBytes);
+  Serial.println("byte");
+
+  Serial.println();
   
-  // FSInfo fs_info;
-  // LittleFS.info(fs_info);
+  Serial.println("LittleFS started. Contents:");
+  {
+    File dir = LITTLEFS.open("/gifs");
+    while (true) {
+      File entry =  dir.openNextFile();
+      if (! entry) {
+        // no more files
+        break;
+      }
 
-  // Serial.println("File sistem info.");
-
-  // Serial.print("Total space:      ");
-  // Serial.print(fs_info.totalBytes);
-  // Serial.println("byte");
-
-  // Serial.print("Total space used: ");
-  // Serial.print(fs_info.usedBytes);
-  // Serial.println("byte");
-
-  // Serial.print("Block size:       ");
-  // Serial.print(fs_info.blockSize);
-  // Serial.println("byte");
-
-  // Serial.print("Page size:        ");
-  // Serial.print(fs_info.totalBytes);
-  // Serial.println("byte");
-
-  // Serial.print("Max open files:   ");
-  // Serial.println(fs_info.maxOpenFiles);
-
-  // Serial.print("Max path length:  ");
-  // Serial.println(fs_info.maxPathLength);
-
-  // Serial.println();
-  
-  // Serial.println("LittleFS started. Contents:");
-  // {
-  //   Dir dir = LittleFS.openDir("/gifs");
-  //   while (dir.next()) {                      // List the file system contents
-  //     String fileName = dir.fileName();
-  //     gifs_vec.push_back("/gifs/"+fileName);
-  //     size_t fileSize = dir.fileSize();
-  //     Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
-  //   }
-  //   Serial.printf("\n");
-  // }
+      String fileName = entry.name();
+      if (entry.isDirectory()) {
+        Serial.print("Directory found: ");
+        Serial.println(fileName);
+      } else {
+        gifs_vec.push_back("/gifs/"+fileName);
+        size_t fileSize =  entry.size();
+        Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
+      }
+      entry.close();
+    }
+    Serial.printf("\n");
+  }
 }

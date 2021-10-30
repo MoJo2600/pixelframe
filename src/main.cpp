@@ -5,23 +5,26 @@
   LED_DATA_PIN - D7
   LED_CLK_PIN - D5, if required, see confg.hpp,34
  */
+
+// https://github.com/FastLED/FastLED/issues/1169
+// TODO: #define FASTLED_ALL_PINS_HARDWARE_SPI
+// Should be irrelevant, because SPI is never used for WS8xxx LEDs
+// #define FASTLED_ESP32_SPI_BUS HSPI
+
 #include "SPI.h"
 #include "lib/stdinout.h"
-#if defined(ESP8266)
-#include "ESP8266WiFi.h"
-#endif
-// #if defined(ESP32)
-// #include "ESP32Wi"
-// #endif
+#include "WiFi.h"
 #include "ArduinoJson.h"
 #include "WiFiUdp.h"
 #include "config.hpp"                    // Set up the LED matrix here
 #include "ezTime.h"
-#include "webserver.h"                   // Web interface
+// #include "webserver.h"                   // Web interface
 #include <filesystem.hpp>
-#include "components/orchestrator.hpp"
-#include "frames/frame.hpp"
-#include "fonts/TomThumbPatched.h"
+// #include "components/orchestrator.hpp"
+// #include "frames/frame.hpp"
+// #include "fonts/TomThumbPatched.h"
+
+char *mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
 bool
   wifiConnected = false;
@@ -46,7 +49,8 @@ void setup() {
   // stdout to serial setup
   hal_printf_init();
 
-  startLittleFS();
+  // TODO
+  // startLittleFS();
 
   // ### READ CONFIG
   Serial.print(F("[CONFIG] Opening configuration file.. "));
@@ -100,7 +104,7 @@ void setup() {
     mdnsName = strdup(configuration["framename"]);
   }
 
-  // WiFi.hostname(mdnsName);
+  WiFi.setHostname(mdnsName);
 
   matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
@@ -128,12 +132,14 @@ void setup() {
   matrix->drawRect(7,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  setup_webserver();
+  // TODO
+  // setup_webserver();
 
   matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  Orchestrator::Instance()->setup();
+  // TODO
+  // Orchestrator::Instance()->setup();
 
   matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
@@ -142,6 +148,7 @@ void setup() {
 unsigned long _timer = millis();
 
 void loop() {
-  webserver_loop();
-  Orchestrator::Instance()->loop();
+  // TODO
+  // webserver_loop();
+  // Orchestrator::Instance()->loop();
 }
