@@ -18,13 +18,11 @@
 #include "WiFiUdp.h"
 #include "config.hpp"                    // Set up the LED matrix here
 #include "ezTime.h"
-// #include "webserver.h"                   // Web interface
+#include "webserver.h"                   // Web interface
 #include <filesystem.hpp>
-// #include "components/orchestrator.hpp"
-// #include "frames/frame.hpp"
-// #include "fonts/TomThumbPatched.h"
-
-char *mdnsName = "pixelframe"; // Domain name for the mDNS responder
+#include "components/orchestrator.hpp"
+#include "frames/frame.hpp"
+#include "fonts/TomThumbPatched.h"
 
 bool
   wifiConnected = false;
@@ -148,7 +146,6 @@ void setup() {
 unsigned long _timer = millis();
 
 void loop() {
-  // TODO
-  // webserver_loop();
-  // Orchestrator::Instance()->loop();
+  webserver_loop();
+  Orchestrator::Instance()->loop();
 }
