@@ -6,6 +6,7 @@
   LED_CLK_PIN - D5, if required, see confg.hpp,34
  */
 
+#define FASTLED_INTERNAL                    // Remove Fastled warnings
 // https://github.com/FastLED/FastLED/issues/1169
 // TODO: #define FASTLED_ALL_PINS_HARDWARE_SPI
 // Should be irrelevant, because SPI is never used for WS8xxx LEDs
@@ -37,7 +38,7 @@ fs::File file;
 
 void setup() {
   // Open serial communications and wait for port to open:
-  Serial.begin(74880);
+  Serial.begin(115200);
 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -47,12 +48,11 @@ void setup() {
   // stdout to serial setup
   hal_printf_init();
 
-  // TODO
-  // startLittleFS();
+  startLittleFS();
 
   // ### READ CONFIG
   Serial.print(F("[CONFIG] Opening configuration file.. "));
-  // file = LittleFS.open("system/config.json", "r");
+  file = LITTLEFS.open("/system/config.json", "r");
   Serial.println(F("ok"));
   Serial.println(F("[CONFIG] Reading json config.."));
   char jsonData[file.size() + 1];
@@ -136,8 +136,7 @@ void setup() {
   matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  // TODO
-  // Orchestrator::Instance()->setup();
+  Orchestrator::Instance()->setup();
 
   matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
@@ -146,6 +145,7 @@ void setup() {
 unsigned long _timer = millis();
 
 void loop() {
-  webserver_loop();
+  // TODO
+  // webserver_loop();
   Orchestrator::Instance()->loop();
 }
