@@ -25,10 +25,7 @@ print( arxx )
 
 dataPath = env['PROJECT_DATA_DIR'] # arxx["-c"]                                                               # Grab the source path parameter
 
-
 fs = LittleFS(block_size=4096, block_count=3072)                                    # Open LittleFS, create a 12MB partition
-
-
 
 for root, subdirs, files in os.walk(dataPath):
 

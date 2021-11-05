@@ -130,8 +130,7 @@ void setup() {
   matrix->drawRect(7,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
 
-  // TODO
-  // setup_webserver();
+  setup_webserver();
 
   matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();
@@ -145,7 +144,6 @@ void setup() {
 unsigned long _timer = millis();
 
 void loop() {
-  // TODO
-  // webserver_loop();
+  webserver_loop();
   Orchestrator::Instance()->loop();
 }

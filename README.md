@@ -16,7 +16,7 @@ pixelframe - a box w/ a DIY 16x16 LED matrix, that displays low res images, gif.
 
 We are using NodeMCU pro mini ESP8266 boards. Connect the LED strip to 5V, GND and the data pin to `D7`
 
-### ESP8266 Firmware
+### ESP32 Firmware
 
 The firmware code is found in the base directory. A vscode development container can be used for easier development.
 
@@ -38,7 +38,7 @@ code --install-extension platformio.platformio-ide
 
 **Remark**: On Windows, an error can occur during installation (https://github.com/platformio/platformio-core-installer/issues/221). Follow those steps if the installation fails and reinstall the extension.
 
-2. Install drivers for USB to UART bridge for your operating system. In our case, using an ESP8266 with a CP2104 USB to UART bridge, the drivers are located here: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
+2. Install drivers for USB to UART bridge for your operating system. In our case, using an ESP32 with a CP2104 USB to UART bridge, the drivers are located here: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
 
 **Remark**: Missing drivers can be detected by seeing unknown devices in the Device Manager on Windows or the following error message during deployment: `"Error: Please specify upload_port for environment or use global --upload-port option."`
 

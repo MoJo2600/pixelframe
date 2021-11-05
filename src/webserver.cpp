@@ -421,13 +421,13 @@ void setup_webserver()
   // }
 
   startMDNS();   // Start the mDNS responder
-  //AsyncElegantOTA.begin(&server);    // Start ElegantOTA
+  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   startServer(); // Start a HTTP server with a file read handler and an upload handler
 }
 
 void webserver_loop()
 {
-  //AsyncElegantOTA.loop();
+  AsyncElegantOTA.loop();
   // TODO
   // MDNS.update();
 }
