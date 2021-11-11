@@ -83,7 +83,7 @@ void GifFrame::react(FrameEvent *event)
     cout << "[FRAME::GIF] reacting to single gif event" << endl;
 
     auto e = (SingleGifFrameEvent *)event;
-    auto gifPath = "/gifs/" + e->filename;
+    auto gifPath = e->filename;
     cout << "[FRAME::GIF] path to single gif: " << gifPath << endl;
 
     this->playGif(gifPath);
@@ -110,12 +110,11 @@ void GifFrame::exit(void)
 void GifFrame::playGif(std::string filename)
 {
   cout << "Got play gif event with file: " << filename << endl;
-  // image = e.file;
   matrix->clear();
   //TODO: Move to sub states, that will use the gif decoder
   if (file)
     file.close();
-  // file = LittleFS.open(filename.c_str(), "r");
+  file = LITTLEFS.open(filename.c_str(), "r");
   if (!file)
   {
     cout << "[PIXELFRAME] Error opening GIF file" << endl;

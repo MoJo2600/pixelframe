@@ -87,3 +87,7 @@ https://tchapi.github.io/Adafruit-GFX-Font-Customiser/
 
 Littlefs
 https://github.com/lorol/LITTLEFS
+
+
+Captive Portal
+https://github.com/me-no-dev/ESPAsyncWebServer/blob/2f784268f0a358741ee6384480d48656e159d726/examples/CaptivePortal/CaptivePortal.ino

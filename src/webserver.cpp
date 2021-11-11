@@ -1,6 +1,6 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
-// #include <ESP8266mDNS.h>
+#include <ESPmDNS.h>
 #include <Wire.h>
 #define FS_NO_GLOBALS
 #include <LITTLEFS.h>
@@ -89,42 +89,53 @@ void handleGetFiles(AsyncWebServerRequest * request, String directory)
 {
   Serial.println(String("[WEBSERVER] handleFileList: ") + directory);
 
-  String path = "/gifs";
-  File dir = fileSystem->open(path);
+  // String path = "/gifs";
+  File dir = fileSystem->open(directory);
 
   // Another approach with lambda... i did not get this working: https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
   AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->print('[');
   bool firstFile = true;
 
+  Serial.println(String("[WEBSERVER] starting response"));
+
+  // File dir = LITTLEFS.open(directory);
   while (true)
   {
     File entry = dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+
     if (!firstFile) {
       response->print(",");
     }
     response->print("{\"type\":\"");
-    if (dir.isDirectory())
+    if (entry.isDirectory())
     {
       response->print("dir");
     }
     else
     {
       response->print(F("file\",\"size\":\""));
-      response->print(dir.size());
+      response->print(entry.size());
     }
     response->print(F("\",\"name\":\""));
     // Always return names without leading "/"
-    if (dir.name()[0] == '/')
+    String fileName = entry.name();
+    Serial.println(String("[WEBSERVER] filename: ") + fileName);
+    if (fileName[0] == '/')
     {
-      response->print(&(dir.name()[1]));
+      response->print(&(fileName[1]));
     }
     else
     {
-      response->print(dir.name());
+      response->print(fileName);
     }
-    response->print("\"}");
     firstFile = false;
+    response->print("\"}");
+    entry.close();
   }
   // send last string
   response->print("]");
@@ -204,19 +215,20 @@ void handleFileList(AsyncWebServerRequest *request)
 }
 
 void startMDNS()
-{ // Start the mDNS responder
+{
   // start the multicast domain name server
-  // TODO
-  // if (!MDNS.begin(mdnsName))
-  // {
-  //   Serial.print("[WEBSERVER] Could not start MDNS service!");
-  // }
-  // else
-  // {
-  //   Serial.print("[WEBSERVER] mDNS responder started: http://");
-  //   Serial.print(mdnsName);
-  //   Serial.println(".local");
-  // }
+  if (!MDNS.begin(mdnsName))
+  {
+    Serial.print("[WEBSERVER] Could not start MDNS service!");
+  }
+  else
+  {
+    Serial.print("[WEBSERVER] mDNS responder started: http://");
+    Serial.print(mdnsName);
+    Serial.println(".local");
+
+    MDNS.addService("http", "tcp", 80);
+  }
 }
 
 void startServer()
@@ -229,23 +241,23 @@ void startServer()
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
 
-  // server.on("/api/show/clock", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   Serial.println("[WEBSERVER] Receive command - switch to clock");
+  server.on("/api/show/clock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] Receive command - switch to clock");
 
-  //   auto ev = new ClockFrameEvent();
-  //   Orchestrator::Instance()->react(ev);
+    auto ev = new ClockFrameEvent();
+    Orchestrator::Instance()->react(ev);
 
-  //   replyOKWithMsg(request, F("Switching to clock"));
-  // });
+    replyOKWithMsg(request, F("Switching to clock"));
+  });
 
-  // server.on("/api/show/off", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   Serial.println("[WEBSERVER] Receive command - switch to off");
+  server.on("/api/show/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] Receive command - switch to off");
 
-  //   auto ev = new OffEvent();
-  //   Orchestrator::Instance()->react(ev);
+    auto ev = new OffEvent();
+    Orchestrator::Instance()->react(ev);
 
-  //   replyOKWithMsg(request, F("Switching to off"));
-  // });
+    replyOKWithMsg(request, F("Switching to off"));
+  });
 
   server.on("/api/show/gif", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (request->hasParam("image"))
@@ -277,38 +289,38 @@ void startServer()
     replyOKWithMsg(request, F("Switching to gif"));
   });
 
-  // server.on("/api/show/visuals", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   if (request->hasParam("v"))
-  //   {
-  //     String visualArg = request->getParam("v")->value();
-  //     Serial.print("[WEBSERVER] Receive command - switch to visual ");
-  //     Serial.println(visualArg);
+  server.on("/api/show/visuals", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("v"))
+    {
+      String visualArg = request->getParam("v")->value();
+      Serial.print("[WEBSERVER] Receive command - switch to visual ");
+      Serial.println(visualArg);
 
-  //     auto ev = new VisualsFrameEvent();
-  //     auto visual = std::string(visualArg.c_str());
-  //     ev->visual = visual;
-  //     Orchestrator::Instance()->react(ev);
+      auto ev = new VisualsFrameEvent();
+      auto visual = std::string(visualArg.c_str());
+      ev->visual = visual;
+      Orchestrator::Instance()->react(ev);
 
-  //     replyOKWithMsg(request, F("Switching to visual frame"));
-  //   }
-  //   else
-  //   {
-  //     Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
+      replyOKWithMsg(request, F("Switching to visual frame"));
+    }
+    else
+    {
+      Serial.println("[WEBSERVER] Receive command - switch to visuals frame");
 
-  //     auto ev = new VisualsFrameEvent();
-  //     ev->visual = "random";
-  //     Orchestrator::Instance()->react(ev);
+      auto ev = new VisualsFrameEvent();
+      ev->visual = "random";
+      Orchestrator::Instance()->react(ev);
 
-  //     replyOKWithMsg(request, F("Switching to random visual frame"));
-  //   }
-  // });
+      replyOKWithMsg(request, F("Switching to random visual frame"));
+    }
+  });
 
   server.on("/api/images", [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET /api/images");
     if (request->hasParam("f")) {
       AsyncWebParameter* p = request->getParam("f");
       String name = p->value();
-      String fullPath = "/gifs/" + name;
+      String fullPath = name;
       // handleFileRead(request, fullPath);
       handleStaticFile(request, fullPath);
     } else {
@@ -428,6 +440,4 @@ void setup_webserver()
 void webserver_loop()
 {
   AsyncElegantOTA.loop();
-  // TODO
-  // MDNS.update();
 }

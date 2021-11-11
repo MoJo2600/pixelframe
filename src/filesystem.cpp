@@ -80,7 +80,7 @@ void startLittleFS() { // Start the LittleFS and list all contents
         Serial.print("Directory found: ");
         Serial.println(fileName);
       } else {
-        gifs_vec.push_back("/gifs/"+fileName);
+        gifs_vec.push_back(fileName);
         size_t fileSize =  entry.size();
         Serial.printf("\tFS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
       }
