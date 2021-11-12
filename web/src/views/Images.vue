@@ -45,7 +45,7 @@
                 <v-img
                   class="pixelated"
                   :class="{ 'image-hover': hover }"
-                  :src="imageHost + '/' + image.name"
+                  :src="imageHost + '?f=/' + image.name"
                 ></v-img>
 
                 <v-fade-transition>
@@ -54,7 +54,7 @@
                       icon
                       large
                       color="white"
-                      @click="playImage(image.name)"
+                      @click="playImage('/' + image.name)"
                     >
                       <v-icon>mdi-play</v-icon>
                     </v-btn>

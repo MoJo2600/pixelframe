@@ -72,7 +72,7 @@ void Orchestrator::loop(void) {
     }
   }
 
-  EVERY_N_MILLISECONDS(15) { matrix->show(); }; // Limit to ~70fps
+  EVERY_N_MILLISECONDS(10) { matrix->show(); }; // Limit to more than ~70fps
 }
 
 void Orchestrator::react(FrameEvent* e) {
