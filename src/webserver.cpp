@@ -14,6 +14,7 @@
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
 #include "AsyncJson.h"
+#include "soc/rtc_wdt.h"
 
 const char *fsName = "LittleFS";
 FS *fileSystem = &LITTLEFS;
@@ -177,7 +178,8 @@ bool handleStaticFile(AsyncWebServerRequest *request, String path) {
       file.size(),
       [file](uint8_t *buffer, size_t maxLen, size_t total) mutable -> size_t {
         int bytes = file.read(buffer, maxLen);
-          
+        rtc_wdt_feed();
+
         // close file at the end
         if (bytes + total == file.size()) file.close();
 
@@ -328,74 +330,74 @@ void startServer()
     }
   });
 
-  // server.on("/api/configuration/basic", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   Serial.println("[WEBSERVER] GET /configuration/basic");
+  server.on("/api/configuration/basic", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET /configuration/basic");
 
-  //   // TODO: EspAsyncWebserver has a native implementation for JSON, so maybe we should this?
-  //   StaticJsonDocument<200> config;
-  //   config["brightness"] = matrix_brightness;
-  //   config["timezone"] = "Europe/Berlin";
+    // TODO: EspAsyncWebserver has a native implementation for JSON, so maybe we should this?
+    StaticJsonDocument<200> config;
+    config["brightness"] = matrix_brightness;
+    config["timezone"] = "Europe/Berlin";
 
-  //   char json_string[200];
-  //   serializeJson(config, json_string);
+    char json_string[200];
+    serializeJson(config, json_string);
 
-  //   replyOKWithJson(request, String(json_string));
-  // });
+    replyOKWithJson(request, String(json_string));
+  });
 
-  // AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
-  //   JsonObject jsonObj = config.as<JsonObject>();
+  AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-  //   if (jsonObj["brightness"] != nullptr) {
-  //     set_brightness(jsonObj["brightness"]);
-  //   }
+    if (jsonObj["brightness"] != nullptr) {
+      set_brightness(jsonObj["brightness"]);
+    }
 
-  //   replyOKWithMsg(request, F("Updating basic configuration"));
-  // });
-  // server.addHandler(configHandler);
+    replyOKWithMsg(request, F("Updating basic configuration"));
+  });
+  server.addHandler(configHandler);
 
-  // server.on("/api/configuration/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   Serial.println("[WEBSERVER] GET api/configuration/wifi");
+  server.on("/api/configuration/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET api/configuration/wifi");
 
-  //   StaticJsonDocument<200> config;
-  //   config["ssid"] = wifi_ssid;
+    StaticJsonDocument<200> config;
+    config["ssid"] = wifi_ssid;
 
-  //   char json_string[200];
-  //   serializeJson(config, json_string);
+    char json_string[200];
+    serializeJson(config, json_string);
 
-  //   replyOKWithJson(request, String(json_string));
-  // });
+    replyOKWithJson(request, String(json_string));
+  });
 
-  // AsyncCallbackJsonWebHandler* wifiConfigHandler = new AsyncCallbackJsonWebHandler("/api/configuration/wifi", [](AsyncWebServerRequest *request, JsonVariant &config) {
-  //   JsonObject jsonObj = config.as<JsonObject>();
+  AsyncCallbackJsonWebHandler* wifiConfigHandler = new AsyncCallbackJsonWebHandler("/api/configuration/wifi", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-  //   if (jsonObj["ssid"] == nullptr || jsonObj["password"] == nullptr) {
-  //     replyBadRequest(request, "Body must contain SSID and password");
-  //     return;
-  //   }
+    if (jsonObj["ssid"] == nullptr || jsonObj["password"] == nullptr) {
+      replyBadRequest(request, "Body must contain SSID and password");
+      return;
+    }
 
-  //   replyOKWithMsg(request, F("Updating wifi configuration"));
+    replyOKWithMsg(request, F("Updating wifi configuration"));
 
-  //   set_wifi(strdup(config["ssid"]), strdup(config["password"]));
-  // });
-  // server.addHandler(wifiConfigHandler);
+    set_wifi(strdup(config["ssid"]), strdup(config["password"]));
+  });
+  server.addHandler(wifiConfigHandler);
 
-  // server.on("/api/environment/wifis", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   Serial.println("[WEBSERVER] GET api/environment/wifis");
+  server.on("/api/environment/wifis", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET api/environment/wifis");
 
-  //   int numberOfNetworks = WiFi.scanNetworks();
+    int numberOfNetworks = WiFi.scanNetworks();
 
-  //   StaticJsonDocument<512> config;
+    StaticJsonDocument<512> config;
 
-  //   for(int i = 0; i < numberOfNetworks; i++) {
-  //     config[i]["ssid"] = WiFi.SSID(i);
-  //     config[i]["signalStrength"] = WiFi.RSSI(i);
-  //   }
+    for(int i = 0; i < numberOfNetworks; i++) {
+      config[i]["ssid"] = WiFi.SSID(i);
+      config[i]["signalStrength"] = WiFi.RSSI(i);
+    }
 
-  //   char json_string[512];
-  //   serializeJson(config, json_string);
+    char json_string[512];
+    serializeJson(config, json_string);
 
-  //   replyOKWithJson(request, String(json_string));
-  // });
+    replyOKWithJson(request, String(json_string));
+  });
 
   server.onNotFound([](AsyncWebServerRequest *request) {
     if (request->method() == HTTP_OPTIONS) {
