@@ -22,11 +22,6 @@
             {{ visual.title }}
           </v-card-title>
 
-          <v-card-actions>
-            <v-btn color="primary" :disabled="loading || !!writing" text>
-              Show
-            </v-btn>
-          </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
