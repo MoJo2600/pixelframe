@@ -3,6 +3,7 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+*/.DS_Store
 mysdcard/
 data/
 data_backup/
