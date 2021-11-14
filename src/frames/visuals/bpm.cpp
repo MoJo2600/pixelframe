@@ -9,7 +9,7 @@ void Bpm::enter() {}
 void Bpm::loop()
 {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-  uint8_t BeatsPerMinute = 62;
+  uint8_t BeatsPerMinute = 60;
   CRGBPalette16 palette = PartyColors_p;
   uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
   int led = 0;
