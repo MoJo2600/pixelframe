@@ -40,8 +40,8 @@ extern char* wifi_password;
 
 // #define LED_CHIP APA102
 // #define LED_ORDER BGR
-// #define LED_DATA_PIN D7
-// #define LED_CLK_PIN D5
+// #define LED_DATA_PIN 23
+// #define LED_CLK_PIN 22
 
 // Used by LEDMatrix
 const uint16_t MATRIX_TILE_WIDTH  = 16; // width of EACH NEOPIXEL MATRIX (not total display)
