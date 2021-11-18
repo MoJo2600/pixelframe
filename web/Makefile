@@ -54,6 +54,12 @@ data: dev-run-build ## Starts container, builds frontend and prepares data dir f
 	rm -Rf ../data/favicon.ico
 	rm -Rf ../data/index.html
 	cp -r  dist/* ../data/
+	find ../data/ -name "*.css" -exec rm -rf {} \;
+	find ../data/ -name "*.css.br" -exec rm -rf {} \;
+	find ../data/ -name "*.js" -exec rm -rf {} \;
+	find ../data/ -name "*.js.br" -exec rm -rf {} \;
+	find ../data/ -name "*.map" -exec rm -rf {} \;
+	find ../data/ -name "*.html.br" -exec rm -rf {} \;
 
 .PHONY: dev-run-build
 dev-run-build: ## Start the development docker environment and builds front end

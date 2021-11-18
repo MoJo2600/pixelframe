@@ -1,11 +1,9 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <uri/UriBraces.h>
-#include <uri/UriRegex.h>
-#include <ESP8266mDNS.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
+#include <ESPmDNS.h>
 #include <Wire.h>
 #define FS_NO_GLOBALS
-#include <LittleFS.h>
+#include <LITTLEFS.h>
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include "config.hpp"
@@ -15,13 +13,14 @@
 #include "frames/gifframe.hpp"
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
+#include "AsyncJson.h"
+#include "soc/rtc_wdt.h"
 
 const char *fsName = "LittleFS";
-FS *fileSystem = &LittleFS;
-LittleFSConfig fileSystemConfig = LittleFSConfig();
+FS *fileSystem = &LITTLEFS;
+// LittleFSConfig fileSystemConfig = LittleFSConfig();
 
-ESP8266WebServer server(80); // Create a webserver object that listens for HTTP request on port 80
-// WebSocketsServer webSocket(81);    // create a websocket server on port 81
+AsyncWebServer server(80);  // Create a webserver object that listens for HTTP request on port 80
 
 char *mdnsName = "pixelframe"; // Domain name for the mDNS responder
 
@@ -30,44 +29,42 @@ static const char APPLICATION_JSON[] PROGMEM = "application/json";
 static const char FS_INIT_ERROR[] PROGMEM = "FS INIT ERROR";
 static const char FILE_NOT_FOUND[] PROGMEM = "FileNotFound";
 
-////////////////////////////////
+
 // Utils to return HTTP codes, and determine content-type
-
-void replyOK()
+void replyOK(AsyncWebServerRequest *request)
 {
-  server.send(200, FPSTR(TEXT_PLAIN), "");
+  AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(TEXT_PLAIN), "");
+  request->send(response);
 }
 
-void replyOKWithMsg(String msg)
+void replyOKWithMsg(AsyncWebServerRequest *request, String msg)
 {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, FPSTR(TEXT_PLAIN), msg);
+  AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(TEXT_PLAIN), msg);
+  request->send(response);
 }
 
-void replyOKWithJson(String serializedJson)
+void replyOKWithJson(AsyncWebServerRequest *request, String serializedJson)
 {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, FPSTR(APPLICATION_JSON), serializedJson);
+  AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(APPLICATION_JSON), serializedJson);
+  request->send(response);
 }
 
-void replyNotFound(String msg)
+void replyNotFound(AsyncWebServerRequest *request, String msg)
 {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(404, FPSTR(TEXT_PLAIN), msg);
+  AsyncWebServerResponse *response = request->beginResponse(404, FPSTR(TEXT_PLAIN), msg);
+  request->send(response);
 }
 
-void replyBadRequest(String msg)
+void replyBadRequest(AsyncWebServerRequest *request, String msg)
 {
-  Serial.println(msg);
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
+  AsyncWebServerResponse *response = request->beginResponse(400, FPSTR(TEXT_PLAIN), msg + "\r\n");
+  request->send(response);
 }
 
-void replyServerError(String msg)
+void replyServerError(AsyncWebServerRequest *request, String msg)
 {
-  Serial.println(msg);
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
+  AsyncWebServerResponse *response = request->beginResponse(500, FPSTR(TEXT_PLAIN), msg + "\r\n");
+  request->send(response);
 }
 
 String getContentType(String filename)
@@ -76,6 +73,8 @@ String getContentType(String filename)
     return "text/html";
   else if (filename.endsWith(".css"))
     return "text/css";
+  else if (filename.endsWith(".gif"))
+    return "image/gif";
   else if (filename.endsWith(".js"))
     return "application/javascript";
   else if (filename.endsWith(".json"))
@@ -87,121 +86,138 @@ String getContentType(String filename)
   return "text/plain";
 }
 
-bool handleFileRead(String path)
-{ // send the right file to the client (if it exists)
-  Serial.println("[WEBSERVER] handleFileRead: " + path);
-  if (path.endsWith("/"))
-    path += "index.html";                    // If a folder is requested, send the index file
-  String contentType = getContentType(path); // Get the MIME type
-  String pathWithGz = path + ".gz";
-  if (LittleFS.exists(pathWithGz) || LittleFS.exists(path))
-  {                                       // If the file exists, either as a compressed archive, or normal
-    if (LittleFS.exists(pathWithGz))      // If there's a compressed version available
-      path += ".gz";                      // Use the compressed verion
-    File file = LittleFS.open(path, "r"); // Open the file
-    server.streamFile(file, contentType); // Send it to the client
-    file.close();                         // Close the file again
-    Serial.println(String("\t[WEBSERVER] Sent file: ") + path);
-    return true;
+void handleGetFiles(AsyncWebServerRequest * request, String directory)
+{
+  Serial.println(String("[WEBSERVER] handleFileList: ") + directory);
+
+  // String path = "/gifs";
+  File dir = fileSystem->open(directory);
+
+  // Another approach with lambda... i did not get this working: https://stackoverflow.com/questions/61559745/espasyncwebserver-serve-large-array-from-ram
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  response->print('[');
+  bool firstFile = true;
+
+  Serial.println(String("[WEBSERVER] starting response"));
+
+  // File dir = LITTLEFS.open(directory);
+  while (true)
+  {
+    File entry = dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+
+    if (!firstFile) {
+      response->print(",");
+    }
+    response->print("{\"type\":\"");
+    if (entry.isDirectory())
+    {
+      response->print("dir");
+    }
+    else
+    {
+      response->print(F("file\",\"size\":\""));
+      response->print(entry.size());
+    }
+    response->print(F("\",\"name\":\""));
+    // Always return names without leading "/"
+    String fileName = entry.name();
+    Serial.println(String("[WEBSERVER] filename: ") + fileName);
+    if (fileName[0] == '/')
+    {
+      response->print(&(fileName[1]));
+    }
+    else
+    {
+      response->print(fileName);
+    }
+    firstFile = false;
+    response->print("\"}");
+    entry.close();
   }
-  Serial.println(String("\t[WEBSERVER]  File Not Found: ") + path); // If the file doesn't exist, return false
-  return false;
+  // send last string
+  response->print("]");
+  request->send(response);
 }
 
-void handleGetFiles(String path)
-{
-  if (path != "/" && !fileSystem->exists(path))
-  {
-    return replyBadRequest("BAD PATH");
+// void handleFileRead(AsyncWebServerRequest *request, String path)
+// { // send the right file to the client (if it exists)
+//   // String path = String(request->url());
+//   Serial.println("[WEBSERVER] handleFileRead: " + path);
+//   if (path.endsWith("/"))
+//     path += "index.html";                    // If a folder is requested, send the index file
+//   String contentType = getContentType(path); // Get the MIME type
+//   request->send(LittleFS, path, contentType);
+//   Serial.println(String("[WEBSERVER] Sent file: ") + path);
+// }
+
+bool handleStaticFile(AsyncWebServerRequest *request, String path) {
+  
+  if (path.endsWith("/")) path += F("index.html");
+  
+  Serial.println(String("[WEBSERVER] handleFileRead: ") + path);
+
+  String contentType = getContentType(path);
+  String pathWithGz = path + ".gz";
+  
+  if (fileSystem->exists(pathWithGz) || fileSystem->exists(path)) {
+    bool gzipped = false;
+    if (fileSystem->exists(pathWithGz)) {
+        gzipped = true;
+        path += ".gz";
+    }
+      
+    Serial.println(String("[WEBSERVER] opening file: ") + path);
+    File file = fileSystem->open(path, "r"); // e.g. SPIFFS.open(path, "r"); 
+
+    AsyncWebServerResponse *response = request->beginResponse(
+      contentType,
+      file.size(),
+      [file](uint8_t *buffer, size_t maxLen, size_t total) mutable -> size_t {
+        int bytes = file.read(buffer, maxLen);
+        rtc_wdt_feed();
+
+        // close file at the end
+        if (bytes + total == file.size()) file.close();
+
+        return max(0, bytes); // return 0 even when no bytes were loaded
+      }
+    );
+
+    if (gzipped) {
+      response->addHeader(F("Content-Encoding"), F("gzip"));
+    }
+
+    request->send(response);
+    Serial.println(String("[WEBSERVER] sent file: ") + path);
+    
+    return true;
   }
-
-  Serial.println(String("[WEBSERVER] handleFileList: ") + path);
-  Dir dir = fileSystem->openDir(path);
-  path.clear();
-
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  // use HTTP/1.1 Chunked response to avoid building a huge temporary string
-  if (!server.chunkedResponseModeStart(200, "application/json"))
-  {
-    server.send(505, F("text/html"), F("HTTP1.1 required"));
-    return;
-  }
-
-  // use the same string for every line
-  String output;
-  output.reserve(64);
-  while (dir.next())
-  {
-
-    if (output.length())
-    {
-      // send string from previous iteration
-      // as an HTTP chunk
-      server.sendContent(output);
-      output = ',';
-    }
-    else
-    {
-      output = '[';
-    }
-
-    output += "{\"type\":\"";
-    if (dir.isDirectory())
-    {
-      output += "dir";
-    }
-    else
-    {
-      output += F("file\",\"size\":\"");
-      output += dir.fileSize();
-    }
-
-    output += F("\",\"name\":\"");
-    // Always return names without leading "/"
-    if (dir.fileName()[0] == '/')
-    {
-      output += &(dir.fileName()[1]);
-    }
-    else
-    {
-      output += dir.fileName();
-    }
-
-    output += "\"}";
-  }
-
-  // send last string
-  output += "]";
-  server.sendContent(output);
-  server.chunkedResponseFinalize();
+  
+  return false;
 }
 
 /*
    Return the list of files in the directory specified by the "dir" query string parameter.
    Also demonstrates the use of chuncked responses.
 */
-void handleFileList()
+void handleFileList(AsyncWebServerRequest *request)
 {
-  if (!server.hasArg("dir"))
+  if (!request->hasParam("dir"))
   {
-    return replyBadRequest(F("DIR ARG MISSING"));
+    replyBadRequest(request, F("DIR ARG MISSING"));
+    return;
   }
 
-  String path = server.arg("dir");
-
-  handleGetFiles(path);
-}
-
-void handleNotFound()
-{ // if the requested file or page doesn't exist, return a 404 not found error
-  if (!handleFileRead(server.uri()))
-  { // check if the file exists in the flash memory (LittleFS), if so, send it
-    server.send(404, "text/plain", "404: File Not Found");
-  }
+  String path = request->getParam("dir")->value();
+  handleGetFiles(request, path);
 }
 
 void startMDNS()
-{ // Start the mDNS responder
+{
   // start the multicast domain name server
   if (!MDNS.begin(mdnsName))
   {
@@ -212,45 +228,51 @@ void startMDNS()
     Serial.print("[WEBSERVER] mDNS responder started: http://");
     Serial.print(mdnsName);
     Serial.println(".local");
+
+    MDNS.addService("http", "tcp", 80);
   }
 }
 
 void startServer()
-{ // Start a HTTP server with a file read handler and an upload handler
+{
+  // Start a HTTP server
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, PUT");
 
   // List directory
   server.on("/api/files", HTTP_GET, handleFileList);
 
-  server.on(UriBraces("/api/show/clock"), HTTP_GET, []() {
+  server.on("/api/show/clock", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] Receive command - switch to clock");
 
     auto ev = new ClockFrameEvent();
     Orchestrator::Instance()->react(ev);
 
-    replyOKWithMsg(F("Switching to clock"));
+    replyOKWithMsg(request, F("Switching to clock"));
   });
 
-  server.on(UriBraces("/api/show/off"), HTTP_GET, []() {
+  server.on("/api/show/off", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] Receive command - switch to off");
 
     auto ev = new OffEvent();
     Orchestrator::Instance()->react(ev);
 
-    replyOKWithMsg(F("Switching to off"));
+    replyOKWithMsg(request, F("Switching to off"));
   });
 
-  server.on(UriBraces("/api/show/gif"), HTTP_GET, []() {
-    if (server.hasArg("image"))
+  server.on("/api/show/gif", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("image"))
     {
-      String filename = server.arg("image");
+      String filename = request->getParam("image")->value();
       Serial.print("[WEBSERVER] Receive command - switch to ");
       Serial.println(filename);
 
       uint8_t duration = 10; // TODO: Put default gif duration somewhere more central?
 
-      if (server.hasArg("duration"))
+      if (request->hasParam("duration"))
       {
-        duration = server.arg("duration").toInt();
+        duration = request->getParam("duration")->value().toInt();
       }
 
       auto ev = new SingleGifFrameEvent(duration);
@@ -266,13 +288,13 @@ void startServer()
       Orchestrator::Instance()->react(ev);
     }
 
-    replyOKWithMsg(F("Switching to gif"));
+    replyOKWithMsg(request, F("Switching to gif"));
   });
 
-  server.on(UriBraces("/api/show/visuals"), HTTP_GET, []() {
-    if (server.hasArg("v"))
+  server.on("/api/show/visuals", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("v"))
     {
-      String visualArg = server.arg("v");
+      String visualArg = request->getParam("v")->value();
       Serial.print("[WEBSERVER] Receive command - switch to visual ");
       Serial.println(visualArg);
 
@@ -281,7 +303,7 @@ void startServer()
       ev->visual = visual;
       Orchestrator::Instance()->react(ev);
 
-      replyOKWithMsg(F("Switching to visual frame"));
+      replyOKWithMsg(request, F("Switching to visual frame"));
     }
     else
     {
@@ -291,63 +313,49 @@ void startServer()
       ev->visual = "random";
       Orchestrator::Instance()->react(ev);
 
-      replyOKWithMsg(F("Switching to random visual frame"));
+      replyOKWithMsg(request, F("Switching to random visual frame"));
     }
   });
 
-  server.on(UriBraces("/api/images/{}"), []() {
-    String name = server.pathArg(0);
-    handleFileRead("gifs/" + name);
+  server.on("/api/images", [](AsyncWebServerRequest *request) {
+    Serial.println("[WEBSERVER] GET /api/images");
+    if (request->hasParam("f")) {
+      AsyncWebParameter* p = request->getParam("f");
+      String name = p->value();
+      String fullPath = name;
+      // handleFileRead(request, fullPath);
+      handleStaticFile(request, fullPath);
+    } else {
+      handleGetFiles(request, "/gifs");
+    }
   });
 
-  server.on(UriBraces("/api/configuration/basic"), HTTP_GET, []() {
+  server.on("/api/configuration/basic", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET /configuration/basic");
 
+    // TODO: EspAsyncWebserver has a native implementation for JSON, so maybe we should this?
     StaticJsonDocument<200> config;
     config["brightness"] = matrix_brightness;
     config["timezone"] = "Europe/Berlin";
-    config["defaultMode"] = default_mode;
-
-    config["availableDefaultModes"][0] = MODE_CLOCK.c_str();
-    config["availableDefaultModes"][1] = MODE_GIF.c_str();
-    config["availableDefaultModes"][2] = MODE_VISUAL.c_str();
-    config["availableDefaultModes"][3] = MODE_OFF.c_str();
 
     char json_string[200];
     serializeJson(config, json_string);
 
-    replyOKWithJson(String(json_string));
+    replyOKWithJson(request, String(json_string));
   });
 
-  server.on(UriBraces("/api/configuration/basic"), HTTP_PATCH, []() {
-    Serial.println("[WEBSERVER] PATCH /configuration/basic");
+  AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-    StaticJsonDocument<200> config;
-
-    DeserializationError error = deserializeJson(config, server.arg("plain"));
-
-    if (error)
-    {
-      replyBadRequest(F("Unable to parse body"));
-      return;
+    if (jsonObj["brightness"] != nullptr) {
+      set_brightness(jsonObj["brightness"]);
     }
 
-    if (config["brightness"] != nullptr) {
-      set_brightness(config["brightness"]);
-    }
-    
-    if (config["timezone"] != nullptr) {
-      // TODO: implement
-    }
-    
-    if (config["defaultMode"] != nullptr) {
-      set_default_mode(strdup(config["defaultMode"]));
-    }
-
-    replyOKWithMsg(F("Updating basic configuration"));
+    replyOKWithMsg(request, F("Updating basic configuration"));
   });
+  server.addHandler(configHandler);
 
-  server.on(UriBraces("/api/configuration/wifi"), HTTP_GET, []() {
+  server.on("/api/configuration/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET api/configuration/wifi");
 
     StaticJsonDocument<200> config;
@@ -356,32 +364,24 @@ void startServer()
     char json_string[200];
     serializeJson(config, json_string);
 
-    replyOKWithJson(String(json_string));
+    replyOKWithJson(request, String(json_string));
   });
 
-  server.on(UriBraces("/api/configuration/wifi"), HTTP_PUT, []() {
-    Serial.println("[WEBSERVER] PUT /configuration/wifi");
+  AsyncCallbackJsonWebHandler* wifiConfigHandler = new AsyncCallbackJsonWebHandler("/api/configuration/wifi", [](AsyncWebServerRequest *request, JsonVariant &config) {
+    JsonObject jsonObj = config.as<JsonObject>();
 
-    StaticJsonDocument<200> config;
-
-    DeserializationError error = deserializeJson(config, server.arg("plain"));
-
-    if (error) {
-      replyBadRequest(F("Unable to parse body"));
+    if (jsonObj["ssid"] == nullptr || jsonObj["password"] == nullptr) {
+      replyBadRequest(request, "Body must contain SSID and password");
       return;
     }
 
-    if (config["ssid"] == nullptr || config["password"] == nullptr) {
-      replyBadRequest("Body must contain SSID and password");
-      return;
-    }
+    replyOKWithMsg(request, F("Updating wifi configuration"));
 
     set_wifi(strdup(config["ssid"]), strdup(config["password"]));
-
-    replyOKWithMsg(F("Updating wifi configuration"));
   });
+  server.addHandler(wifiConfigHandler);
 
-  server.on(UriBraces("/api/environment/wifis"), HTTP_GET, []() {
+  server.on("/api/environment/wifis", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET api/environment/wifis");
 
     int numberOfNetworks = WiFi.scanNetworks();
@@ -396,15 +396,23 @@ void startServer()
     char json_string[512];
     serializeJson(config, json_string);
 
-    replyOKWithJson(String(json_string));
+    replyOKWithJson(request, String(json_string));
   });
 
-  server.on("/api/images", HTTP_GET, []() {
-    handleGetFiles("/gifs");
+  server.onNotFound([](AsyncWebServerRequest *request) {
+    if (request->method() == HTTP_OPTIONS) {
+      request->send(200);
+    } else if (request->method() == HTTP_GET) {
+      if (!handleStaticFile(request, request->url())) {
+        request->send(404);
+      }
+    } else {
+      request->send(404);
+    }
   });
 
-  server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
-                                     // and check if the file exists
+  // server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
+  //                                    // and check if the file exists
 
   server.begin(); // start the HTTP server
   Serial.println("[WEBSERVER] HTTP server started.");
@@ -412,12 +420,26 @@ void startServer()
 
 void setup_webserver()
 {
+
+  // TODO: Add to a IFDEF DEBUG somewhere for webserver debugging
+  // int params = request->params();
+  // for(int i=0;i<params;i++){
+  //   AsyncWebParameter* p = request->getParam(i);
+  //   if(p->isFile()){ //p->isPost() is also true
+  //     Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+  //   } else if(p->isPost()){
+  //     Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+  //   } else {
+  //     Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+  //   }
+  // }
+
   startMDNS();   // Start the mDNS responder
+  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   startServer(); // Start a HTTP server with a file read handler and an upload handler
 }
 
 void webserver_loop()
 {
-  server.handleClient(); // run the server
-  MDNS.update();
+  AsyncElegantOTA.loop();
 }

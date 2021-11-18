@@ -5,9 +5,16 @@
   LED_DATA_PIN - D7
   LED_CLK_PIN - D5, if required, see confg.hpp,34
  */
+
+#define FASTLED_INTERNAL                    // Remove Fastled warnings
+// https://github.com/FastLED/FastLED/issues/1169
+// TODO: #define FASTLED_ALL_PINS_HARDWARE_SPI
+// Should be irrelevant, because SPI is never used for WS8xxx LEDs
+// #define FASTLED_ESP32_SPI_BUS HSPI
+
 #include "SPI.h"
 #include "lib/stdinout.h"
-#include "ESP8266WiFi.h"
+#include "WiFi.h"
 #include "ArduinoJson.h"
 #include "WiFiUdp.h"
 #include "config.hpp"                    // Set up the LED matrix here
@@ -31,7 +38,7 @@ fs::File file;
 
 void setup() {
   // Open serial communications and wait for port to open:
-  Serial.begin(74880);
+  Serial.begin(115200);
 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -45,7 +52,7 @@ void setup() {
 
   // ### READ CONFIG
   Serial.print(F("[CONFIG] Opening configuration file.. "));
-  file = LittleFS.open("system/config.json", "r");
+  file = LITTLEFS.open("/system/config.json", "r");
   Serial.println(F("ok"));
   Serial.println(F("[CONFIG] Reading json config.."));
   char jsonData[file.size() + 1];
@@ -95,7 +102,7 @@ void setup() {
     mdnsName = strdup(configuration["framename"]);
   }
 
-  WiFi.hostname(mdnsName);
+  WiFi.setHostname(mdnsName);
 
   matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
   matrix->show();

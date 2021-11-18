@@ -15,12 +15,9 @@
 
 // #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 // #include <FS.h>
+#include <Arduino.h>
 #define FS_NO_GLOBALS
-#include <LittleFS.h>
-
-// #ifdef ESP8266
-// #define FASTLED_ALLOW_INTERRUPTS 0                            // Used for ESP8266 with WS2812 LED's. Ugh!!!
-// #endif
+#include "LITTLEFS.h"
 #include <FastLED.h>
 
 #include <Adafruit_GFX.h>
@@ -39,12 +36,12 @@ extern char* wifi_password;
 // Choose one of:
 #define LED_CHIP WS2812B
 #define LED_ORDER GRB
-#define LED_DATA_PIN D7
+#define LED_DATA_PIN 23
 
 // #define LED_CHIP APA102
 // #define LED_ORDER BGR
-// #define LED_DATA_PIN D7
-// #define LED_CLK_PIN D5
+// #define LED_DATA_PIN 23 // SPI MOSI pin
+// #define LED_CLK_PIN 18 // SPI SCK pin
 
 // Used by LEDMatrix
 const uint16_t MATRIX_TILE_WIDTH  = 16; // width of EACH NEOPIXEL MATRIX (not total display)
@@ -73,10 +70,12 @@ const uint16_t kMatrixWidth = mw;
 const uint16_t kMatrixHeight = mh;
 #endif
 
+#if defined(ESP8266)
 #include "ESP8266WiFi.h"
 extern "C" {
 #include "user_interface.h"
 }
+#endif
 
 extern float matrix_gamma; // higher number is darker, needed for Neomatrix more than SmartMatrix
 

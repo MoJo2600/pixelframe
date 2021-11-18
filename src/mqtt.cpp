@@ -1,5 +1,5 @@
 #include "ArduinoJson.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <PubSubClient.h>
 #include <mqtt.h>
 

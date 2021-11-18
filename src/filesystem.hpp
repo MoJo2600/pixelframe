@@ -1,7 +1,10 @@
 #ifndef FILESYSTEM_HPP_INCLUDED
 #define FILESYSTEM_HPP_INCLUDED
 
-#include <LittleFS.h>
+// Good tutorial https://www.mischianti.org/2021/04/01/esp32-integrated-littlefs-filesystem-5/
+
+#include "FS.h"
+#include <LITTLEFS.h>
 #include <vector>
 
 using std::vector;

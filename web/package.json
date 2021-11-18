@@ -28,7 +28,7 @@
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
-    "@vue/cli": "^4.5.11",
+    "@vue/cli": "^4.5.15",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-plugin-router": "~4.5.0",
@@ -45,6 +45,7 @@
     "sass": "^1.32.0",
     "sass-loader": "^10.0.0",
     "typescript": "~3.9.3",
+    "vue-cli-plugin-compression": "~1.1.5",
     "vue-cli-plugin-vuetify": "~2.1.0",
     "vue-template-compiler": "^2.6.11",
     "vuetify-loader": "^1.7.0"

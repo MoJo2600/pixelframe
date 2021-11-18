@@ -1,0 +1,17 @@
+{
+  "wifi": {
+    "ssid": "ENTER_YOUR_SSID",
+    "password": "ENTER_YOUR_PASSWORD"
+  },
+  "mqtt": {
+    "host": "ENTER_YOUR_HOST",
+    "port": 1883,
+    "user": "ENTER_YOUR_USER",
+    "password": "ENTER_YOUR_PASSWORD",
+    "topic": "ENTER_YOUR_TOPIC"
+  },
+  "timezone": "ENTER_YOUR_TIMEZONE",
+  "brightness": 16,
+  "defaultmode": "clock",
+  "framename": "pixelframe"
+}
