@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import NestedViewWrapper from "@/components/NestedViewWrapper.vue";
+import ConfigurationWizardView from "@/views/ConfigurationWizardView.vue";
 import FramesView from "@/views/Frames.vue";
 import VisualsView from "@/views/Visuals.vue";
 import ConfigurationBasicView from "@/views/ConfigurationBasic.vue";
@@ -14,8 +15,14 @@ const routes: Array<RouteConfig> = [
   {
     path: "/",
     redirect: {
-      path: "/frames"
+      path: "/wizard"
+      // TODO: add condition based on mode
     }
+  },
+  {
+    path: "/wizard",
+    name: "ConfigurationWizard",
+    component: ConfigurationWizardView
   },
   {
     path: "/frames",
