@@ -47,20 +47,6 @@ mock-api-delay: ## Start up mock api with delay
 mock-api-error: ## Start up mock api with error middleware
 	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR} --middlewares ${MOCK_API_DIR}/middlewares/internalServerError.js
 
-.PHONY: data
-data: dev-run-build ## Starts container, builds frontend and prepares data dir for upload
-	rm -Rf ../data/css
-	rm -Rf ../data/js
-	rm -Rf ../data/favicon.ico
-	rm -Rf ../data/index.html
-	cp -r  dist/* ../data/
-	find ../data/ -name "*.css" -exec rm -rf {} \;
-	find ../data/ -name "*.css.br" -exec rm -rf {} \;
-	find ../data/ -name "*.js" -exec rm -rf {} \;
-	find ../data/ -name "*.js.br" -exec rm -rf {} \;
-	find ../data/ -name "*.map" -exec rm -rf {} \;
-	find ../data/ -name "*.html.br" -exec rm -rf {} \;
-
 .PHONY: dev-run-build
 dev-run-build: ## Start the development docker environment and builds front end
 	docker-compose run dev make build
