@@ -15,6 +15,8 @@ MOCK_API_DIR := mock-api
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+
+## docker container related
 .PHONY: dev-run
 dev-run: ## Start the development docker environment
 	docker-compose run dev zsh
@@ -27,6 +29,12 @@ dev-build: ## Build the development docker environment
 dev-prune: ## Cleanup the development docker environment
 	docker-compose down -v --remove-orphans --rmi all
 
+.PHONY: dev-run-build
+dev-run-build: ## Start the development docker environment and builds front end
+	docker-compose run dev make build
+
+
+## app related
 .PHONY: run
 run: ## Start up web application locally
 	npm run serve
@@ -35,6 +43,8 @@ run: ## Start up web application locally
 build: ## Build web application
 	npm run build
 
+
+## local mock API
 .PHONY: mock-api
 mock-api: ## Start up mock api
 	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR}
@@ -46,21 +56,3 @@ mock-api-delay: ## Start up mock api with delay
 .PHONY: mock-api-error
 mock-api-error: ## Start up mock api with error middleware
 	npx json-server --watch ${MOCK_API_DIR}/db.json --routes ${MOCK_API_DIR}/routes.json --static ${MOCK_API_DIR} --middlewares ${MOCK_API_DIR}/middlewares/internalServerError.js
-
-.PHONY: data
-data: dev-run-build ## Starts container, builds frontend and prepares data dir for upload
-	rm -Rf ../data/css
-	rm -Rf ../data/js
-	rm -Rf ../data/favicon.ico
-	rm -Rf ../data/index.html
-	cp -r  dist/* ../data/
-	find ../data/ -name "*.css" -exec rm -rf {} \;
-	find ../data/ -name "*.css.br" -exec rm -rf {} \;
-	find ../data/ -name "*.js" -exec rm -rf {} \;
-	find ../data/ -name "*.js.br" -exec rm -rf {} \;
-	find ../data/ -name "*.map" -exec rm -rf {} \;
-	find ../data/ -name "*.html.br" -exec rm -rf {} \;
-
-.PHONY: dev-run-build
-dev-run-build: ## Start the development docker environment and builds front end
-	docker-compose run dev make build

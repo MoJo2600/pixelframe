@@ -2,9 +2,15 @@
   <v-navigation-drawer v-model="drawerVisible" app hide-overlay>
     <v-list nav>
       <template
-        v-for="item in $router.options.routes.filter(r => r.path !== '/')"
+        v-for="item in ($router.options.routes || []).filter(
+          r => r.path !== '/'
+        )"
       >
-        <v-list-item v-if="!item.children" :key="item.name" :to="item.path">
+        <v-list-item
+          v-if="!item.children"
+          :key="item.name + '-item'"
+          :to="item.path"
+        >
           <v-list-item-icon>
             <v-icon>{{ item.meta.icon }}</v-icon>
           </v-list-item-icon>
@@ -17,7 +23,7 @@
         <v-list-group
           v-else
           :group="item.path"
-          :key="item.name"
+          :key="item.name + '-group'"
           :prepend-icon="item.meta.icon"
         >
           <template #activator>
@@ -38,6 +44,15 @@
           </v-list-item>
         </v-list-group>
       </template>
+      <v-list-item href="/update">
+        <v-list-item-icon>
+          <v-icon>mdi-memory</v-icon>
+        </v-list-item-icon>
+
+        <v-list-item-content>
+          <v-list-item-title>Update firmware</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
       <v-list-item @click="shutdown">
         <v-list-item-icon>
           <v-icon>mdi-power</v-icon>
@@ -62,7 +77,7 @@ export default class Navigation extends Vue {
   @VModel()
   public readonly drawerVisible!: boolean;
 
-  private async shutdown(): Promise<void> {
+  public async shutdown(): Promise<void> {
     await this.framesService.showFrame("off");
   }
 }
