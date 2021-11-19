@@ -45,7 +45,7 @@
                 <v-img
                   class="pixelated"
                   :class="{ 'image-hover': hover }"
-                  :src="imageHost + '?f=/' + image.name"
+                  :src="imageHost + '/' + image.name"
                 ></v-img>
 
                 <v-fade-transition>
@@ -95,15 +95,15 @@ import { required } from "@/validation";
     SpinnerText,
     DataLoaderError,
     ConfigurationSection,
-    ConfigurationFormButton
-  }
+    ConfigurationFormButton,
+  },
 })
 export default class ImagesView extends Mixins(DataHandlerMixin) {
   required = required;
 
   private readonly imgService = Service.get(ImagesService);
-  private imageHost = `${process.env.VUE_APP_API_BASE_URL ||
-    window.location.origin}/api/images`;
+  private imageHost =
+    process.env.VUE_APP_API_BASE_URL || window.location.origin;
   private images: Image[] = [];
   private file: string | null = null;
   private formValid = false;

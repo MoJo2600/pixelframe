@@ -19,6 +19,8 @@
 #define FS_NO_GLOBALS
 #include "LITTLEFS.h"
 #include <FastLED.h>
+#include "ArduinoJson.h"
+#include "esp_task_wdt.h"
 
 #include <Adafruit_GFX.h>
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -95,6 +97,8 @@ void *mallocordie(const char *varname, uint32_t req, bool psram=true);
 void matrix_setup(bool initserial=true, int reservemem = 40000);
 
 void set_brightness(uint8_t brightness);
+
+StaticJsonDocument<512> readConfiguration();
 
 void set_wifi(char* ssid, char* password);
 

@@ -3,16 +3,15 @@
 
 bool init_done = 0;
 
-char* wifi_ssid = nullptr;
-char* wifi_password = nullptr;
+char *wifi_ssid = nullptr;
+char *wifi_password = nullptr;
 
 uint8_t matrix_brightness = 64;
 float matrix_gamma = 1; // higher number is darker, needed for Neomatrix more than SmartMatrix
 
-CRGB* matrixleds = nullptr;
+CRGB *matrixleds = nullptr;
 
-char* default_mode = strdup(MODE_CLOCK.c_str());
-
+char *default_mode = strdup(MODE_CLOCK.c_str());
 
 // MATRIX DECLARATION:
 // Parameter 1 = width of EACH NEOPIXEL MATRIX (not total display)
@@ -42,48 +41,57 @@ char* default_mode = strdup(MODE_CLOCK.c_str());
 //     zig-zag order, the orientation of the matrices in alternate rows
 //     will be rotated 180 degrees (this is normal -- simplifies wiring).
 //   See example below for these values in action.
-FastLED_NeoMatrix* matrix = new FastLED_NeoMatrix(
-  matrixleds, 
-  MATRIX_TILE_WIDTH, 
-  MATRIX_TILE_HEIGHT, 
-  MATRIX_TILE_H, 
-  MATRIX_TILE_V,
-  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
-      NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
-      NEO_TILE_TOP + NEO_TILE_LEFT +  NEO_TILE_PROGRESSIVE
-);
+FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
+    matrixleds,
+    MATRIX_TILE_WIDTH,
+    MATRIX_TILE_HEIGHT,
+    MATRIX_TILE_H,
+    MATRIX_TILE_V,
+    NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
+        NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
+        NEO_TILE_TOP + NEO_TILE_LEFT + NEO_TILE_PROGRESSIVE);
 
-Timezone* timezone = new Timezone();
+Timezone *timezone = new Timezone();
 
-int XY2( int x, int y, bool wrap) {
+int XY2(int x, int y, bool wrap)
+{
     wrap = wrap; // squelch compiler warning
-    return matrix->XY(x,MATRIX_HEIGHT-1-y);
+    return matrix->XY(x, MATRIX_HEIGHT - 1 - y);
 }
 
-uint16_t XY( uint8_t x, uint8_t y) {
-    return matrix->XY(x,y);
+uint16_t XY(uint8_t x, uint8_t y)
+{
+    return matrix->XY(x, y);
 }
 
-int wrapX(int x) {
-    if (x < 0 ) return 0;
-    if (x >= MATRIX_WIDTH) return (MATRIX_WIDTH-1);
+int wrapX(int x)
+{
+    if (x < 0)
+        return 0;
+    if (x >= MATRIX_WIDTH)
+        return (MATRIX_WIDTH - 1);
     return x;
 }
 
-void show_free_mem(const char *pre) {
+void show_free_mem(const char *pre)
+{
     Framebuffer_GFX::show_free_mem(pre);
 }
 
-void die(const char *mesg) {
+void die(const char *mesg)
+{
     Serial.println(mesg);
-    while(1) delay((uint32_t)1); // while 1 loop only triggers watchdog on ESP chips
+    while (1)
+        delay((uint32_t)1); // while 1 loop only triggers watchdog on ESP chips
 }
 
-void *mallocordie(const char *varname, uint32_t req, bool psram) {
+void *mallocordie(const char *varname, uint32_t req, bool psram)
+{
 #ifndef BOARD_HAS_PSRAM
     psram = false;
 #endif
-    if (psram) Serial.print("PS");
+    if (psram)
+        Serial.print("PS");
     Serial.print("Malloc ");
     Serial.print(varname);
     Serial.print(" . Requested bytes: ");
@@ -91,44 +99,50 @@ void *mallocordie(const char *varname, uint32_t req, bool psram) {
     void *mem;
     mem = malloc(req);
 
-    if (mem) {
+    if (mem)
+    {
         return mem;
-    } else {
+    }
+    else
+    {
         Serial.print("FATAL: ");
-        if (psram) Serial.print("ps_");
+        if (psram)
+            Serial.print("ps_");
         Serial.print("malloc failed for ");
         Serial.println(varname);
         show_free_mem();
-        while (1); // delay(1);  Adding this seems to cause an ESP32 bug
+        while (1)
+            ; // delay(1);  Adding this seems to cause an ESP32 bug
     }
     return NULL;
 }
 
-void matrix_setup(bool initserial, int reservemem) {
+void matrix_setup(bool initserial, int reservemem)
+{
     reservemem = reservemem; // squelch compiler warning if var is unused.
 
-    if (init_done) {
+    if (init_done)
+    {
         Serial.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BUG: matrix_setup called twice");
         return;
     }
     init_done = 1;
     show_free_mem("Memory after setup() starts");
 
-    
-    // Smartmatrix defines the framebuffers itself. Other methods make their own allocation here  
+    // Smartmatrix defines the framebuffers itself. Other methods make their own allocation here
     // ESP32 has more memory available for allocation in setup than in global
     // (if this were a global array), so we use malloc here.
     // https://forum.arduino.cc/index.php?topic=647833
-    matrixleds = (CRGB *) mallocordie("matrixleds", sizeof(CRGB) * NUMMATRIX, 1);
+    matrixleds = (CRGB *)mallocordie("matrixleds", sizeof(CRGB) * NUMMATRIX, 1);
     // and then fix the until now NULL pointer in the object.
     matrix->newLedsPtr(matrixleds);
     show_free_mem("After matrixleds malloc");
 
-    #ifdef LED_CLK_PIN
+#ifdef LED_CLK_PIN
     FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_CLK_PIN, LED_ORDER>(matrixleds, NUMMATRIX).setCorrection(TypicalLEDStrip);
-    #else
+#else
     FastLED.addLeds<LED_CHIP, LED_DATA_PIN, LED_ORDER>(matrixleds, NUMMATRIX).setCorrection(TypicalLEDStrip);
-    #endif
+#endif
 
     //============================================================================================
     // Matrix Init End
@@ -149,7 +163,7 @@ void matrix_setup(bool initserial, int reservemem) {
     Serial.println("matrix_setup done");
 
     // ESP32 speed tests
-    // - Adafruit::ILI9341 speed at 80Mhz is 
+    // - Adafruit::ILI9341 speed at 80Mhz is
     // - WROVER at 24Mhz is 25fps, doesn't seem to work any faster
     // - https://github.com/loboris/ESP32_TFT_lib (DMA) at 24Mhz is only 7fps?
     //
@@ -183,12 +197,17 @@ void matrix_setup(bool initserial, int reservemem) {
     // At least on teensy, due to some framework bug it seems, early
     // serial output gets looped back into serial input
     // Hence, flush input.
-    while(Serial.available() > 0) { char t = Serial.read(); t = t; }
+    while (Serial.available() > 0)
+    {
+        char t = Serial.read();
+        t = t;
+    }
 
     matrix->clear();
 }
 
-void set_brightness(uint8_t brightness) {
+void set_brightness(uint8_t brightness)
+{
     Serial.print("Setting Brightness: ");
     Serial.println(brightness);
 
@@ -198,33 +217,65 @@ void set_brightness(uint8_t brightness) {
     FastLED.setBrightness(matrix_brightness);
 }
 
+StaticJsonDocument<512> readConfiguration()
+{
+    fs::File file;
 
-void set_wifi(char* ssid, char* password) {
-  Serial.print(F("[WIFI] Connecting to wifi "));
-  Serial.print(ssid);
+    Serial.print(F("[CONFIG] Opening configuration file.. "));
+    file = LITTLEFS.open("/system/config.json", "r");
+    Serial.println(F("ok"));
 
-  // TODO: write in config json
+    StaticJsonDocument<512> configuration;
+    Serial.println(F("[CONFIG] Reading json config.."));
+    char jsonData[file.size() + 1];
+    int stringIndex = 0;
+    int data;
+    while ((data = file.read()) >= 0)
+    {
+        jsonData[stringIndex] = data;
+        stringIndex++;
+    }
+    jsonData[stringIndex] = '\0'; // Add the NULL
+    file.close();
 
-  wifi_ssid = ssid;
-  wifi_password = password;
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(configuration, jsonData);
+    if (error)
+        Serial.println(F("[CONFIG] Failed to read configuration file!"));
 
-  // TODO: ESP32
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wifi_ssid, wifi_password);
-
-  while (WiFi.status() != WL_CONNECTED) { 
-    delay(500);
-    Serial.print('.');
-  }
-  Serial.println("");
-  Serial.print("[WIFI] IP: ");
-  Serial.println(WiFi.localIP());
-
-  // TODO: optional: fallback if connect failed?
+    return configuration;
 }
 
+void set_wifi(char *ssid, char *password)
+{
+    Serial.print(F("[WIFI] Connecting to wifi "));
+    Serial.print(ssid);
 
-void set_default_mode(char* mode) {
+    // TODO: write in config json
+
+    wifi_ssid = ssid;
+    wifi_password = password;
+
+    // TODO: ESP32
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(wifi_ssid, wifi_password);
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        // EVERY_N_MILLISECONDS(100) {
+        //     Serial.print('.');
+        // }
+        // yield();
+    }
+    Serial.println("");
+    Serial.print("[WIFI] IP: ");
+    Serial.println(WiFi.localIP());
+
+    // TODO: optional: fallback if connect failed?
+}
+
+void set_default_mode(char *mode)
+{
     Serial.print("Setting default mode: ");
     Serial.println(mode);
 

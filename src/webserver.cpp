@@ -384,6 +384,8 @@ void startServer()
   server.on("/api/environment/wifis", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET api/environment/wifis");
 
+    //WiFi.mode(WIFI_OFF);
+    WiFi.disconnect();
     int numberOfNetworks = WiFi.scanNetworks();
 
     StaticJsonDocument<512> config;
@@ -396,23 +398,33 @@ void startServer()
     char json_string[512];
     serializeJson(config, json_string);
 
+    Serial.println(wifi_ssid);
+    Serial.println(wifi_password);
+     // Back to old wifi
+    set_wifi(wifi_ssid, wifi_password);
+
     replyOKWithJson(request, String(json_string));
   });
 
-  server.onNotFound([](AsyncWebServerRequest *request) {
-    if (request->method() == HTTP_OPTIONS) {
-      request->send(200);
-    } else if (request->method() == HTTP_GET) {
-      if (!handleStaticFile(request, request->url())) {
-        request->send(404);
-      }
-    } else {
-      request->send(404);
-    }
-  });
+  // server.onNotFound([](AsyncWebServerRequest *request) {
+  //   if (request->method() == HTTP_OPTIONS) {
+  //     request->send(200);
+  //   } else if (request->method() == HTTP_GET) {
+  //     if (!handleStaticFile(request, request->url())) {
+  //       request->send(404);
+  //     }
+  //   } else {
+  //     request->send(404);
+  //   }
+  // });
 
+  // Get memory information
+  server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", String(ESP.getFreeHeap()));
+  });
   // server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
   //                                    // and check if the file exists
+  server.serveStatic("/", LITTLEFS, "/").setDefaultFile("index.html");
 
   server.begin(); // start the HTTP server
   Serial.println("[WEBSERVER] HTTP server started.");
