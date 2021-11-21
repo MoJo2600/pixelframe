@@ -14,7 +14,7 @@
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
 #include "AsyncJson.h"
-#include "soc/rtc_wdt.h"
+#include "esp_task_wdt.h"
 
 const char *fsName = "LittleFS";
 FS *fileSystem = &LITTLEFS;
@@ -178,7 +178,7 @@ bool handleStaticFile(AsyncWebServerRequest *request, String path) {
       file.size(),
       [file](uint8_t *buffer, size_t maxLen, size_t total) mutable -> size_t {
         int bytes = file.read(buffer, maxLen);
-        rtc_wdt_feed();
+        esp_task_wdt_reset();
 
         // close file at the end
         if (bytes + total == file.size()) file.close();
