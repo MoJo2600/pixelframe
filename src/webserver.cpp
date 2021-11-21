@@ -453,5 +453,5 @@ void setup_webserver()
 
 void webserver_loop()
 {
-  AsyncElegantOTA.loop();
+    // AsyncElegantOTA.loop(); // * should not be used in loop. Already deprecated. Will be removed.
 }
