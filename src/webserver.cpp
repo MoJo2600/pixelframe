@@ -22,7 +22,7 @@ FS *fileSystem = &LITTLEFS;
 
 AsyncWebServer server(80);  // Create a webserver object that listens for HTTP request on port 80
 
-char *mdnsName = "pixelframe"; // Domain name for the mDNS responder
+char *mdnsName = strdup("pixelframe"); // Domain name for the mDNS responder
 
 static const char TEXT_PLAIN[] PROGMEM = "text/plain";
 static const char APPLICATION_JSON[] PROGMEM = "application/json";
