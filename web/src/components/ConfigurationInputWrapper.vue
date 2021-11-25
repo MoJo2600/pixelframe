@@ -1,26 +1,30 @@
 <template>
-  <v-row>
-    <v-col :cols="$vuetify.breakpoint.xs ? 12 : 4">
-      <p class="text-body-1">{{ title }}</p>
-    </v-col>
-    <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
-      <v-skeleton-loader
-        v-if="skeletonType === SkeletonType.Input && (loading || error)"
-        :boilerplate="error"
-        class="skeleton-child-full-width"
-        type="button"
-      ></v-skeleton-loader>
+  <v-container>
+    <v-row>
+      <v-col class="pb-0">
+        <p class="text-body-2 ma-0 pl-2">{{ title }}</p>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <v-skeleton-loader
+          v-if="skeletonType === SkeletonType.Input && (loading || error)"
+          :boilerplate="error"
+          class="skeleton-child-full-width"
+          type="button"
+        ></v-skeleton-loader>
 
-      <v-skeleton-loader
-        v-if="skeletonType === SkeletonType.Slider && (loading || error)"
-        :boilerplate="error"
-        class="mx-auto mt-2"
-        type="text"
-      ></v-skeleton-loader>
+        <v-skeleton-loader
+          v-if="skeletonType === SkeletonType.Slider && (loading || error)"
+          :boilerplate="error"
+          class="mx-auto mt-2"
+          type="text"
+        ></v-skeleton-loader>
 
-      <slot></slot>
-    </v-col>
-  </v-row>
+        <slot></slot>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -40,21 +44,29 @@ export default class ConfigurationInputWrapper extends Vue {
   @Prop({
     required: true
   })
-  private loading!: boolean;
+  public loading!: boolean;
 
   @Prop({
     required: true
   })
-  private error!: boolean;
+  public error!: boolean;
 
   @Prop({
     required: true
   })
-  private title!: string;
+  public title!: string;
 
   @Prop({
     required: true
   })
-  private skeletonType!: SkeletonType;
+  public skeletonType!: SkeletonType;
 }
 </script>
+
+<style lang="scss">
+.skeleton-child-full-width {
+  & > div {
+    width: 100%;
+  }
+}
+</style>

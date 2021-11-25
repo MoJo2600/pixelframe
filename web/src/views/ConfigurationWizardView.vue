@@ -24,7 +24,7 @@
               </v-icon>
             </a>
           </v-row>
-          <v-row class="pt-8">
+          <v-row class="pt-8" style="max-width: 320px;">
             <v-img
               src="https://github.com/MoJo2600/pixelframe/raw/dev/docs/pixelframe.png"
             ></v-img>
@@ -44,111 +44,75 @@
         </v-container>
       </v-stepper-content>
 
-      <v-stepper-step :complete="stepperCurrentStep > 2" step="2" editable>
+      <v-stepper-step
+        :complete="stepperCurrentStep > 2"
+        step="2"
+        editable
+        :rules="[() => generalFormValid]"
+      >
         General
       </v-stepper-step>
 
       <v-stepper-content step="2">
-        <v-form v-model="wifiFormValid">
-          <p>Framename / Hostname</p>
-          <v-text-field
+        <v-form v-model="generalFormValid">
+          <frame-name-input
             v-model="frameName"
-            outlined
-            hide-details
-          ></v-text-field>
-
-          <p>Brightness</p>
-          <v-text-field
-            v-model.number="brightness"
-            outlined
-            hide-details
-          ></v-text-field>
-
-          <p>Timezone</p>
-          <v-text-field v-model="timezone" outlined hide-details></v-text-field>
-
-          <p>Default mode</p>
-          <v-text-field
+            :error="false"
+            :loading="false"
+          />
+          <timezone-input v-model="timezone" :error="false" :loading="false" />
+          <default-mode-input
             v-model="defaultMode"
-            outlined
-            hide-details
-          ></v-text-field>
+            :availableDefaultModes="availableDefaultModes"
+            :error="false"
+            :loading="false"
+          />
+          <brightness-input
+            v-model="brightness"
+            :error="false"
+            :loading="false"
+          />
         </v-form>
 
         <v-container class="mt-4">
           <v-btn text @click="stepperCurrentStep--">
             Back
           </v-btn>
-          <v-btn color="primary" @click="stepperCurrentStep++">
+          <v-btn
+            color="primary"
+            @click="stepperCurrentStep++"
+            :disabled="!generalFormValid"
+          >
             Continue
           </v-btn>
         </v-container>
       </v-stepper-content>
 
-      <v-stepper-step :complete="stepperCurrentStep > 3" step="3" editable>
+      <v-stepper-step
+        :complete="stepperCurrentStep > 3"
+        step="3"
+        editable
+        :rules="[() => wifiFormValid]"
+      >
         WiFi
       </v-stepper-step>
 
       <v-stepper-content step="3">
         <v-form v-model="wifiFormValid">
-          <v-container>
-            <v-radio-group v-model="selectedWifi">
-              <v-card
-                v-for="wifi of availableAndSortedWifis"
-                :key="wifi.ssid"
-                class="px-4"
-                @click="selectedWifi = wifi"
-              >
-                <v-card-text>
-                  <v-row class="wifi py-3">
-                    <v-col cols="auto">
-                      <v-icon
-                        class="wifiIcon pr-2"
-                        :class="{
-                          selected:
-                            selectedWifi && selectedWifi.ssid === wifi.ssid
-                        }"
-                        >mdi-wifi</v-icon
-                      >
-                    </v-col>
-                    <v-col>
-                      <v-row>
-                        <p>{{ wifi.ssid }}</p>
-                      </v-row>
-                      <v-row class="mt-0"
-                        ><small class="text--disabled"
-                          >Signal strength: {{ wifi.signalStrength }}</small
-                        ></v-row
-                      >
-                    </v-col>
+          <wifi-input
+            v-model="selectedWifi"
+            :availableWifis="availableWifis"
+            :error="false"
+            :loading="false"
+            @onRefreshClick="refreshWifiList"
+          />
 
-                    <v-radio :value="wifi.ssid" class="d-none"></v-radio>
-                  </v-row>
-                </v-card-text>
-              </v-card>
-            </v-radio-group>
-
-            <v-btn color="primary" @click="refreshWifiList">
-              <v-icon left>
-                mdi-refresh
-              </v-icon>
-              Refresh
-            </v-btn>
-          </v-container>
-
-          <v-expand-transition>
-            <v-container v-show="selectedWifi !== null" class="mt-4">
-              <p>Password</p>
-              <v-text-field
-                v-model="wifiPassword"
-                outlined
-                :append-icon="showWifiPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                @click:append="showWifiPassword = !showWifiPassword"
-                :type="showWifiPassword ? 'text' : 'password'"
-                hide-details
-              ></v-text-field>
-            </v-container>
-          </v-expand-transition>
+          <wifi-password-input
+            v-model="wifiPassword"
+            :error="false"
+            :loading="false"
+            :show="selectedWifi !== null"
+          />
         </v-form>
 
         <v-container class="mt-4">
@@ -175,7 +139,16 @@
         </v-container>
 
         <v-container class="mt-8">
-          <v-btn color="primary" x-large>
+          <p v-if="!generalFormValid || !wifiFormValid" class="red--text">
+            There is at least one error in the configuration sections. Please
+            have a look at the highlighted sections of the wizard and fix the
+            errors or fill in the required data.
+          </p>
+          <v-btn
+            color="primary"
+            x-large
+            :disabled="!generalFormValid || !wifiFormValid"
+          >
             <v-icon left>
               mdi-rocket-launch
             </v-icon>
@@ -188,13 +161,26 @@
 </template>
 
 <script lang="ts">
-import { orderBy } from "lodash";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Wifi } from "@/models/environment";
 
+import FrameNameInput from "@/components/inputs/FrameName.vue";
+import TimezoneInput from "@/components/inputs/Timezone.vue";
+import DefaultModeInput from "@/components/inputs/DefaultMode.vue";
+import BrightnessInput from "@/components/inputs/Brightness.vue";
+import WifiInput from "@/components/inputs/Wifi.vue";
+import WifiPasswordInput from "@/components/inputs/WifiPassword.vue";
+
 @Component({
-  components: {}
+  components: {
+    FrameNameInput,
+    TimezoneInput,
+    DefaultModeInput,
+    BrightnessInput,
+    WifiInput,
+    WifiPasswordInput
+  }
 })
 export default class ConfigurationWizardView extends Vue {
   public stepperCurrentStep = 1;
@@ -208,7 +194,11 @@ export default class ConfigurationWizardView extends Vue {
   public wifiPassword = "";
   public showWifiPassword = false;
 
-  private availableWifis: Wifi[] = [
+  public get availableDefaultModes() {
+    return ["clock", "gif"];
+  }
+
+  public availableWifis: Wifi[] = [
     {
       ssid: "Wizard test 1",
       signalStrength: 1
@@ -223,23 +213,9 @@ export default class ConfigurationWizardView extends Vue {
     }
   ]; // FIXME: replace with data from service
 
-  public get availableAndSortedWifis() {
-    return orderBy(this.availableWifis, ["signalStrength"], "desc");
-  }
-
   public async refreshWifiList(): Promise<void> {
     // TODO:
+    console.log("refresh");
   }
 }
 </script>
-
-<style>
-.wifiIcon.selected {
-  opacity: 1;
-  color: var(--v-primary-base);
-}
-
-.wifiIcon {
-  opacity: 0.4;
-}
-</style>
