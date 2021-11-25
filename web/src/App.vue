@@ -31,6 +31,7 @@ import Notification from "@/components/Notification.vue";
 import { VuetifyThemeItem } from "vuetify/types/services/theme";
 import NotificationModule from "@/store/modules/notification";
 import RendererModule from "@/store/modules/renderer";
+import ThemeModule from "@/store/modules/theme";
 
 @Component({
   components: {
@@ -47,6 +48,10 @@ export default class App extends Vue {
   get background(): VuetifyThemeItem | undefined {
     const currentTheme = this.$vuetify.theme.dark ? "dark" : "light";
     return this.$vuetify.theme.themes[currentTheme].background;
+  }
+
+  created() {
+    this.$vuetify.theme.dark = ThemeModule.darkThemeEnabled;
   }
 }
 </script>

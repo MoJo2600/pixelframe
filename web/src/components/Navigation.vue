@@ -44,6 +44,7 @@
           </v-list-item>
         </v-list-group>
       </template>
+
       <v-list-item href="/update">
         <v-list-item-icon>
           <v-icon>mdi-memory</v-icon>
@@ -53,6 +54,17 @@
           <v-list-item-title>Update firmware</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
+
+      <v-list-item @click="ThemeModule.switchTheme()">
+        <v-list-item-icon>
+          <v-icon>mdi-theme-light-dark</v-icon>
+        </v-list-item-icon>
+
+        <v-list-item-content>
+          <v-list-item-title>Theme</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+
       <v-list-item @click="shutdown">
         <v-list-item-icon>
           <v-icon>mdi-power</v-icon>
@@ -68,10 +80,13 @@
 
 <script lang="ts">
 import { FramesService, Service } from "@/services";
-import { Vue, Component, VModel } from "vue-property-decorator";
+import { Vue, Component, VModel, Watch } from "vue-property-decorator";
+import ThemeModule from "@/store/modules/theme";
 
 @Component
 export default class Navigation extends Vue {
+  ThemeModule = ThemeModule;
+
   private readonly framesService = Service.get(FramesService);
 
   @VModel()
@@ -80,6 +95,16 @@ export default class Navigation extends Vue {
   public async shutdown(): Promise<void> {
     await this.framesService.showFrame("off");
   }
+
+  get getTheme() {
+    return ThemeModule.darkThemeEnabled
+  }
+
+  @Watch("getTheme")
+  onThemeChanged() {
+      this.$vuetify.theme.dark = this.getTheme;
+  }
+
 }
 </script>
 
