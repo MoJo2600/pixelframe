@@ -11,19 +11,23 @@
 // TODO: #define FASTLED_ALL_PINS_HARDWARE_SPI
 // Should be irrelevant, because SPI is never used for WS8xxx LEDs
 // #define FASTLED_ESP32_SPI_BUS HSPI
-
+#include "Preferences.h"
+// #include "WiFiClientSecure.h"
 #include "SPI.h"
 #include "lib/stdinout.h"
-#include "WiFi.h"
 #include "ArduinoJson.h"
-#include "WiFiUdp.h"
+// #include "WiFiUdp.h"
 #include "config.hpp"                    // Set up the LED matrix here
-#include "ezTime.h"
-#include "webserver.h"                   // Web interface
+
+#include "pixel_webserver.h"                   // Web interface
 #include <filesystem.hpp>
 #include "components/orchestrator.hpp"
 #include "frames/frame.hpp"
 #include "fonts/TomThumbPatched.h"
+
+#include <WiFi.h>
+#include <esp_wifi.h>
+#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 
 bool
   wifiConnected = false;
@@ -44,6 +48,8 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
   delay(500);
+
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
 
   // stdout to serial setup
   hal_printf_init();
@@ -86,59 +92,95 @@ void setup() {
 
   matrix_setup();
 
-  matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
-  matrix->show();
-
   // ### CONNECT WIFI
-  if (configuration["wifi"]["ssid"] != nullptr) {
-    wifi_ssid = strdup(configuration["wifi"]["ssid"]);
+  // This is a sample setup... there are a lot of good examples on how to get configuration from json, etc:
+  // https://github.com/tzapu/WiFiManager/tree/master/examples
+  // 
+  // WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+  WiFiManager wm;
+
+  // reset settings - wipe stored credentials for testing
+  // these are stored by the esp library
+  wm.resetSettings();
+
+  // Automatically connect using saved credentials,
+  // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
+  // if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
+  // then goes into a blocking loop awaiting configuration and will return success result
+
+  bool res;
+
+  char randomPasswordStr[8];
+  sprintf(randomPasswordStr, "%lu", random(10000000,99999999));
+  Serial.print(F("[CONFIG] AP password: "));
+  Serial.println(randomPasswordStr);
+
+  // draw AP PW on screen
+  matrix->setTextColor(matrix->Color(155, 155, 155));
+  matrix->setTextSize(1);
+  matrix->setTextWrap(false);
+  matrix->setFont(&TomThumbPatched);
+  // Text wrap breaks to early and shows only 3 characters... doh
+  matrix->println(randomPasswordStr);
+  matrix->print(&randomPasswordStr[4]);
+  matrix->show();
+
+  res = wm.autoConnect("Pixelframe", randomPasswordStr); // password protected ap
+
+  if(!res) {
+    Serial.println("Failed to connect");
+    ESP.restart();
+  } 
+  else {
+    //if you get here you have connected to the WiFi    
+    Serial.println("connected...yeey :)");
+
+    matrix->drawRect(2,5,12,6, matrix->Color(155, 155, 155));
+    matrix->show();
+
+    mdnsName = strdup("pixelframe");
+    if (configuration["framename"] != nullptr) {
+      mdnsName = strdup(configuration["framename"]);
+    }
+
+    // WiFi.setHostname(mdnsName);
+
+    matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
+    matrix->show();
+
+    if (wifi_ssid == nullptr || wifi_password == nullptr) {
+      // TODO: access point
+      // configure wifi via webpage
+    } else {
+      set_wifi(wifi_ssid, wifi_password);
+    }
+
+    matrix->drawRect(5,6,2,4, matrix->Color(155, 210, 155));
+    matrix->show();
+
+    // Time
+    Serial.println(F("[TZ] Adjusting clock.."));
+    const char* tzConf = configuration["timezone"];
+    waitForSync();
+    timezone->setLocation(tzConf);
+    Serial.print(F("[TZ] "));
+    Serial.println(timezone->dateTime());
+    Serial.print(F("[TZ] Timezone: "));
+    Serial.println(tzConf);
+
+    matrix->drawRect(7,6,2,4, matrix->Color(155, 210, 155));
+    matrix->show();
+
+    setup_webserver();
+
+    matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
+    matrix->show();
+
+    Orchestrator::Instance()->setup();
+
+    matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
+    matrix->show();
   }
-  if (configuration["wifi"]["password"] != nullptr) {
-    wifi_password = strdup(configuration["wifi"]["password"]);
-  }
-
-  mdnsName = strdup("pixelframe");
-  if (configuration["framename"] != nullptr) {
-    mdnsName = strdup(configuration["framename"]);
-  }
-
-  WiFi.setHostname(mdnsName);
-
-  matrix->drawRect(3,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
-
-  if (wifi_ssid == nullptr || wifi_password == nullptr) {
-    // TODO: access point
-    // configure wifi via webpage
-  } else {
-    set_wifi(wifi_ssid, wifi_password);
-  }
-
-  matrix->drawRect(5,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
-
-  // Time
-  Serial.println(F("[TZ] Adjusting clock.."));
-  const char* tzConf = configuration["timezone"];
-  waitForSync();
-  timezone->setLocation(tzConf);
-  Serial.print(F("[TZ] "));
-  Serial.println(timezone->dateTime());
-  Serial.print(F("[TZ] Timezone: "));
-  Serial.println(tzConf);
-
-  matrix->drawRect(7,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
-
-  setup_webserver();
-
-  matrix->drawRect(9,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
-
-  Orchestrator::Instance()->setup();
-
-  matrix->drawRect(11,6,2,4, matrix->Color(155, 210, 155));
-  matrix->show();
 }
 
 unsigned long _timer = millis();

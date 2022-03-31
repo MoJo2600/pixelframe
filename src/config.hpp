@@ -15,6 +15,8 @@
 
 // #define FS_NO_GLOBALS // otherwise there is a conflict between fs::File and SD File
 // #include <FS.h>
+#include <Preferences.h>
+#include <ezTime.h>
 #include <Arduino.h>
 #define FS_NO_GLOBALS
 #include "LITTLEFS.h"
@@ -106,6 +108,7 @@ void set_wifi(char* ssid, char* password);
 // TIMEZONE
 //
 #include <Arduino.h>
+#include "Preferences.h"
 #include "ezTime.h"
 
 extern Timezone* timezone;

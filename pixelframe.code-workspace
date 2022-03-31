@@ -5,6 +5,7 @@
 		}
 	],
 	"settings": {
+		"editor.rulers": [120],
 		"files.associations": {
 			"*.vue": "vue",
 			"array": "cpp",
@@ -44,7 +45,8 @@
 			"type_traits": "cpp",
 			"utility": "cpp",
 			"typeinfo": "cpp",
-			"cstring": "cpp"
+			"cstring": "cpp",
+			"regex": "cpp"
 		}
 	}
 }

@@ -7,7 +7,7 @@
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include "config.hpp"
-#include "webserver.h"
+#include "pixel_webserver.h"
 #include "components/orchestrator.hpp"
 #include "frames/clockframe.hpp"
 #include "frames/gifframe.hpp"

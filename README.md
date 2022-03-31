@@ -26,54 +26,72 @@ The code of the web frontend can be found in the `webfrontend` folder. A vscode 
 
 ## How to build & deploy
 
-### Using Platform IO and VS Code
-
-**Hint**: This setup does not work with WSL without a lot of effort because WSL does not handle USB devices by default.
+### Using Platform IO and VS Code (Windows)
 
 1. Open VS Code, go to extensions and install the `PlatformIO IDE` extension. Alternatively, run following command:
 
-```bash
-code --install-extension platformio.platformio-ide
-```
-
-**Remark**: On Windows, an error can occur during installation (https://github.com/platformio/platformio-core-installer/issues/221). Follow those steps if the installation fails and reinstall the extension.
+   ```bash
+   code --install-extension platformio.platformio-ide
+   ```
+   
+   **Remark**: On Windows, an error can occur during installation (https://github.   com/platformio/platformio-core-installer/issues/221). Follow those steps if the    installation fails and reinstall the extension.
 
 2. Install drivers for USB to UART bridge for your operating system. In our case, using an ESP32 with a CP2104 USB to UART bridge, the drivers are located here: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
 
-**Remark**: Missing drivers can be detected by seeing unknown devices in the Device Manager on Windows or the following error message during deployment: `"Error: Please specify upload_port for environment or use global --upload-port option."`
+   **Remark**: Missing drivers can be detected by seeing unknown devices in the    Device Manager on Windows or the following error message during deployment:    `"Error: Please specify upload_port for environment or use global --upload-port    option."`
 
 3. Open this projects root directory in VS Code
 
 4. Set up data directory (within root folder of the project) with data for the filesystem on the ESP containing the following content:
 
-```
-data
-│
-└─ gifs
-│  │  *.gif
-│
-└─ system
-│  │  config.json
-```
+   ```
+   data
+   │
+   └─ gifs
+   │  │  *.gif
+   │
+   └─ system
+   │  │  config.json
+   ```
 
-**config.json**
+   **config.json**
 
-```json
-{
-  "wifi": {
-    "ssid": "ssid",
-    "password": "password"
-  },
-  "timezone": "Europe/Berlin"
-}
-```
+   ```json
+   {
+     "wifi": {
+       "ssid": "ssid",
+       "password": "password"
+     },
+     "timezone": "Europe/Berlin"
+   }
+   ```
 
 5. Upload the filesystem to the ESP by going to the PlatformIO extension and selecting `Platform > Upload Filesystem Image`
 
 6. Use the VS Code commands, assigned keybindings or icons in the footer for
 
-- building (check mark): `PlatformIO: Build`
-- deploying (arrow): `PlatformIO: Upload`
+   - building (check mark): `PlatformIO: Build`
+   - deploying (arrow): `PlatformIO: Upload`
+
+### Using Platform IO and VS Code (Windows WSL2)
+
+Prerequisites: VSCode with installed PlatformIO extension. WSL with Ubuntu 20.04, [Docker installed inside WSL2 without Docker Desktop](https://dev.to/felipecrs/simply-run-docker-on-wsl2-3o8)
+
+1. [Install usbipd.win](https://devblogs.microsoft.com/commandline/connecting-usb-devices-to-wsl/) and connect the USB device to WSL
+
+   ```
+   usbipd wsl list
+   usbipd wsl attach --busid <busid>
+   ```
+
+2. Add user to dialout group
+
+   `sudo usermod -a -G dialout $USER`
+
+3. Change the device to be writable during boot
+
+
+
 
 ## Used sources
 
