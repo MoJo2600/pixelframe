@@ -1,35 +1,21 @@
-import { v4 as uuidv4 } from "uuid";
-import {
-  Action,
-  getModule,
-  Module,
-  Mutation,
-  VuexModule
-} from "vuex-module-decorators";
-import store from "@/store";
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
-@Module({
-  dynamic: true,
-  namespaced: true,
-  name: "renderer",
-  store
+export const useRendererStore = defineStore('renderer', () => {
+  const key = ref<string>(uuidv4())
+
+  const renderKey = computed(() => key.value)
+
+  function forceReRender(): string {
+    const newKey = uuidv4()
+    key.value = newKey
+    return newKey
+  }
+
+  return {
+    key,
+    renderKey,
+    forceReRender,
+  }
 })
-class RendererModule extends VuexModule {
-  private key: string = uuidv4();
-
-  get renderKey(): string {
-    return this.key;
-  }
-
-  @Mutation
-  private assignNewKey(key: string): void {
-    this.key = key;
-  }
-
-  @Action({ commit: "assignNewKey" })
-  public forceReRender(): string {
-    return uuidv4();
-  }
-}
-
-export default getModule(RendererModule);

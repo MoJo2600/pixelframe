@@ -1,33 +1,68 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.158.0/containers/cpp
+// For format details, see https://aka.ms/devcontainer.json
 {
-	"name": "C++",
+	"name": "PixelFrame Development",
 	"build": {
-		"dockerfile": "Dockerfile",
-		// Update 'VARIANT' to pick an Debian / Ubuntu OS version: debian-10, debian-9, ubuntu-20.04, ubuntu-18.04
-		"args": { "VARIANT": "ubuntu-20.04" }
-	},
-	// , "--device=/dev/ttyUSB0:/dev/ttyUSB0"
-	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", "--device=/dev/ttyUSB0:/dev/ttyUSB0"],
-
-	// Set *default* container specific settings.json values on container create.
-	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash"
+		"dockerfile": "Dockerfile"
 	},
 
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"ms-vscode.cpptools",
-		"platformio.platformio-ide",
-		"ms-vscode.cpptools-extension-pack"
+	// Run arguments for the container
+	"runArgs": [
+		"--cap-add=SYS_PTRACE",
+		"--security-opt", "seccomp=unconfined"
 	],
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	// Mount USB devices if available (comment out if not using hardware)
+	// "mounts": [
+	// 	"source=/dev/ttyUSB0,target=/dev/ttyUSB0,type=bind"
+	// ],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
+	// Forward ports for web development
+	"forwardPorts": [
+		3000,  // Mock API server
+		5173   // Vite dev server
+	],
 
-	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	// VS Code customizations (new format)
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"[cpp]": {
+					"editor.defaultFormatter": "ms-vscode.cpptools"
+				},
+				"[typescript]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"[vue]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"platformio-ide.useBuiltinPython": false,
+				"platformio-ide.customPATH": "/opt/platformio-venv/bin"
+			},
+			"extensions": [
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"platformio.platformio-ide",
+				"Vue.volar",
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"EditorConfig.EditorConfig",
+				"ms-vscode.vscode-typescript-next"
+			]
+		}
+	},
+
+	// Features to add to the container
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {}
+	},
+
+	// Commands to run after container creation
+	"postCreateCommand": "cd /workspaces/pixelframe/web && npm install",
+
+	// Commands to run after container starts
+	"postStartCommand": "pio system info || true",
+
+	// Use non-root user
 	"remoteUser": "vscode"
 }

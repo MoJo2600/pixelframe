@@ -1,35 +1,26 @@
-import {
-  Action,
-  getModule,
-  Module,
-  Mutation,
-  VuexModule
-} from "vuex-module-decorators";
-import store from "@/store";
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 
-@Module({
-  dynamic: true,
-  namespaced: true,
-  name: "theme",
-  store
+export const useThemeStore = defineStore('theme', () => {
+  const darkTheme = ref(false)
+
+  const darkThemeEnabled = computed(() => darkTheme.value)
+
+  function switchTheme(): boolean {
+    darkTheme.value = !darkTheme.value
+    // TODO: localStorage.put
+    return darkTheme.value
+  }
+
+  function setDarkTheme(value: boolean): void {
+    darkTheme.value = value
+    // TODO: localStorage.put
+  }
+
+  return {
+    darkTheme,
+    darkThemeEnabled,
+    switchTheme,
+    setDarkTheme,
+  }
 })
-class ThemeModule extends VuexModule {
-  private darkTheme = false;
-
-  get darkThemeEnabled(): boolean {
-    return this.darkTheme;
-  }
-
-  @Mutation
-  private setDarkTheme(darkTheme: boolean): void {
-    this.darkTheme = darkTheme;
-    // * TODO localStorage.put
-  }
-
-  @Action({ commit: "setDarkTheme" })
-  public switchTheme(): boolean {
-    return !this.darkTheme;
-  }
-}
-
-export default getModule(ThemeModule);

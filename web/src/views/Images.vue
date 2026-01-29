@@ -40,16 +40,16 @@
       <v-row>
         <v-col :cols="imageSize" v-for="image in images" :key="image.name">
           <v-hover>
-            <template v-slot:default="{ hover }">
+            <template v-slot:default="{ isHovering }">
               <v-container class="ma-0 pa-0" style="position: relative">
                 <v-img
                   class="pixelated"
-                  :class="{ 'image-hover': hover }"
+                  :class="{ 'image-hover': isHovering }"
                   :src="imageHost + '/' + image.name"
                 ></v-img>
 
                 <v-fade-transition>
-                  <v-overlay v-if="hover" absolute>
+                  <v-overlay v-if="isHovering" absolute>
                     <v-btn
                       icon
                       large
@@ -78,78 +78,66 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationFormButton from "@/components/ConfigurationFormButton.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { Image } from "@/models/images";
-import { Service, ImagesService } from "@/services";
-import { required } from "@/validation";
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
+import SpinnerText from '@/components/SpinnerText.vue'
+import DataLoaderError from '@/components/DataLoaderError.vue'
+import ConfigurationSection from '@/components/ConfigurationSection.vue'
+import ConfigurationFormButton from '@/components/ConfigurationFormButton.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { Image } from '@/models/images'
+import { Service, ImagesService } from '@/services'
+import { required } from '@/validation'
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationFormButton,
-  },
+const { loading, error, writing, wrapDataRead, wrapDataWrite } =
+  useDataHandler()
+const imgService = Service.get(ImagesService)
+const display = useDisplay()
+
+const imageHost =
+  (import.meta.env.VITE_API_BASE_URL as string) || window.location.origin
+const images = ref<Image[]>([])
+const file = ref<File[] | null>(null)
+const formValid = ref(false)
+
+const imageSize = computed(() => {
+  if (display.xs.value) return 6
+  if (display.sm.value) return 4
+  if (display.md.value) return 4
+  if (display.lg.value) return 2
+  return 1
 })
-export default class ImagesView extends Mixins(DataHandlerMixin) {
-  required = required;
 
-  private readonly imgService = Service.get(ImagesService);
-  private imageHost =
-    process.env.VUE_APP_API_BASE_URL || window.location.origin;
-  private images: Image[] = [];
-  private file: string | null = null;
-  private formValid = false;
-
-  private get imageSize(): number {
-    return this.$vuetify.breakpoint.xs
-      ? 6
-      : this.$vuetify.breakpoint.sm
-      ? 4
-      : this.$vuetify.breakpoint.md
-      ? 4
-      : this.$vuetify.breakpoint.lg
-      ? 2
-      : 1;
-  }
-
-  private async playImage(name: string): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        await this.imgService.playImage(name);
-      },
-      WriteAction.Command,
-      `play image ${name}`
-    );
-  }
-
-  private async deleteImage(name: string): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        await this.imgService.deleteImage(name);
-      },
-      WriteAction.Delete,
-      `image ${name}`
-    );
-  }
-
-  private async uploadImage(): Promise<void> {
-    console.log(this.file);
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      this.images = await this.imgService.listImages();
-    });
-  }
+async function playImage(name: string): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      await imgService.playImage(name)
+    },
+    WriteAction.Command,
+    `play image ${name}`
+  )
 }
+
+async function deleteImage(name: string): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      await imgService.deleteImage(name)
+    },
+    WriteAction.Delete,
+    `image ${name}`
+  )
+}
+
+async function uploadImage(): Promise<void> {
+  console.log(file.value)
+}
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    images.value = await imgService.listImages()
+  })
+})
 </script>
 
 <style lang="scss" scoped>
@@ -157,12 +145,14 @@ export default class ImagesView extends Mixins(DataHandlerMixin) {
   background: #000000;
 }
 
-::v-deep .v-image__image {
+:deep(.v-image__image) {
   image-rendering: pixelated;
 }
 
 .image-hover {
-  transition: opacity 300ms, filter 300ms;
+  transition:
+    opacity 300ms,
+    filter 300ms;
   filter: grayscale(100%);
   opacity: 0.4;
 }

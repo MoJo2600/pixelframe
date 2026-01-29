@@ -1,27 +1,118 @@
 {
   "configuration-basic": {
-    "brightness": 164,
+    "brightness": 105.9724342663274,
     "timezone": "Europe/Berlin"
   },
   "configuration-wifi": {
-    "ssid": "ssid1",
-    "password": "asdf"
+    "ssid": "PixelFrame-Network",
+    "password": "********"
   },
   "configuration-mqtt": {
-    "host": "host",
-    "port": "8080",
-    "user": "user",
-    "password": "asdf",
-    "baseTopic": "topic"
+    "host": "mqtt.example.com",
+    "port": "1883",
+    "user": "pixelframe",
+    "password": "********",
+    "baseTopic": "home/pixelframe"
   },
   "environment-wifis": [
     {
-      "ssid": "ssid1",
-      "signalStrength": 0
+      "ssid": "PixelFrame-Network",
+      "signalStrength": -45
     },
     {
-      "ssid": "ssid2",
-      "signalStrength": 0
+      "ssid": "Neighbor-WiFi",
+      "signalStrength": -72
+    },
+    {
+      "ssid": "Guest-Network",
+      "signalStrength": -68
+    }
+  ],
+  "files": [
+    {
+      "type": "file",
+      "size": "1771",
+      "name": "bird.gif"
+    },
+    {
+      "type": "file",
+      "size": "1358",
+      "name": "bomb.gif"
+    },
+    {
+      "type": "file",
+      "size": "425",
+      "name": "boy.gif"
+    },
+    {
+      "type": "file",
+      "size": "2831",
+      "name": "bridge.gif"
+    },
+    {
+      "type": "file",
+      "size": "1545",
+      "name": "bridggy.gif"
+    },
+    {
+      "type": "file",
+      "size": "1408",
+      "name": "bug.gif"
+    },
+    {
+      "type": "file",
+      "size": "1813",
+      "name": "butterfly.gif"
+    },
+    {
+      "type": "file",
+      "size": "1530",
+      "name": "candles.gif"
+    },
+    {
+      "type": "file",
+      "size": "1489",
+      "name": "car.gif"
+    },
+    {
+      "type": "file",
+      "size": "1631",
+      "name": "caterpillar.gif"
+    },
+    {
+      "type": "file",
+      "size": "5169",
+      "name": "city.gif"
+    },
+    {
+      "type": "file",
+      "size": "1363",
+      "name": "coffee.gif"
+    },
+    {
+      "type": "file",
+      "size": "1593",
+      "name": "girl.gif"
+    },
+    {
+      "type": "file",
+      "size": "1375",
+      "name": "girl2.gif"
+    },
+    {
+      "type": "file",
+      "size": "2268",
+      "name": "progress.gif"
+    },
+    {
+      "type": "file",
+      "size": "1336",
+      "name": "rain.gif"
+    },
+    {
+      "type": "file",
+      "size": "8572",
+      "name": "sunmoon.gif"
     }
   ],
   "images": [
@@ -110,5 +201,34 @@
       "size": "8572",
       "name": "sunmoon.gif"
     }
-  ]
+  ],
+  "perf": {
+    "frame": {
+      "avgTimeUs": 1250,
+      "minTimeUs": 800,
+      "maxTimeUs": 3500,
+      "fps": 80,
+      "count": 24000,
+      "drops": 12
+    },
+    "api": {
+      "calls": 156,
+      "avgTimeUs": 2800,
+      "maxTimeUs": 15000,
+      "wsEvents": 42
+    },
+    "memory": {
+      "freeHeap": 185432,
+      "minFreeHeap": 162000,
+      "largestBlock": 110000
+    },
+    "core": 1
+  },
+  "heap": {
+    "value": 185432
+  },
+  "show-status": {
+    "mode": "clock",
+    "message": "OK"
+  }
 }

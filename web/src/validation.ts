@@ -1,4 +1,6 @@
-export const required = (v: string) => !!v;
+export const required = (v: string) => !!v
 
-export const validPort = (v: string | number) =>
-  Number.isInteger(Number(v)) && v > 0 && v <= 65535;
+export const validPort = (v: string | number) => {
+  const num = Number(v)
+  return Number.isInteger(num) && num > 0 && num <= 65535
+}

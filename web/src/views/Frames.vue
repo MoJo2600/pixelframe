@@ -25,89 +25,71 @@
           <v-card-subtitle>
             {{ frame.description }}
           </v-card-subtitle>
-
         </v-card>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
-<script lang="ts">
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { Service, FramesService } from "@/services";
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
+import SpinnerText from '@/components/SpinnerText.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { Service, FramesService } from '@/services'
 
 interface Frame {
-  name: string;
-  description: string;
-  apiPath: string;
+  name: string
+  description: string
+  apiPath: string
 }
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationInputWrapper
-  }
+const { loading, writing, wrapDataRead, wrapDataWrite } = useDataHandler()
+const framesService = Service.get(FramesService)
+const display = useDisplay()
+
+const frames: Frame[] = [
+  {
+    name: 'Pong Clock',
+    description: 'A fancy pong clock',
+    apiPath: 'clock',
+  },
+  {
+    name: 'Gif',
+    description: 'Plays random GIF animations.',
+    apiPath: 'gif',
+  },
+  {
+    name: 'Visuals',
+    description: 'Plays random visuals.',
+    apiPath: 'visuals',
+  },
+  {
+    name: 'Off',
+    description: 'Turn off the LEDs.',
+    apiPath: 'off',
+  },
+]
+
+const cardSize = computed(() => {
+  if (display.xs.value) return 12
+  if (display.sm.value) return 6
+  return 3
 })
-export default class FramesView extends Mixins(DataHandlerMixin) {
-  private readonly framesService = Service.get(FramesService);
 
-  private readonly frames: Frame[] = [
-    {
-      name: "Pong Clock",
-      description: "A fancy pong clock",
-      apiPath: "clock"
+async function showFrame(frame: Frame): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      await framesService.showFrame(frame.apiPath)
     },
-    {
-      name: "Gif",
-      description: "Plays random GIF animations.",
-      apiPath: "gif"
-    },
-    {
-      name: "Visuals",
-      description: "Plays random visuals.",
-      apiPath: "visuals"
-    },
-    {
-      name: "Off",
-      description: "Turn off the LEDs.",
-      apiPath: "off"
-    }
-  ];
-
-  private get cardSize(): number {
-    return this.$vuetify.breakpoint.xs
-      ? 12
-      : this.$vuetify.breakpoint.sm
-      ? 6
-      : this.$vuetify.breakpoint.md
-      ? 3
-      : this.$vuetify.breakpoint.lg
-      ? 3
-      : 3;
-  }
-
-  private async showFrame(frame: Frame): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        await this.framesService.showFrame(frame.apiPath);
-      },
-      WriteAction.Command,
-      `show frame ${frame.name}`
-    );
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      // nothing to load, required for setting loading to false
-    });
-  }
+    WriteAction.Command,
+    `show frame ${frame.name}`
+  )
 }
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    // nothing to load, required for setting loading to false
+  })
+})
 </script>

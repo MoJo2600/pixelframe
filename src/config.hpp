@@ -19,7 +19,8 @@
 #include <ezTime.h>
 #include <Arduino.h>
 #define FS_NO_GLOBALS
-#include "LITTLEFS.h"
+#include <LittleFS.h>
+#define LITTLEFS LittleFS
 #include <FastLED.h>
 #include "ArduinoJson.h"
 #include "esp_task_wdt.h"
@@ -100,7 +101,7 @@ void matrix_setup(bool initserial=true, int reservemem = 40000);
 
 void set_brightness(uint8_t brightness);
 
-StaticJsonDocument<512> readConfiguration();
+JsonDocument readConfiguration();
 
 void set_wifi(char* ssid, char* password);
 

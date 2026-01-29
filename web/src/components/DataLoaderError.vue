@@ -19,21 +19,16 @@
   </v-expand-transition>
 </template>
 
-<script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import { Prop } from "vue-property-decorator";
-import RendererModule from "@/store/modules/renderer";
+<script setup lang="ts">
+import { useRendererStore } from '@/store/modules/renderer'
 
-@Component
-export default class DataLoaderError extends Vue {
-  @Prop({
-    required: true
-  })
-  private text!: string;
+defineProps<{
+  text: string
+}>()
 
-  private retry(): void {
-    RendererModule.forceReRender();
-  }
+const rendererStore = useRendererStore()
+
+function retry(): void {
+  rendererStore.forceReRender()
 }
 </script>

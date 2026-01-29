@@ -1,28 +1,34 @@
-import Vue from "vue";
-import Vuetify from "vuetify/lib/framework";
-import colors from "vuetify/lib/util/colors";
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import { md3 } from 'vuetify/blueprints'
 
-Vue.use(Vuetify);
+// Vuetify styles
+import 'vuetify/styles'
 
-export default new Vuetify({
+export default createVuetify({
+  blueprint: md3,
+  components,
+  directives,
   theme: {
-    dark: false,
+    defaultTheme: 'light',
     themes: {
       light: {
-        primary: colors.green.base,
-        secondary: colors.green.darken3,
-        accent: colors.red.base,
-        background: colors.grey.lighten4
+        colors: {
+          primary: '#4CAF50',
+          secondary: '#00897B',
+          accent: '#F44336',
+          background: '#F5F5F5',
+        },
       },
       dark: {
-        primary: colors.cyan.base,
-        secondary: colors.cyan.darken3,
-        accent: colors.red.base,
-        background: colors.grey.darken4
-      }
+        colors: {
+          primary: '#00BCD4',
+          secondary: '#00838F',
+          accent: '#F44336',
+          background: '#121212',
+        },
+      },
     },
-    options: {
-      customProperties: true
-    }
-  }
-});
+  },
+})

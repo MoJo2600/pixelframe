@@ -1,60 +1,46 @@
-import { v4 as uuidv4 } from "uuid";
-import {
-  Action,
-  getModule,
-  Module,
-  Mutation,
-  VuexModule
-} from "vuex-module-decorators";
-import store from "@/store";
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
 export enum NotificationType {
-  Success = "success",
-  Information = "info",
-  Warning = "warning",
-  Error = "error"
+  Success = 'success',
+  Information = 'info',
+  Warning = 'warning',
+  Error = 'error',
 }
 
 export interface NotificationData {
-  id: string;
-  dateTime: Date;
-  type: NotificationType;
-  content: string;
-  details?: string;
+  id: string
+  dateTime: Date
+  type: NotificationType
+  content: string
+  details?: string
 }
 
-@Module({
-  dynamic: true,
-  namespaced: true,
-  name: "notification",
-  store
-})
-class NotificationModule extends VuexModule {
-  private notifications: NotificationData[] = [];
+export const useNotificationStore = defineStore('notification', () => {
+  const notifications = ref<NotificationData[]>([])
 
-  get allNotifications(): NotificationData[] {
-    return this.notifications;
-  }
+  const allNotifications = computed(() => notifications.value)
 
   // TODO: provide getter for visible notifications only to clean up DOM
 
-  @Mutation
-  private addNotification(notification: NotificationData): void {
-    this.notifications.push(notification);
-  }
-
-  @Action({ commit: "addNotification" })
-  public notify(options: {
-    type: NotificationType;
-    content: string;
-    details?: string;
+  function notify(options: {
+    type: NotificationType
+    content: string
+    details?: string
   }): NotificationData {
-    return {
+    const notification: NotificationData = {
       id: uuidv4(),
       dateTime: new Date(),
-      ...options
-    };
+      ...options,
+    }
+    notifications.value.push(notification)
+    return notification
   }
-}
 
-export default getModule(NotificationModule);
+  return {
+    notifications,
+    allNotifications,
+    notify,
+  }
+})

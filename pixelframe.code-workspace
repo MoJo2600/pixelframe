@@ -1,11 +1,18 @@
 {
 	"folders": [
 		{
+			"name": "🔌 ESP32 Firmware",
 			"path": "."
+		},
+		{
+			"name": "🌐 Web Frontend",
+			"path": "web"
 		}
 	],
 	"settings": {
 		"editor.rulers": [120],
+		
+		// File associations for C++ (firmware)
 		"files.associations": {
 			"*.vue": "vue",
 			"array": "cpp",
@@ -47,6 +54,112 @@
 			"typeinfo": "cpp",
 			"cstring": "cpp",
 			"regex": "cpp"
+		},
+
+		// Exclude build artifacts and dependencies from search
+		"files.exclude": {
+			"**/.pio": true,
+			"**/node_modules": true,
+			"**/.git": true
+		},
+		"search.exclude": {
+			"**/.pio": true,
+			"**/node_modules": true,
+			"**/dist": true
+		},
+
+		// TypeScript/Vue settings for web folder
+		"[vue]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnSave": true
+		},
+		"[typescript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnSave": true
+		},
+		"[javascript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnSave": true
+		},
+
+		// C++ settings for firmware folder
+		"[cpp]": {
+			"editor.defaultFormatter": "ms-vscode.cpptools"
 		}
+	},
+	"extensions": {
+		"recommendations": [
+			// Firmware development
+			"platformio.platformio-ide",
+			"ms-vscode.cpptools",
+			"ms-vscode.cpptools-extension-pack",
+			
+			// Web development
+			"Vue.volar",
+			"dbaeumer.vscode-eslint",
+			"esbenp.prettier-vscode",
+			"ms-vscode.vscode-typescript-next"
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "🔨 Build Firmware",
+				"type": "shell",
+				"command": "pio run",
+				"group": "build",
+				"problemMatcher": ["$platformio"]
+			},
+			{
+				"label": "📤 Upload Firmware",
+				"type": "shell",
+				"command": "pio run --target upload",
+				"group": "build",
+				"problemMatcher": ["$platformio"]
+			},
+			{
+				"label": "🌐 Start Web Dev Server",
+				"type": "shell",
+				"command": "npm run dev",
+				"options": {
+					"cwd": "${workspaceFolder:🌐 Web Frontend}"
+				},
+				"isBackground": true,
+				"problemMatcher": []
+			},
+			{
+				"label": "🧪 Start Web Test Mode",
+				"type": "shell",
+				"command": "npm run test:ui",
+				"options": {
+					"cwd": "${workspaceFolder:🌐 Web Frontend}"
+				},
+				"isBackground": true,
+				"problemMatcher": []
+			},
+			{
+				"label": "📦 Build Web for Production",
+				"type": "shell",
+				"command": "npm run build",
+				"options": {
+					"cwd": "${workspaceFolder:🌐 Web Frontend}"
+				},
+				"group": "build",
+				"problemMatcher": []
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "🌐 Debug Web (Chrome)",
+				"type": "chrome",
+				"request": "launch",
+				"url": "http://localhost:8080",
+				"webRoot": "${workspaceFolder:🌐 Web Frontend}/src"
+			}
+		]
 	}
 }

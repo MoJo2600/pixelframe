@@ -10,12 +10,12 @@
     <navigation v-model="drawerVisible" />
 
     <v-main :style="{ background }">
-      <router-view :key="RendererModule.renderKey"></router-view>
+      <router-view :key="rendererStore.renderKey"></router-view>
     </v-main>
 
     <v-container id="notification-container">
       <notification
-        v-for="notification in NotificationModule.allNotifications"
+        v-for="notification in notificationStore.allNotifications"
         :key="notification.id"
         :notification="notification"
       />
@@ -23,37 +23,30 @@
   </v-app>
 </template>
 
-<script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import Navigation from "@/components/Navigation.vue";
-import Notification from "@/components/Notification.vue";
-import { VuetifyThemeItem } from "vuetify/types/services/theme";
-import NotificationModule from "@/store/modules/notification";
-import RendererModule from "@/store/modules/renderer";
-import ThemeModule from "@/store/modules/theme";
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useTheme } from 'vuetify'
+import Navigation from '@/components/Navigation.vue'
+import Notification from '@/components/Notification.vue'
+import { useNotificationStore } from '@/store/modules/notification'
+import { useRendererStore } from '@/store/modules/renderer'
+import { useThemeStore } from '@/store/modules/theme'
 
-@Component({
-  components: {
-    Navigation,
-    Notification
-  }
+const theme = useTheme()
+const notificationStore = useNotificationStore()
+const rendererStore = useRendererStore()
+const themeStore = useThemeStore()
+
+const drawerVisible = ref(true)
+
+const background = computed(() => {
+  const currentTheme = theme.global.name.value
+  return theme.themes.value[currentTheme]?.colors?.background
 })
-export default class App extends Vue {
-  NotificationModule = NotificationModule;
-  RendererModule = RendererModule;
 
-  private drawerVisible = true;
-
-  get background(): VuetifyThemeItem | undefined {
-    const currentTheme = this.$vuetify.theme.dark ? "dark" : "light";
-    return this.$vuetify.theme.themes[currentTheme].background;
-  }
-
-  created() {
-    this.$vuetify.theme.dark = ThemeModule.darkThemeEnabled;
-  }
-}
+onMounted(() => {
+  theme.change(themeStore.darkThemeEnabled ? 'dark' : 'light')
+})
 </script>
 
 <style lang="scss">
@@ -66,9 +59,9 @@ export default class App extends Vue {
 #notification-container {
   width: auto;
   position: fixed;
-  top: 0;
+  top: 64px;
   right: 0;
-  z-index: 99;
+  z-index: 2000;
   max-width: 480px;
 }
 </style>

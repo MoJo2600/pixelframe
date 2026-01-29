@@ -21,97 +21,79 @@
           <v-card-title>
             {{ visual.title }}
           </v-card-title>
-
         </v-card>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
-<script lang="ts">
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { Service, VisualsService } from "@/services";
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
+import SpinnerText from '@/components/SpinnerText.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { Service, VisualsService } from '@/services'
 
 interface Visual {
-  title: string;
-  name: string;
+  title: string
+  name: string
 }
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationInputWrapper
-  }
+const { loading, writing, wrapDataRead, wrapDataWrite } = useDataHandler()
+const visualsService = Service.get(VisualsService)
+const display = useDisplay()
+
+// TODO: Load this from the backend
+const visuals: Visual[] = [
+  {
+    title: 'Bpm',
+    name: 'bpm',
+  },
+  {
+    title: 'Twinkle',
+    name: 'twinkle',
+  },
+  {
+    title: 'Pacifica',
+    name: 'pacifica',
+  },
+  {
+    title: 'Rainbow Beat',
+    name: 'rainbowbeat',
+  },
+  {
+    title: 'Confetti',
+    name: 'confetti',
+  },
+  {
+    title: 'Noise',
+    name: 'noise',
+  },
+  {
+    title: 'Random',
+    name: 'random',
+  },
+]
+
+const cardSize = computed(() => {
+  if (display.xs.value) return 12
+  if (display.sm.value) return 6
+  return 3
 })
-export default class FramesView extends Mixins(DataHandlerMixin) {
-  private readonly visualsService = Service.get(VisualsService);
 
-  // TODO: Load this from the backend
-  private readonly visuals: Visual[] = [
-    {
-      title: "Bpm",
-      name: "bpm"
+async function showVisual(visual: Visual): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      await visualsService.showVisual(visual.name)
     },
-    {
-      title: "Twinkle",
-      name: "twinkle"
-    },
-    {
-      title: "Pacifica",
-      name: "pacifica"
-    },
-    {
-      title: "Rainbow Beat",
-      name: "rainbowbeat"
-    },
-    {
-      title: "Confetti",
-      name: "confetti"
-    },
-    {
-      title: "Noise",
-      name: "noise"
-    },
-    {
-      title: "Random",
-      name: "random"
-    }
-  ];
-
-  private get cardSize(): number {
-    return this.$vuetify.breakpoint.xs
-      ? 12
-      : this.$vuetify.breakpoint.sm
-      ? 6
-      : this.$vuetify.breakpoint.md
-      ? 3
-      : this.$vuetify.breakpoint.lg
-      ? 3
-      : 3;
-  }
-
-  private async showVisual(visual: Visual): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        await this.visualsService.showVisual(visual.name);
-      },
-      WriteAction.Command,
-      `show visual ${visual.name}`
-    );
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      // nothing to load, required for setting loading to false
-    });
-  }
+    WriteAction.Command,
+    `show visual ${visual.name}`
+  )
 }
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    // nothing to load, required for setting loading to false
+  })
+})
 </script>
