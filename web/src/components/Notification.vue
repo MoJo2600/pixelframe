@@ -1,48 +1,53 @@
 <template>
   <v-alert
-    dismissible
+    v-model="visible"
+    closable
     :type="notification.type"
+    variant="elevated"
     transition="scale-transition"
-    :value="visible"
+    class="notification-alert"
   >
-    <p class="text-body-1">{{ notification.content }}</p>
+    <p class="text-body-1 mb-0">{{ notification.content }}</p>
     <span v-if="notification.details" class="text-caption">{{
       notification.details
     }}</span>
   </v-alert>
 </template>
 
-<script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import { Prop } from "vue-property-decorator";
-import { NotificationData } from "@/store/modules/notification";
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import type { NotificationData } from '@/store/modules/notification'
 
-@Component
-export default class Notification extends Vue {
-  private readonly notificationVisibleDuration = process.env
-    .VUE_APP_NOTIFICATION_DURATION
-    ? Number(process.env.VUE_APP_NOTIFICATION_DURATION)
-    : 2000;
+defineProps<{
+  notification: NotificationData
+}>()
 
-  @Prop({
-    required: true
-  })
-  private notification!: NotificationData;
+const notificationVisibleDuration = import.meta.env.VITE_NOTIFICATION_DURATION
+  ? Number(import.meta.env.VITE_NOTIFICATION_DURATION)
+  : 4000
 
-  private visible = true;
+const visible = ref(true)
 
-  created() {
-    setTimeout(() => {
-      this.visible = false;
-    }, this.notificationVisibleDuration);
-  }
-}
+onMounted(() => {
+  setTimeout(() => {
+    visible.value = false
+  }, notificationVisibleDuration)
+})
 </script>
 
 <style lang="scss" scoped>
-.v-alert__content,
-.text-body-1 {
+.v-alert__content {
   margin: 0;
+}
+
+.notification-alert {
+  :deep(.v-alert__close) {
+    color: inherit;
+    opacity: 0.9;
+
+    .v-btn {
+      color: inherit;
+    }
+  }
 }
 </style>

@@ -19,7 +19,7 @@
         :loading="loading"
       >
         <v-slider
-          v-if="!loading && !error"
+          v-if="!loading && !error && basicConfiguration"
           min="0"
           max="255"
           v-model="basicConfiguration.brightness"
@@ -30,8 +30,8 @@
 
       <v-row style="margin-top: -24px">
         <v-col
-          :cols="$vuetify.breakpoint.xs ? 12 : 8"
-          :offset="$vuetify.breakpoint.xs ? 0 : 4"
+          :cols="display.xs.value ? 12 : 8"
+          :offset="display.xs.value ? 0 : 4"
         >
           <v-row>
             <v-col cols="6">
@@ -42,7 +42,10 @@
                 max-width="200"
                 type="text"
               ></v-skeleton-loader>
-              <p v-else class="text-caption text-center">
+              <p
+                v-else-if="basicConfiguration"
+                class="text-caption text-center"
+              >
                 Absolute value: {{ basicConfiguration.brightness }}
               </p>
             </v-col>
@@ -54,7 +57,10 @@
                 max-width="200"
                 type="text"
               ></v-skeleton-loader>
-              <p v-else class="text-caption text-center">
+              <p
+                v-else-if="basicConfiguration"
+                class="text-caption text-center"
+              >
                 Percent value:
                 {{ ((basicConfiguration.brightness / 255) * 100).toFixed(0) }}%
               </p>
@@ -72,7 +78,7 @@
         :loading="loading"
       >
         <v-autocomplete
-          v-if="!loading && !error"
+          v-if="!loading && !error && basicConfiguration"
           v-model="basicConfiguration.timezone"
           :items="timezoneItems"
           outlined
@@ -91,7 +97,7 @@
         :loading="loading"
       >
         <v-autocomplete
-          v-if="!loading && !error"
+          v-if="!loading && !error && basicConfiguration"
           v-model="basicConfiguration.defaultMode"
           :items="basicConfiguration.availableDefaultModes"
           outlined
@@ -104,88 +110,79 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { BasicConfiguration } from "@/models/configuration";
-import { Service, ConfigurationService } from "@/services";
-import timezones from "@/assets/timezones.json";
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
+import SpinnerText from '@/components/SpinnerText.vue'
+import DataLoaderError from '@/components/DataLoaderError.vue'
+import ConfigurationSection from '@/components/ConfigurationSection.vue'
+import ConfigurationInputWrapper from '@/components/ConfigurationInputWrapper.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { BasicConfiguration } from '@/models/configuration'
+import { Service, ConfigurationService } from '@/services'
+import timezones from '@/assets/timezones.json'
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationInputWrapper
-  }
-})
-export default class BasicConfigurationView extends Mixins(DataHandlerMixin) {
-  private readonly configService = Service.get(ConfigurationService);
-  private basicConfiguration: BasicConfiguration | null = null;
-  private timezoneItems = timezones.map(t => {
-    return {
-      text: t,
-      value: t
-    };
-  });
+const { loading, error, wrapDataRead, wrapDataWrite } = useDataHandler()
+const configService = Service.get(ConfigurationService)
+const display = useDisplay()
 
-  private async updateBrightness(): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        if (!this.basicConfiguration) {
-          return;
-        }
+const basicConfiguration = ref<BasicConfiguration | null>(null)
+const timezoneItems = timezones.map(t => ({
+  title: t,
+  value: t,
+}))
 
-        await this.configService.updateBasicConfiguratin({
-          brightness: this.basicConfiguration.brightness
-        });
-      },
-      WriteAction.Update,
-      "brightness"
-    );
-  }
+async function updateBrightness(): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      if (!basicConfiguration.value) {
+        return
+      }
 
-  private async updateTimezone(): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        if (!this.basicConfiguration) {
-          return;
-        }
-
-        await this.configService.updateBasicConfiguratin({
-          timezone: this.basicConfiguration.timezone
-        });
-      },
-      WriteAction.Update,
-      "timezone"
-    );
-  }
-
-  private async updateDefaultMode(): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        if (!this.basicConfiguration) {
-          return;
-        }
-
-        await this.configService.updateBasicConfiguratin({
-          defaultMode: this.basicConfiguration.defaultMode
-        });
-      },
-      WriteAction.Update,
-      "default mode"
-    );
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      this.basicConfiguration = await this.configService.getBasicConfiguration();
-    });
-  }
+      await configService.updateBasicConfiguratin({
+        brightness: basicConfiguration.value.brightness,
+      })
+    },
+    WriteAction.Update,
+    'brightness'
+  )
 }
+
+async function updateTimezone(): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      if (!basicConfiguration.value) {
+        return
+      }
+
+      await configService.updateBasicConfiguratin({
+        timezone: basicConfiguration.value.timezone,
+      })
+    },
+    WriteAction.Update,
+    'timezone'
+  )
+}
+
+async function updateDefaultMode(): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      if (!basicConfiguration.value) {
+        return
+      }
+
+      await configService.updateBasicConfiguratin({
+        defaultMode: basicConfiguration.value.defaultMode,
+      })
+    },
+    WriteAction.Update,
+    'default mode'
+  )
+}
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    basicConfiguration.value = await configService.getBasicConfiguration()
+  })
+})
 </script>

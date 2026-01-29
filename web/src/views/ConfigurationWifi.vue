@@ -20,7 +20,7 @@
           :loading="loading"
         >
           <v-autocomplete
-            v-if="!loading && !error"
+            v-if="!loading && !error && wifiConfiguration"
             v-model="wifiConfiguration.ssid"
             :items="wifiItems"
             outlined
@@ -37,7 +37,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && wifiConfiguration"
             v-model="wifiConfiguration.password"
             outlined
             dense
@@ -61,73 +61,58 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { orderBy } from "lodash";
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
-import ConfigurationFormButton from "@/components/ConfigurationFormButton.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { UpdateWifiConfiguration } from "@/models/configuration";
-import { Service, ConfigurationService, EnvironmentService } from "@/services";
-import { Wifi } from "@/models/environment";
-import { required } from "@/validation";
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { orderBy } from 'lodash'
+import SpinnerText from '@/components/SpinnerText.vue'
+import DataLoaderError from '@/components/DataLoaderError.vue'
+import ConfigurationSection from '@/components/ConfigurationSection.vue'
+import ConfigurationInputWrapper from '@/components/ConfigurationInputWrapper.vue'
+import ConfigurationFormButton from '@/components/ConfigurationFormButton.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { UpdateWifiConfiguration } from '@/models/configuration'
+import { Service, ConfigurationService, EnvironmentService } from '@/services'
+import { Wifi } from '@/models/environment'
+import { required } from '@/validation'
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationInputWrapper,
-    ConfigurationFormButton
-  }
+const { loading, error, writing, wrapDataRead, wrapDataWrite } =
+  useDataHandler()
+const configService = Service.get(ConfigurationService)
+const environmentService = Service.get(EnvironmentService)
+
+const wifiConfiguration = ref<UpdateWifiConfiguration | null>(null)
+const availableWifis = ref<Wifi[]>([])
+const showPassword = ref(false)
+const formValid = ref(false)
+
+const wifiItems = computed(() => {
+  return orderBy(availableWifis.value, ['signalStrength'], 'desc').map(w => ({
+    title: w.ssid,
+    value: w.ssid,
+  }))
 })
-export default class WifiConfigurationView extends Mixins(DataHandlerMixin) {
-  required = required;
 
-  private readonly configService = Service.get(ConfigurationService);
-  private readonly environmentService = Service.get(EnvironmentService);
-  private wifiConfiguration: UpdateWifiConfiguration | null = null;
-  private availableWifis: Wifi[] = [];
-  private showPassword = false;
-  private formValid = false;
+async function updateWifiConfiguration(): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      if (!wifiConfiguration.value) {
+        return
+      }
 
-  private get wifiItems() {
-    return orderBy(this.availableWifis, ["signalStrength"], "desc").map(w => {
-      return {
-        text: w.ssid,
-        value: w.ssid
-      };
-    });
-  }
-
-  private async updateWifiConfiguration(): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        if (!this.wifiConfiguration) {
-          return;
-        }
-
-        await this.configService.updateWifiConfiguration(
-          this.wifiConfiguration
-        );
-      },
-      WriteAction.Update,
-      "WiFi configuration"
-    );
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      this.wifiConfiguration = {
-        ...(await this.configService.getWifiConfiguration()),
-        password: ""
-      };
-      this.availableWifis = await this.environmentService.getAvailableWifis();
-    });
-  }
+      await configService.updateWifiConfiguration(wifiConfiguration.value)
+    },
+    WriteAction.Update,
+    'WiFi configuration'
+  )
 }
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    wifiConfiguration.value = {
+      ...(await configService.getWifiConfiguration()),
+      password: '',
+    }
+    availableWifis.value = await environmentService.getAvailableWifis()
+  })
+})
 </script>

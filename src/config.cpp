@@ -217,7 +217,7 @@ void set_brightness(uint8_t brightness)
     FastLED.setBrightness(matrix_brightness);
 }
 
-StaticJsonDocument<512> readConfiguration()
+JsonDocument readConfiguration()
 {
     fs::File file;
 
@@ -225,7 +225,7 @@ StaticJsonDocument<512> readConfiguration()
     file = LITTLEFS.open("/system/config.json", "r");
     Serial.println(F("ok"));
 
-    StaticJsonDocument<512> configuration;
+    JsonDocument configuration;
     Serial.println(F("[CONFIG] Reading json config.."));
     char jsonData[file.size() + 1];
     int stringIndex = 0;

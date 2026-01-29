@@ -28,11 +28,15 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+#include "lib/perf_monitor.h"
+
+// Performance logging interval (ms)
+#define PERF_LOG_INTERVAL 30000
 
 bool
   wifiConnected = false;
 
-StaticJsonDocument<512>
+JsonDocument
   configuration;
 
 // Error messages stored in flash.
@@ -80,11 +84,11 @@ void setup() {
   // ### END: READ CONFIG
 
   // Setup matrix
-  if (configuration["brightness"] != nullptr) {
+  if (!configuration["brightness"].isNull()) {
     matrix_brightness = configuration["brightness"];
   }
 
-  if (configuration["defaultmode"] != nullptr) {
+  if (!configuration["defaultmode"].isNull()) {
     default_mode = strdup(configuration["defaultmode"]);
     Serial.print(F("[CONFIG] Default mode: "));
     Serial.println(default_mode);
@@ -139,7 +143,7 @@ void setup() {
     matrix->show();
 
     mdnsName = strdup("pixelframe");
-    if (configuration["framename"] != nullptr) {
+    if (!configuration["framename"].isNull()) {
       mdnsName = strdup(configuration["framename"]);
     }
 
@@ -184,8 +188,16 @@ void setup() {
 }
 
 unsigned long _timer = millis();
+unsigned long _perfTimer = millis();
 
 void loop() {
   webserver_loop();
   Orchestrator::Instance()->loop();
+  
+  // Periodic performance logging
+  if (millis() - _perfTimer > PERF_LOG_INTERVAL) {
+    PERF_PRINT();
+    PERF_RESET();
+    _perfTimer = millis();
+  }
 }

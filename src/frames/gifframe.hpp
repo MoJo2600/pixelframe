@@ -29,9 +29,17 @@ class GifFrame : public Frame {
 
   private:
     void playGif(std::string filename);
+    bool loadGifToBuffer(std::string filename);
+    void freeBuffer(void);
 
-    static fs::File file;
+    // RAM buffer for GIF data (eliminates blocking file I/O)
+    static uint8_t* gifBuffer;
+    static size_t gifBufferSize;
+    static size_t gifBufferPos;
+
     static GifDecoder<16, 16, 10> * decoder;
+    
+    // Buffer-based callbacks (non-blocking)
     static unsigned long filePositionCallback(void);
     static int fileReadCallback(void);
     static int fileReadBlockCallback(void * buffer, int numberOfBytes);

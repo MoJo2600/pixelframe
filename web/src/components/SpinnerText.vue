@@ -10,16 +10,8 @@
   </span>
 </template>
 
-<script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import { Prop } from "vue-property-decorator";
-
-@Component
-export default class SpinnerText extends Vue {
-  @Prop({
-    required: true
-  })
-  private text!: boolean;
-}
+<script setup lang="ts">
+defineProps<{
+  text: string
+}>()
 </script>

@@ -20,7 +20,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && mqttConfiguration"
             v-model="mqttConfiguration.host"
             outlined
             dense
@@ -37,7 +37,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && mqttConfiguration"
             v-model="mqttConfiguration.port"
             outlined
             dense
@@ -54,7 +54,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && mqttConfiguration"
             v-model="mqttConfiguration.user"
             outlined
             dense
@@ -71,7 +71,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && mqttConfiguration"
             v-model="mqttConfiguration.password"
             outlined
             dense
@@ -90,7 +90,7 @@
           :loading="loading"
         >
           <v-text-field
-            v-if="!loading && !error"
+            v-if="!loading && !error && mqttConfiguration"
             v-model="mqttConfiguration.baseTopic"
             outlined
             dense
@@ -112,60 +112,46 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import Component from "vue-class-component";
-import { Mixins } from "vue-property-decorator";
-import SpinnerText from "@/components/SpinnerText.vue";
-import DataLoaderError from "@/components/DataLoaderError.vue";
-import ConfigurationSection from "@/components/ConfigurationSection.vue";
-import ConfigurationInputWrapper from "@/components/ConfigurationInputWrapper.vue";
-import ConfigurationFormButton from "@/components/ConfigurationFormButton.vue";
-import { DataHandlerMixin, WriteAction } from "@/mixins";
-import { UpdateMqttConfiguration } from "@/models/configuration";
-import { Service, ConfigurationService } from "@/services";
-import { required, validPort } from "@/validation";
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import SpinnerText from '@/components/SpinnerText.vue'
+import DataLoaderError from '@/components/DataLoaderError.vue'
+import ConfigurationSection from '@/components/ConfigurationSection.vue'
+import ConfigurationInputWrapper from '@/components/ConfigurationInputWrapper.vue'
+import ConfigurationFormButton from '@/components/ConfigurationFormButton.vue'
+import { useDataHandler, WriteAction } from '@/mixins'
+import { UpdateMqttConfiguration } from '@/models/configuration'
+import { Service, ConfigurationService } from '@/services'
+import { required, validPort } from '@/validation'
 
-@Component({
-  components: {
-    SpinnerText,
-    DataLoaderError,
-    ConfigurationSection,
-    ConfigurationInputWrapper,
-    ConfigurationFormButton
-  }
-})
-export default class MqttConfigurationView extends Mixins(DataHandlerMixin) {
-  required = required;
-  validPort = validPort;
+const { loading, error, writing, wrapDataRead, wrapDataWrite } =
+  useDataHandler()
+const configService = Service.get(ConfigurationService)
 
-  private readonly configService = Service.get(ConfigurationService);
-  private mqttConfiguration: UpdateMqttConfiguration | null = null;
-  private showPassword = false;
-  private formValid = false;
+const mqttConfiguration = ref<UpdateMqttConfiguration | null>(null)
+const showPassword = ref(false)
+const formValid = ref(false)
 
-  private async updateMqttConfiguration(): Promise<void> {
-    await this.wrapDataWrite(
-      async () => {
-        if (!this.mqttConfiguration) {
-          return;
-        }
+async function updateMqttConfiguration(): Promise<void> {
+  await wrapDataWrite(
+    async () => {
+      if (!mqttConfiguration.value) {
+        return
+      }
 
-        await this.configService.updateMqttConfiguration(
-          this.mqttConfiguration
-        );
-      },
-      WriteAction.Update,
-      "MQTT configuration"
-    );
-  }
-
-  private async created(): Promise<void> {
-    await this.wrapDataRead(async () => {
-      this.mqttConfiguration = {
-        ...(await this.configService.getMqttConfiguration()),
-        password: ""
-      };
-    });
-  }
+      await configService.updateMqttConfiguration(mqttConfiguration.value)
+    },
+    WriteAction.Update,
+    'MQTT configuration'
+  )
 }
+
+onMounted(async () => {
+  await wrapDataRead(async () => {
+    mqttConfiguration.value = {
+      ...(await configService.getMqttConfiguration()),
+      password: '',
+    }
+  })
+})
 </script>

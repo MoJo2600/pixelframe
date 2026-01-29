@@ -16,21 +16,9 @@
   </v-row>
 </template>
 
-<script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import { Prop } from "vue-property-decorator";
-
-@Component
-export default class ConfigurationSection extends Vue {
-  @Prop({
-    required: true
-  })
-  private error!: boolean;
-
-  @Prop({
-    required: false
-  })
-  private title?: string;
-}
+<script setup lang="ts">
+defineProps<{
+  error: boolean
+  title?: string
+}>()
 </script>

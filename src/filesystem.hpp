@@ -4,7 +4,8 @@
 // Good tutorial https://www.mischianti.org/2021/04/01/esp32-integrated-littlefs-filesystem-5/
 
 #include "FS.h"
-#include <LITTLEFS.h>
+#include <LittleFS.h>
+#define LITTLEFS LittleFS
 #include <vector>
 
 using std::vector;

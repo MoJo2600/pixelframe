@@ -3,7 +3,8 @@
 #include <ESPmDNS.h>
 #include <Wire.h>
 #define FS_NO_GLOBALS
-#include <LITTLEFS.h>
+#include <LittleFS.h>
+#define LITTLEFS LittleFS
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include "config.hpp"
@@ -15,6 +16,7 @@
 #include "frames/off.hpp"
 #include "AsyncJson.h"
 #include "esp_task_wdt.h"
+#include "lib/perf_monitor.h"
 
 const char *fsName = "LittleFS";
 FS *fileSystem = &LITTLEFS;
@@ -244,24 +246,29 @@ void startServer()
   server.on("/api/files", HTTP_GET, handleFileList);
 
   server.on("/api/show/clock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    PERF_API_START();
     Serial.println("[WEBSERVER] Receive command - switch to clock");
 
     auto ev = new ClockFrameEvent();
     Orchestrator::Instance()->react(ev);
 
     replyOKWithMsg(request, F("Switching to clock"));
+    PERF_API_END();
   });
 
   server.on("/api/show/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+    PERF_API_START();
     Serial.println("[WEBSERVER] Receive command - switch to off");
 
     auto ev = new OffEvent();
     Orchestrator::Instance()->react(ev);
 
     replyOKWithMsg(request, F("Switching to off"));
+    PERF_API_END();
   });
 
   server.on("/api/show/gif", HTTP_GET, [](AsyncWebServerRequest *request) {
+    PERF_API_START();
     if (request->hasParam("image"))
     {
       String filename = request->getParam("image")->value();
@@ -289,9 +296,11 @@ void startServer()
     }
 
     replyOKWithMsg(request, F("Switching to gif"));
+    PERF_API_END();
   });
 
   server.on("/api/show/visuals", HTTP_GET, [](AsyncWebServerRequest *request) {
+    PERF_API_START();
     if (request->hasParam("v"))
     {
       String visualArg = request->getParam("v")->value();
@@ -334,7 +343,7 @@ void startServer()
     Serial.println("[WEBSERVER] GET /configuration/basic");
 
     // TODO: EspAsyncWebserver has a native implementation for JSON, so maybe we should this?
-    StaticJsonDocument<200> config;
+    JsonDocument config;
     config["brightness"] = matrix_brightness;
     config["timezone"] = "Europe/Berlin";
 
@@ -347,7 +356,7 @@ void startServer()
   AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/api/configuration/basic", [](AsyncWebServerRequest *request, JsonVariant &config) {
     JsonObject jsonObj = config.as<JsonObject>();
 
-    if (jsonObj["brightness"] != nullptr) {
+    if (!jsonObj["brightness"].isNull()) {
       set_brightness(jsonObj["brightness"]);
     }
 
@@ -358,7 +367,7 @@ void startServer()
   server.on("/api/configuration/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("[WEBSERVER] GET api/configuration/wifi");
 
-    StaticJsonDocument<200> config;
+    JsonDocument config;
     config["ssid"] = wifi_ssid;
 
     char json_string[200];
@@ -370,7 +379,7 @@ void startServer()
   AsyncCallbackJsonWebHandler* wifiConfigHandler = new AsyncCallbackJsonWebHandler("/api/configuration/wifi", [](AsyncWebServerRequest *request, JsonVariant &config) {
     JsonObject jsonObj = config.as<JsonObject>();
 
-    if (jsonObj["ssid"] == nullptr || jsonObj["password"] == nullptr) {
+    if (jsonObj["ssid"].isNull() || jsonObj["password"].isNull()) {
       replyBadRequest(request, "Body must contain SSID and password");
       return;
     }
@@ -388,7 +397,7 @@ void startServer()
     WiFi.disconnect();
     int numberOfNetworks = WiFi.scanNetworks();
 
-    StaticJsonDocument<512> config;
+    JsonDocument config;
 
     for(int i = 0; i < numberOfNetworks; i++) {
       config[i]["ssid"] = WiFi.SSID(i);
@@ -422,6 +431,27 @@ void startServer()
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
   });
+
+  // Performance monitoring endpoint
+  server.on("/api/perf", HTTP_GET, [](AsyncWebServerRequest *request){
+    PERF_API_START();
+    String json = PERF_JSON();
+    PERF_API_END();
+    request->send(200, "application/json", json);
+  });
+
+  // Reset performance stats
+  server.on("/api/perf/reset", HTTP_GET, [](AsyncWebServerRequest *request){
+    PERF_RESET();
+    request->send(200, "text/plain", "Performance stats reset");
+  });
+
+  // Print performance stats to serial
+  server.on("/api/perf/print", HTTP_GET, [](AsyncWebServerRequest *request){
+    PERF_PRINT();
+    request->send(200, "text/plain", "Stats printed to serial");
+  });
+
   // server.onNotFound(handleNotFound); // if someone requests any other file or page, go to function 'handleNotFound'
   //                                    // and check if the file exists
   server.serveStatic("/", LITTLEFS, "/").setDefaultFile("index.html");

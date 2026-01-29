@@ -2,7 +2,7 @@
 # Development
 ####
 
-FROM node:16.13-alpine AS dev
+FROM node:20-alpine AS dev
 
 RUN apk add --update --no-cache \
   curl \

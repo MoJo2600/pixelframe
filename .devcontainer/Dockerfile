@@ -1,11 +1,47 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.158.0/containers/cpp/.devcontainer/base.Dockerfile
+# Use modern Ubuntu LTS base image
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
 
-# [Choice] Debian / Ubuntu version: debian-10, debian-9, ubuntu-20.04, ubuntu-18.04
-ARG VARIANT="buster"
-FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-${VARIANT}
+# Avoid prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
 
-# [Optional] Uncomment this section to install additional packages.
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends python3 python3-pip
+# Install system dependencies for ESP32/PlatformIO and Node.js development
+RUN apt-get update && apt-get -y install --no-install-recommends \
+    # Build essentials
+    build-essential \
+    cmake \
+    # Python for PlatformIO
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    # Git and utilities
+    git \
+    curl \
+    wget \
+    ca-certificates \
+    # Serial/USB support for ESP32
+    udev \
+    usbutils \
+    # Additional tools
+    jq \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install python3-distutils
+# Install Node.js LTS (v20.x)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create Python virtual environment for PlatformIO
+ENV PLATFORMIO_VENV=/opt/platformio-venv
+RUN python3 -m venv ${PLATFORMIO_VENV} \
+    && ${PLATFORMIO_VENV}/bin/pip install --upgrade pip setuptools wheel \
+    && ${PLATFORMIO_VENV}/bin/pip install platformio
+
+# Add PlatformIO to PATH
+ENV PATH="${PLATFORMIO_VENV}/bin:${PATH}"
+
+# Setup udev rules for ESP32 devices (to be run with appropriate permissions)
+RUN mkdir -p /etc/udev/rules.d
+
+# Set the default shell to bash
+SHELL ["/bin/bash", "-c"]

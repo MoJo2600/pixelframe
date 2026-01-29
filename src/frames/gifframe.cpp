@@ -4,10 +4,18 @@
 #include "filesystem.hpp"
 #include "config.hpp"
 #include "frames/gifframe.hpp"
+#include "esp_heap_caps.h"
 
 using namespace std;
 
 #define GIF_DURATION 30 //TODO: make configurable
+#define MAX_GIF_SIZE (256 * 1024)  // 256KB max GIF size
+
+// Static buffer members
+uint8_t* GifFrame::gifBuffer = nullptr;
+size_t GifFrame::gifBufferSize = 0;
+size_t GifFrame::gifBufferPos = 0;
+GifDecoder<16, 16, 10>* GifFrame::decoder = nullptr;
 
 const std::string EVENT_ID_RANDOM = "frame.event.gif.random";
 const std::string EVENT_ID_SINGLE = "frame.event.gif.single";
@@ -96,46 +104,123 @@ void GifFrame::react(FrameEvent *event)
 
 void GifFrame::exit(void)
 {
-  cout << "[PIXELFRAME] Exit Gif mode" << endl;
-  decoder->stop();
-  if (file)
-  {
-    cout << "[PIXELFRAME] Close file" << endl;
-    file.close();
+  cout << "[FRAME::GIF] Exit Gif mode" << endl;
+  if (decoder) {
+    decoder->stop();
+    cout << "[FRAME::GIF] Delete decoder" << endl;
+    delete decoder;
+    decoder = nullptr;
   }
-  cout << "[PIXELFRAME] Delete decoder" << endl;
-  delete decoder;
+  freeBuffer();
+}
+
+void GifFrame::freeBuffer(void)
+{
+  if (gifBuffer) {
+    cout << "[FRAME::GIF] Freeing GIF buffer (" << gifBufferSize << " bytes)" << endl;
+    free(gifBuffer);
+    gifBuffer = nullptr;
+    gifBufferSize = 0;
+    gifBufferPos = 0;
+  }
+}
+
+bool GifFrame::loadGifToBuffer(std::string filename)
+{
+  // Free existing buffer
+  freeBuffer();
+  
+  // Open file
+  fs::File file = LITTLEFS.open(filename.c_str(), "r");
+  if (!file) {
+    cout << "[FRAME::GIF] Error opening GIF file: " << filename << endl;
+    return false;
+  }
+  
+  size_t fileSize = file.size();
+  cout << "[FRAME::GIF] Loading GIF to RAM: " << filename << " (" << fileSize << " bytes)" << endl;
+  
+  // Check size limit
+  if (fileSize > MAX_GIF_SIZE) {
+    cout << "[FRAME::GIF] GIF too large! Max: " << MAX_GIF_SIZE << " bytes" << endl;
+    file.close();
+    return false;
+  }
+  
+  // Try to allocate from PSRAM first (ESP32 has 4MB PSRAM on Lolin D32 Pro)
+  gifBuffer = (uint8_t*)heap_caps_malloc(fileSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  
+  // Fallback to regular RAM if PSRAM not available
+  if (!gifBuffer) {
+    cout << "[FRAME::GIF] PSRAM unavailable, trying regular RAM" << endl;
+    gifBuffer = (uint8_t*)malloc(fileSize);
+  }
+  
+  if (!gifBuffer) {
+    cout << "[FRAME::GIF] Failed to allocate buffer!" << endl;
+    file.close();
+    return false;
+  }
+  
+  // Read entire file into buffer
+  size_t bytesRead = file.read(gifBuffer, fileSize);
+  file.close();
+  
+  if (bytesRead != fileSize) {
+    cout << "[FRAME::GIF] Read error: expected " << fileSize << ", got " << bytesRead << endl;
+    freeBuffer();
+    return false;
+  }
+  
+  gifBufferSize = fileSize;
+  gifBufferPos = 0;
+  
+  cout << "[FRAME::GIF] GIF loaded to RAM successfully" << endl;
+  return true;
 }
 
 void GifFrame::playGif(std::string filename)
 {
-  cout << "Got play gif event with file: " << filename << endl;
+  cout << "[FRAME::GIF] Playing: " << filename << endl;
   matrix->clear();
-  //TODO: Move to sub states, that will use the gif decoder
-  if (file)
-    file.close();
-  file = LITTLEFS.open(filename.c_str(), "r");
-  if (!file)
-  {
-    cout << "[PIXELFRAME] Error opening GIF file" << endl;
+  
+  if (!loadGifToBuffer(filename)) {
+    cout << "[FRAME::GIF] Failed to load GIF to buffer" << endl;
+    return;
   }
-  cout << "[PIXELFRAME] Opened GIF file, start decoding" << endl;
+  
+  cout << "[FRAME::GIF] Starting decoder" << endl;
   decoder->startDecoding();
 }
 
 unsigned long GifFrame::filePositionCallback()
 {
-  return file.position();
+  return gifBufferPos;
 }
 
 int GifFrame::fileReadCallback()
 {
-  return file.read();
+  if (gifBuffer && gifBufferPos < gifBufferSize) {
+    return gifBuffer[gifBufferPos++];
+  }
+  return -1;  // EOF
 }
 
 int GifFrame::fileReadBlockCallback(void *buffer, int numberOfBytes)
 {
-  return file.read((uint8_t *)buffer, numberOfBytes);
+  if (!gifBuffer || gifBufferPos >= gifBufferSize) {
+    return 0;
+  }
+  
+  // Calculate how many bytes we can actually read
+  size_t bytesAvailable = gifBufferSize - gifBufferPos;
+  size_t bytesToRead = (numberOfBytes < bytesAvailable) ? numberOfBytes : bytesAvailable;
+  
+  // Copy from buffer (this is fast - just a memcpy!)
+  memcpy(buffer, gifBuffer + gifBufferPos, bytesToRead);
+  gifBufferPos += bytesToRead;
+  
+  return bytesToRead;
 }
 
 void GifFrame::screenClearCallback(void)
@@ -154,8 +239,10 @@ void GifFrame::drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t gree
 
 bool GifFrame::fileSeekCallback(unsigned long position)
 {
-  return file.seek(position);
+  if (position <= gifBufferSize) {
+    gifBufferPos = position;
+    return true;
+  }
+  return false;
 }
-
-fs::File GifFrame::file;
-GifDecoder<16, 16, 10> *GifFrame::decoder;
+// Static members initialized at top of file

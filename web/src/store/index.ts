@@ -1,6 +1,4 @@
-import Vue from "vue";
-import Vuex from "vuex";
-
-Vue.use(Vuex);
-
-export default new Vuex.Store({});
+// Pinia stores
+export { useNotificationStore } from './modules/notification'
+export { useRendererStore } from './modules/renderer'
+export { useThemeStore } from './modules/theme'

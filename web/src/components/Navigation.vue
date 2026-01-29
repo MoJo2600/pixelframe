@@ -1,111 +1,90 @@
 <template>
   <v-navigation-drawer v-model="drawerVisible" app hide-overlay>
     <v-list nav>
-      <template
-        v-for="item in ($router.options.routes || []).filter(
-          r => r.path !== '/'
-        )"
-      >
-        <v-list-item
-          v-if="!item.children"
-          :key="item.name + '-item'"
-          :to="item.path"
-        >
-          <v-list-item-icon>
-            <v-icon>{{ item.meta.icon }}</v-icon>
-          </v-list-item-icon>
-
-          <v-list-item-content>
-            <v-list-item-title>{{ item.name }}</v-list-item-title>
-          </v-list-item-content>
+      <template v-for="item in navRoutes" :key="String(item.name)">
+        <v-list-item v-if="!item.children" :to="item.path">
+          <template #prepend>
+            <v-icon>{{ item.meta?.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ item.name }}</v-list-item-title>
         </v-list-item>
 
-        <v-list-group
-          v-else
-          :group="item.path"
-          :key="item.name + '-group'"
-          :prepend-icon="item.meta.icon"
-        >
-          <template #activator>
-            <v-list-item-title>{{ item.name }}</v-list-item-title>
+        <v-list-group v-else :value="item.path">
+          <template #activator="{ props }">
+            <v-list-item v-bind="props" :prepend-icon="String(item.meta?.icon)">
+              <v-list-item-title>{{ item.name }}</v-list-item-title>
+            </v-list-item>
           </template>
 
           <v-list-item
             v-for="nestedItem in item.children"
-            :key="nestedItem.name"
+            :key="String(nestedItem.name)"
             :to="`${item.path}/${nestedItem.path}`"
-            dense
+            density="compact"
           >
-            <v-list-item-content>
-              <v-list-item-title class="ml-2">{{
-                nestedItem.name
-              }}</v-list-item-title>
-            </v-list-item-content>
+            <v-list-item-title class="ml-2">{{
+              nestedItem.name
+            }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
       </template>
 
       <v-list-item href="/update">
-        <v-list-item-icon>
+        <template #prepend>
           <v-icon>mdi-memory</v-icon>
-        </v-list-item-icon>
-
-        <v-list-item-content>
-          <v-list-item-title>Update firmware</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Update firmware</v-list-item-title>
       </v-list-item>
 
-      <v-list-item @click="ThemeModule.switchTheme()">
-        <v-list-item-icon>
+      <v-list-item @click="handleSwitchTheme()">
+        <template #prepend>
           <v-icon>mdi-theme-light-dark</v-icon>
-        </v-list-item-icon>
-
-        <v-list-item-content>
-          <v-list-item-title>Theme</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Theme</v-list-item-title>
       </v-list-item>
 
       <v-list-item @click="shutdown">
-        <v-list-item-icon>
+        <template #prepend>
           <v-icon>mdi-power</v-icon>
-        </v-list-item-icon>
-
-        <v-list-item-content>
-          <v-list-item-title>Off</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Off</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
 
-<script lang="ts">
-import { FramesService, Service } from "@/services";
-import { Vue, Component, VModel, Watch } from "vue-property-decorator";
-import ThemeModule from "@/store/modules/theme";
+<script setup lang="ts">
+import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
+import { FramesService, Service } from '@/services'
+import { useThemeStore } from '@/store/modules/theme'
 
-@Component
-export default class Navigation extends Vue {
-  ThemeModule = ThemeModule;
+const drawerVisible = defineModel<boolean>()
 
-  private readonly framesService = Service.get(FramesService);
+const router = useRouter()
+const vuetifyTheme = useTheme()
+const themeStore = useThemeStore()
+const framesService = Service.get(FramesService)
 
-  @VModel()
-  public readonly drawerVisible!: boolean;
+const navRoutes = computed(() => {
+  return (router.options.routes || []).filter(r => r.path !== '/')
+})
 
-  public async shutdown(): Promise<void> {
-    await this.framesService.showFrame("off");
-  }
-
-  get getTheme() {
-    return ThemeModule.darkThemeEnabled
-  }
-
-  @Watch("getTheme")
-  onThemeChanged() {
-      this.$vuetify.theme.dark = this.getTheme;
-  }
-
+async function shutdown(): Promise<void> {
+  await framesService.showFrame('off')
 }
+
+function handleSwitchTheme(): void {
+  themeStore.switchTheme()
+}
+
+watch(
+  () => themeStore.darkThemeEnabled,
+  isDark => {
+    vuetifyTheme.change(isDark ? 'dark' : 'light')
+  }
+)
 </script>
 
 <style lang="scss" scoped>

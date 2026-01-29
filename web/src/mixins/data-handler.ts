@@ -1,68 +1,77 @@
-import Vue from "vue";
-import Component from "vue-class-component";
-import NotificationModule, {
-  NotificationType
-} from "@/store/modules/notification";
+import { ref } from 'vue'
+import {
+  useNotificationStore,
+  NotificationType,
+} from '@/store/modules/notification'
 
 export enum WriteAction {
-  Create = "create",
-  Update = "update",
-  Delete = "delete",
-  Command = "command"
+  Create = 'create',
+  Update = 'update',
+  Delete = 'delete',
+  Command = 'command',
 }
 
-@Component
-export class DataHandlerMixin extends Vue {
+export function useDataHandler() {
+  const notificationStore = useNotificationStore()
+
   // data loading
-  protected loading = true;
-  protected error = false;
+  const loading = ref(true)
+  const error = ref(false)
   // data sending / updating / deleting
-  protected writing: string | null = null;
+  const writing = ref<string | null>(null)
 
-  protected async wrapDataRead(fn: () => Promise<void>): Promise<void> {
+  async function wrapDataRead(fn: () => Promise<void>): Promise<void> {
     try {
-      await fn();
-    } catch (error) {
-      this.error = true;
+      await fn()
+    } catch (err: any) {
+      error.value = true
 
-      NotificationModule.notify({
+      notificationStore.notify({
         type: NotificationType.Error,
-        content: "Failed to load data",
-        details: error.message
-      });
+        content: 'Failed to load data',
+        details: err.message,
+      })
     } finally {
-      this.loading = false;
+      loading.value = false
     }
   }
 
-  protected async wrapDataWrite(
+  async function wrapDataWrite(
     fn: () => Promise<void>,
     action: WriteAction,
     item: string
   ): Promise<void> {
     try {
-      this.writing = item;
+      writing.value = item
 
-      await fn();
+      await fn()
 
-      NotificationModule.notify({
+      notificationStore.notify({
         type: NotificationType.Success,
         content:
           action === WriteAction.Command
             ? `Successfully sent command '${item}'`
-            : `Successfully ${action}d ${item}`
-      });
-    } catch (error) {
-      NotificationModule.notify({
+            : `Successfully ${action}d ${item}`,
+      })
+    } catch (err: any) {
+      notificationStore.notify({
         type: NotificationType.Error,
         content:
           action === WriteAction.Command
             ? `Failed to send command '${item}'`
             : `Failed to ${action} ${item}`,
-        details: error.message
-      });
+        details: err.message,
+      })
     } finally {
-      this.writing = null;
+      writing.value = null
     }
+  }
+
+  return {
+    loading,
+    error,
+    writing,
+    wrapDataRead,
+    wrapDataWrite,
   }
 }

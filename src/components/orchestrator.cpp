@@ -7,6 +7,7 @@
 #include "frames/visualsframe.hpp"
 #include "frames/off.hpp"
 #include <cstring>
+#include "lib/perf_monitor.h"
 
 
 #define FADE_LENGTH 500
@@ -40,6 +41,8 @@ void Orchestrator::setup() {
 }
 
 void Orchestrator::loop(void) {
+  PERF_FRAME_START();
+  
   // If the event has a duration, switch back to the last event after the time has passed
   if (this->currentEvent != nullptr &&
       this->currentEvent->duration > 0 && 
@@ -73,6 +76,9 @@ void Orchestrator::loop(void) {
   }
 
   EVERY_N_MILLISECONDS(12.5) { matrix->show(); }; // set to 80Hz equivalent
+  
+  PERF_FRAME_END();
+  PERF_FRAME_CHECK();
 }
 
 void Orchestrator::react(FrameEvent* e) {
